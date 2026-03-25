@@ -1,0 +1,50 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.venv/
+env/
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite3
+
+# Uploads/Images (保留目录结构)
+images/*
+!images/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node.js (frontend)
+node_modules/
+dist/
+.npm
+*.local
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# MyPy
+.mypy_cache/
+
+# Build
+build/
+*.egg-info/
