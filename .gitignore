@@ -48,3 +48,6 @@ htmlcov/
 # Build
 build/
 *.egg-info/
+
+# User documents (not tracked)
+.user/
