@@ -44,15 +44,22 @@ AI 自审两遍（对照规划文档 §7 陷阱 + §9 审查清单）
 AI 跑规划文档 §6 的测试命令 → 通过
       │
       ▼
-AI commit + push + 创建 PR
+AI commit + push（不创建 PR）
       │
       ▼
 用户跑 §6 的用户测试命令
       │
-      ├── 有问题 → 同分支修改 → 推送 → 再测
+      ├── 有问题 → 同分支修改 → push → 用户再测
       │
       ▼
-用户验收 → squash merge → 清理分支
+用户验收通过 → AI 创建 PR → squash merge → 清理分支
+      │
+      ▼
+AI 逐项检查（squash merge 后必做）：
+  ├── Issue 是否已关闭？
+  ├── 本地分支是否已删除？
+  ├── 远程分支是否已删除？（git fetch --prune）
+  └── git status 确认工作区干净
 ```
 
 ### 2.3 文件标记与审查强度
