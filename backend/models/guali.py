@@ -1,8 +1,8 @@
 """卦例主表"""
-from __future__ import annotations
 from datetime import datetime
 from typing import List, Optional
 from sqlalchemy import TEXT
+from sqlalchemy.orm import Mapped
 from sqlmodel import Field, Relationship, SQLModel
 
 from backend.models.tag import GualiTag, Tag
@@ -18,4 +18,4 @@ class Guali(SQLModel, table=True):
     yao_bian_code: str = Field(default="000000", max_length=6)
     zhi_code: str = Field(default="000000", max_length=6)
 
-    tags: List[Tag] = Relationship(back_populates="gualis", link_model=GualiTag)
+    tags: Mapped[List["Tag"]] = Relationship(back_populates="gualis", link_model=GualiTag)
