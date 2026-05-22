@@ -105,7 +105,7 @@ def register_stored_functions(engine: Engine):
 
     for sql_file in sql_files:
         sql = sql_file.read_text(encoding="utf-8")
-        _execute_sql_script(engine, sql)
+        _execute_sql_script(engine, sql, use_multi=True)
 
     print(f"存储函数注册完成（{len(sql_files)} 个）")
 
@@ -121,26 +121,39 @@ def seed_static_data(session: Session):
     raise NotImplementedError("v0.1 核心算法完成后实现 seed_static_data()")
 
 
-def _execute_sql_script(engine: Engine, sql: str):
-    """执行 SQL 脚本——逐条执行，忽略注释行和空语句。
+def _execute_sql_script(engine: Engine, sql: str, use_multi: bool = False):
+    """执行 SQL 脚本。
 
-    使用 raw_connection 绕过 SQLAlchemy 的事务管理，
-    确保 SET FOREIGN_KEY_CHECKS 等会话级语句正确生效。
+    use_multi=False（建表 SQL）：按 ; 分拆逐条执行。
+    use_multi=True（存储函数）：手动拆分 DROP FUNCTION 和 CREATE FUNCTION，
+    后者体内含 ; 不能简单分割。
+
+    使用 raw_connection 确保 SET FOREIGN_KEY_CHECKS 等会话语句正确生效。
     """
-    clean_lines = [
-        line for line in sql.split("\n")
-        if line.strip() and not line.strip().startswith("--")
-    ]
-    clean_sql = "\n".join(clean_lines)
-
     raw_conn = engine.raw_connection()
     cursor = raw_conn.cursor()
     try:
         cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
-        for statement in clean_sql.split(";"):
-            stmt = statement.strip()
-            if stmt:
-                cursor.execute(stmt)
+
+        if use_multi:
+            # 存储函数文件：DROP FUNCTION ...; + CREATE FUNCTION ... END;
+            idx = sql.index("CREATE FUNCTION")
+            drop_stmt = sql[:idx].strip().rstrip(";")
+            create_stmt = sql[idx:].strip()
+            cursor.execute(drop_stmt)
+            cursor.execute(create_stmt)
+        else:
+            # 建表 SQL：去注释 → 按 ; 分割 → 逐条执行
+            clean_lines = [
+                line for line in sql.split("\n")
+                if line.strip() and not line.strip().startswith("--")
+            ]
+            clean_sql = "\n".join(clean_lines)
+            for statement in clean_sql.split(";"):
+                stmt = statement.strip()
+                if stmt:
+                    cursor.execute(stmt)
+
         cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
         raw_conn.commit()
     finally:
