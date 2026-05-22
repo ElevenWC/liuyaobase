@@ -49,5 +49,8 @@ htmlcov/
 build/
 *.egg-info/
 
+# Sensitive config (not tracked)
+backend/config.py
+
 # User documents (not tracked)
 .user/
