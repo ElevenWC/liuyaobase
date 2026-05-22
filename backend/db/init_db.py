@@ -29,6 +29,7 @@ def init_database():
     create_tables(engine)
     with Session(engine) as session:
         seed_basic_data(session)
+        seed_static_data(session)
     register_stored_functions(engine)
     print("数据库初始化完成")
 
@@ -111,14 +112,67 @@ def register_stored_functions(engine: Engine):
 
 
 def seed_static_data(session: Session):
-    """v0.1 回填 static_* 三表数据（当前为占位函数）
+    """填充 static_* 三表数据（~832 条）
 
-    v0.1 核心算法完成后，调用 core/ 模块生成并插入：
-    - static_gua_yao_info（384 条）
+    调用 v0.1 核心算法生成：
+    - static_gua_yao_info（64卦 × 6爻 = 384 条）
     - static_fushen_zengshan（~64 条）
-    - static_fushen_yimao（384 条）
+    - static_fushen_yimao（64卦 × 6爻 = 384 条）
     """
-    raise NotImplementedError("v0.1 核心算法完成后实现 seed_static_data()")
+    from backend.models.static_gua_yao_info import StaticGuaYaoInfo
+    from backend.models.static_fushen_zengshan import StaticFushenZengshan
+    from backend.models.static_fushen_yimao import StaticFushenYimao
+    from backend.core.najia import get_yao_info
+    from backend.core.liuqin import calc_liuqin
+    from backend.core.fushen_zengshan import get_fushen as get_fushen_zs
+    from backend.core.fushen_yimao import get_all_fushen as get_all_fushen_ym
+    from backend.core.enums import CODE_TO_NAME, CODE_TO_ELEMENT
+
+    codes = list(CODE_TO_NAME.keys())
+
+    for code in codes:
+        gua_element = CODE_TO_ELEMENT[code]
+
+        # ① 纳甲装卦：每爻的地支 + 天干（含夏/冬两套）+ 六亲
+        for yao in get_yao_info(code):
+            session.add(StaticGuaYaoInfo(
+                code=code,
+                yao_index=yao["yao_index"],
+                dizhi=yao["dizhi"],
+                tiangan=yao.get("tiangan"),
+                tiangan_summer=yao.get("tiangan_summer"),
+                tiangan_winter=yao.get("tiangan_winter"),
+                liuqin=calc_liuqin(gua_element, yao["dizhi"]),
+            ))
+
+        # ② 增删伏神（0~2 条/卦）
+        for f in get_fushen_zs(code):
+            session.add(StaticFushenZengshan(
+                code=code,
+                yao_index=f["yao_index"],
+                missing_liuqin=f["missing_liuqin"],
+                fushen_dizhi=f["fushen_dizhi"],
+                fushen_liuqin=f["fushen_liuqin"],
+                feishen_dizhi=f["feishen_dizhi"],
+                feishen_liuqin=f["feishen_liuqin"],
+            ))
+
+        # ③ 易冒伏神（6 条/卦）
+        for f in get_all_fushen_ym(code):
+            session.add(StaticFushenYimao(
+                code=code,
+                yao_index=f["yao_index"],
+                fushen_dizhi=f["fushen_dizhi"],
+                fushen_liuqin=f["fushen_liuqin"],
+            ))
+
+    session.commit()
+    count_yao = len(codes) * 6
+    count_zs = session.query(StaticFushenZengshan).count()
+    print(f"static_* 三表数据填充完成"
+          f"（static_gua_yao_info {count_yao} +"
+          f" static_fushen_zengshan {count_zs} +"
+          f" static_fushen_yimao {count_yao}）")
 
 
 def _execute_sql_script(engine: Engine, sql: str, use_multi: bool = False):
