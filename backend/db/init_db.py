@@ -6,7 +6,7 @@
 import json
 import os
 from pathlib import Path
-from sqlalchemy import text
+from sqlalchemy import Engine
 from sqlmodel import Session
 from backend.db.connection import engine
 
@@ -26,20 +26,20 @@ def init_database():
         print("如需初始化，请执行: $env:LIUYAO_ALLOW_DB_INIT='true' (PowerShell)")
         return
 
-    create_tables()
+    create_tables(engine)
     with Session(engine) as session:
         seed_basic_data(session)
-    register_stored_functions()
+    register_stored_functions(engine)
     print("数据库初始化完成")
 
 
-def create_tables():
+def create_tables(engine: Engine):
     """执行建表 SQL（18 张表 + 36 个索引），按依赖顺序 DROP 再 CREATE。"""
     if not SQL_FILE.exists():
         raise FileNotFoundError(f"建表 SQL 文件不存在: {SQL_FILE}")
 
     sql = SQL_FILE.read_text(encoding="utf-8")
-    _execute_sql_script(sql)
+    _execute_sql_script(engine, sql)
     print("建表 + 索引完成（18 张表 + 36 个索引）")
 
 
@@ -88,7 +88,7 @@ def seed_basic_data(session: Session):
     print("基础数据填充完成（bagong_gua 64 + guaci 64 + system_config 1）")
 
 
-def register_stored_functions():
+def register_stored_functions(engine: Engine):
     """注册 MySQL 存储函数（从 stored_functions/*.sql 读取并执行）
 
     v0.0 阶段 stored_functions/ 可能尚未创建（等待 Issue #7），
@@ -105,7 +105,7 @@ def register_stored_functions():
 
     for sql_file in sql_files:
         sql = sql_file.read_text(encoding="utf-8")
-        _execute_sql_script(sql)
+        _execute_sql_script(engine, sql)
 
     print(f"存储函数注册完成（{len(sql_files)} 个）")
 
@@ -121,13 +121,12 @@ def seed_static_data(session: Session):
     raise NotImplementedError("v0.1 核心算法完成后实现 seed_static_data()")
 
 
-def _execute_sql_script(sql: str):
+def _execute_sql_script(engine: Engine, sql: str):
     """执行 SQL 脚本——逐条执行，忽略注释行和空语句。
 
     使用 raw_connection 绕过 SQLAlchemy 的事务管理，
     确保 SET FOREIGN_KEY_CHECKS 等会话级语句正确生效。
     """
-    # 去除注释行，按 ; 分割为独立语句
     clean_lines = [
         line for line in sql.split("\n")
         if line.strip() and not line.strip().startswith("--")
