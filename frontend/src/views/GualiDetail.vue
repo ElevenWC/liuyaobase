@@ -53,7 +53,8 @@ async function toggleTag(name) {
   } else {
     // 添加二级标签时，去掉同组一级标签
     if (tag.parent_id) {
-      const l1 = store.tagTree.find(n => n.id === tag.parent_id)
+      const tree = store.tagTree.length ? store.tagTree : tagTree.value
+      const l1 = tree.find(n => n.id === tag.parent_id)
       if (l1 && detail.value.tags.includes(l1.name)) {
         await removeGualiTag(detail.value.id, l1.id)
         detail.value.tags = detail.value.tags.filter(t => t !== l1.name)
@@ -66,39 +67,44 @@ async function toggleTag(name) {
   }
 }
 
-const TAG_COLORS = ['#6366F1','#8B5CF6','#EC4899','#F59E0B','#22C55E','#3B82F6','#EF4444','#14B8A6']
+const TAG_COLORS = ['#818CF8','#A78BFA','#F472B6','#FBBF24','#34D399','#60A5FA','#F87171','#2DD4BF']
 
 function tagColor(node) {
-  // 按一级标签在 tagTree 中的索引分配颜色
-  const idx = tagTree.value.findIndex(n => n.id === node.id || n.children?.some(c => c.id === node.id))
+  const tree = store.tagTree.length ? store.tagTree : tagTree.value
+  const idx = tree.findIndex(n => n.id === node.id || n.children?.some(c => c.id === node.id))
   return TAG_COLORS[idx >= 0 ? idx : 0]
 }
 
 // 显示标签：有同组二级则隐藏一级
 function showTag(name) {
-  const tag = findTagByName(name)
+  const tree = store.tagTree.length ? store.tagTree : tagTree.value
+  const tag = _findTagInTree(tree, name)
   if (!tag) return true
-  if (tag.parent_id) return true // 是二级，显示
-  // 是一级：检查是否有同组二级已在 tags 中
-  const children = tagTree.value.find(n => n.id === tag.id)?.children || []
+  if (tag.parent_id) return true
+  const l1 = tree.find(n => n.id === tag.id)
+  const children = l1?.children || []
   return !children.some(c => detail.value?.tags?.includes(c.name))
 }
 
 function tagBadgeColor(name) {
-  const tag = findTagByName(name)
+  const tree = store.tagTree.length ? store.tagTree : tagTree.value
+  const tag = _findTagInTree(tree, name)
   if (!tag) return TAG_COLORS[0]
-  return tagColor(tag.parent_id ? tagTree.value.find(n => n.id === tag.parent_id) : tag)
+  const parent = tag.parent_id ? tree.find(n => n.id === tag.parent_id) : tag
+  return parent ? tagColor(parent) : TAG_COLORS[0]
+}
+
+function _findTagInTree(nodes, name) {
+  for (const n of nodes) {
+    if (n.name === name) return n
+    if (n.children?.length) { const r = _findTagInTree(n.children, name); if (r) return r }
+  }
+  return null
 }
 
 function findTagByName(name) {
-  function search(nodes) {
-    for (const n of nodes) {
-      if (n.name === name) return n
-      if (n.children?.length) { const r = search(n.children); if (r) return r }
-    }
-    return null
-  }
-  return search(tagTree.value)
+  const tree = store.tagTree.length ? store.tagTree : tagTree.value
+  return _findTagInTree(tree, name)
 }
 
 const WUXING = {
@@ -121,6 +127,7 @@ async function loadDetail() {
     const res = await fetchGualiDetail(store.currentGualiId)
     if (res.data.code === 200) detail.value = res.data.data
     else error.value = res.data.message || '加载失败'
+    if (!store.tagTree.length) await loadTagTree()
   } catch { error.value = '加载失败' }
   finally { loading.value = false }
 }
@@ -213,7 +220,7 @@ function fanYinText() {
         <div class="info-row">
           <span class="label">标签：</span>
           <template v-for="t in detail.tags" :key="t">
-            <span v-if="showTag(t)" class="tag-badge" :style="{ background: tagBadgeColor(t) }">{{ t }}</span>
+            <span v-if="showTag(t)" class="tag-badge">{{ t }}</span>
           </template>
           <span class="tag-add-btn" @click="openTagEditor">
             +
