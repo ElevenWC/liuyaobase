@@ -14,7 +14,7 @@ from backend.services.import_service import (
 )
 from backend.schemas.guali import ManualImportSchema
 
-router = APIRouter(prefix="/api/import", tags=["导入"])
+router = APIRouter(prefix="/import", tags=["导入"])
 
 
 def _success(data: dict) -> dict:
