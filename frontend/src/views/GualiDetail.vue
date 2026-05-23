@@ -60,8 +60,6 @@ function yaoMark(y) {
   return ''
 }
 
-function yaoSymbol(yt) { return yt === '阳' ? '───' : '─ ─' }
-
 async function saveShiyou() {
   try { await updateGuali(detail.value.id, { zhanwen_shiyou: editShiyou.value }); detail.value.zhanwen_shiyou = editShiyou.value; editingShiyou.value = false }
   catch { error.value = '保存失败' }
@@ -167,32 +165,58 @@ function fanYinText() {
         </label>
       </div>
 
-      <div class="yao-table-wrap">
-        <table class="yao-table">
-          <thead><tr>
-            <th v-if="showLiuShen">六神</th>
-            <th v-if="showYiMao">易冒</th>
-            <th v-if="hasZengshan">增删</th>
-            <th>本卦</th><th>卦象</th><th>动</th><th>世应</th>
-            <th v-if="showZhiColumns">之卦</th>
-            <th v-if="showZhiColumns">卦象</th>
-            <th v-if="showZhiColumns">世应</th>
-          </tr></thead>
-          <tbody>
-            <tr v-for="y in reversedYaos" :key="y.yao_position" :class="{ 'shi-row': y.ben_shi_ying === '世' }">
-              <td v-if="showLiuShen">{{ y.liushen }}</td>
-              <td v-if="showYiMao">{{ y.yimao_liuqin }}{{ dizhiFull(y.yimao_dizhi) }}</td>
-              <td v-if="hasZengshan"><template v-if="y.zengshan_exists">{{ y.zengshan_liuqin }}{{ dizhiFull(y.zengshan_dizhi) }}</template></td>
-              <td>{{ y.ben_liuqin }}{{ dizhiFull(y.ben_dizhi, y.ben_tiangan) }}</td>
-              <td>{{ yaoSymbol(y.ben_yao_type) }}</td>
-              <td>{{ yaoMark(y) }}</td>
-              <td>{{ y.ben_shi_ying }}</td>
-              <td v-if="showZhiColumns"><template v-if="zhiMode !== 'changed' || y.is_dong">{{ y.zhi_liuqin }}{{ dizhiFull(y.zhi_dizhi, y.zhi_tiangan) }}</template></td>
-              <td v-if="showZhiColumns"><template v-if="zhiMode !== 'changed' || y.is_dong">{{ yaoSymbol(y.zhi_yao_type) }}</template></td>
-              <td v-if="showZhiColumns"><template v-if="zhiMode !== 'changed' || y.is_dong">{{ y.zhi_shi_ying }}</template></td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="yao-card">
+        <div class="yao-header">
+          <span v-if="showLiuShen" class="hdr hdr-ls">六神</span>
+          <span v-if="showYiMao" class="hdr hdr-ym">易冒</span>
+          <span v-if="hasZengshan" class="hdr hdr-zs">增删</span>
+          <span class="hdr hdr-ben">本卦</span>
+          <span class="hdr hdr-line">卦象</span>
+          <span class="hdr hdr-mark">动</span>
+          <span class="hdr hdr-sy">世应</span>
+          <template v-if="showZhiColumns">
+            <span class="hdr hdr-zhi">之卦</span>
+            <span class="hdr hdr-zx">卦象</span>
+            <span class="hdr hdr-zsy">世应</span>
+          </template>
+        </div>
+        <div class="yao-rows">
+          <div v-for="y in reversedYaos" :key="y.yao_position"
+            class="yao-row" :class="{ 'shi-row': y.ben_shi_ying === '世' }">
+            <span v-if="showLiuShen" class="col col-ls">{{ y.liushen }}</span>
+            <span v-if="showYiMao" class="col col-ym">{{ y.yimao_liuqin }}{{ dizhiFull(y.yimao_dizhi) }}</span>
+            <span v-if="hasZengshan" class="col col-zs">
+              <template v-if="y.zengshan_exists">{{ y.zengshan_liuqin }}{{ dizhiFull(y.zengshan_dizhi) }}</template>
+            </span>
+            <span class="col col-ben">{{ y.ben_liuqin }}{{ dizhiFull(y.ben_dizhi, y.ben_tiangan) }}</span>
+            <span class="col col-line">
+              <span class="yao-line" :class="{ yin: y.ben_yao_type === '阴', yang: y.ben_yao_type === '阳' }">
+                <span v-if="y.ben_yao_type === '阴'" class="seg"></span>
+                <span v-if="y.ben_yao_type === '阴'" class="gap"></span>
+                <span v-if="y.ben_yao_type === '阴'" class="seg"></span>
+              </span>
+            </span>
+            <span class="col col-mark">{{ yaoMark(y) }}</span>
+            <span class="col col-sy">{{ y.ben_shi_ying }}</span>
+            <template v-if="showZhiColumns">
+              <span class="col col-zhi">
+                <template v-if="zhiMode !== 'changed' || y.is_dong">{{ y.zhi_liuqin }}{{ dizhiFull(y.zhi_dizhi, y.zhi_tiangan) }}</template>
+              </span>
+              <span class="col col-line">
+                <template v-if="zhiMode !== 'changed' || y.is_dong">
+                  <span class="yao-line" :class="{ yin: y.zhi_yao_type === '阴', yang: y.zhi_yao_type === '阳' }">
+                    <span v-if="y.zhi_yao_type === '阴'" class="seg"></span>
+                    <span v-if="y.zhi_yao_type === '阴'" class="gap"></span>
+                    <span v-if="y.zhi_yao_type === '阴'" class="seg"></span>
+                  </span>
+                </template>
+              </span>
+              <span class="col col-sy">
+                <template v-if="zhiMode !== 'changed' || y.is_dong">{{ y.zhi_shi_ying }}</template>
+              </span>
+            </template>
+          </div>
+        </div>
       </div>
 
       <div class="info-section" @dblclick="editingZhanduan = true; editZhanduan = detail.zhanduan">
@@ -228,11 +252,58 @@ function fanYinText() {
 .toggles label { display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--color-text-secondary); }
 .toggles select { padding: 2px 4px; background: var(--color-bg-tertiary); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); transition: border-color var(--transition-fast); }
 
-.yao-table-wrap { margin: var(--space-3) 0; overflow: hidden; border-radius: var(--radius-lg); }
-.yao-table { border-collapse: collapse; font-size: var(--font-size-base); width: 100%; }
-.yao-table th, .yao-table td { padding: 4px 10px; text-align: center; white-space: nowrap; }
-.yao-table th { color: var(--color-text-secondary); font-weight: 500; font-size: var(--font-size-xs); border-bottom: 1px solid var(--color-border-primary); }
-.yao-table td { color: var(--color-text-primary); }
+.yao-card {
+  width: 640px; max-width: 100%;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  box-shadow: var(--shadow-sm);
+  margin: var(--space-3) 0;
+}
+.yao-header { display: flex; align-items: center; padding: 0 0 var(--space-2) 0; border-bottom: 1px solid var(--color-border-primary); margin-bottom: var(--space-1); }
+.hdr { font-size: var(--font-size-xs); color: var(--color-text-secondary); font-weight: 500; text-align: center; }
+.hdr-ls { width: 44px; flex-shrink: 0; }
+.hdr-ym { width: 50px; flex-shrink: 0; }
+.hdr-zs { width: 50px; flex-shrink: 0; }
+.hdr-ben { flex: 1; }
+.hdr-line { width: 72px; flex-shrink: 0; }
+.hdr-mark { width: 28px; flex-shrink: 0; }
+.hdr-sy { width: 36px; flex-shrink: 0; }
+.hdr-zhi { flex: 1; }
+.hdr-zx { width: 72px; flex-shrink: 0; }
+.hdr-zsy { width: 36px; flex-shrink: 0; }
+
+.yao-rows { display: flex; flex-direction: column; }
+.yao-row { display: flex; align-items: center; padding: 4px 0; min-height: 32px; }
+.yao-row.shi-row { background: var(--color-accent-soft); border-radius: var(--radius-sm); }
+
+.col { font-size: var(--font-size-sm); color: var(--color-text-primary); text-align: center; white-space: nowrap; }
+.col-ls { width: 44px; flex-shrink: 0; color: var(--color-text-secondary); }
+.col-ym { width: 50px; flex-shrink: 0; font-size: var(--font-size-xs); }
+.col-zs { width: 50px; flex-shrink: 0; font-size: var(--font-size-xs); color: var(--color-accent-light); }
+.col-ben { flex: 1; text-align: left; padding-left: var(--space-2); }
+.col-line { width: 72px; flex-shrink: 0; display: flex; justify-content: center; }
+.col-mark { width: 28px; flex-shrink: 0; font-size: var(--font-size-md); font-weight: bold; }
+.col-sy { width: 36px; flex-shrink: 0; color: var(--color-accent); font-weight: bold; }
+.col-zhi { flex: 1; text-align: left; padding-left: var(--space-2); }
+
+/* yao line drawing */
+.yao-line {
+  display: inline-flex; align-items: center;
+  width: 64px; height: 18px;
+}
+.yao-line.yang {
+  border-top: 4px solid var(--color-text-primary);
+  border-radius: 2px;
+}
+.yao-line.yin { justify-content: center; gap: 14px; }
+.yao-line .seg {
+  width: 24px; height: 0;
+  border-top: 4px solid var(--color-text-primary);
+  border-radius: 2px;
+}
+.yao-line .gap { width: 14px; }
+
 .shi-row { background: var(--color-accent-soft); }
 
 .zhanduan-text { white-space: pre-wrap; line-height: var(--line-height); }
