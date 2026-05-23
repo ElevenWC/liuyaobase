@@ -26,9 +26,7 @@ onMounted(async () => {
   }
 })
 
-onUnmounted(() => {
-  clearTimeout(debounceTimer)
-})
+onUnmounted(() => clearTimeout(debounceTimer))
 
 async function loadData() {
   loading.value = true
@@ -48,10 +46,7 @@ async function loadData() {
 
 function onSearch() {
   clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(() => {
-    page.value = 1
-    loadData()
-  }, 300)
+  debounceTimer = setTimeout(() => { page.value = 1; loadData() }, 300)
 }
 
 function onTagFilter(tagId) {
@@ -60,57 +55,28 @@ function onTagFilter(tagId) {
   loadData()
 }
 
-function onPageChange(p) {
-  page.value = p
-  loadData()
-}
+function onPageChange(p) { page.value = p; loadData() }
+function selectGuali(item) { store.selectGuali(item.id) }
 
-function selectGuali(item) {
-  store.selectGuali(item.id)
-}
-
-function totalPages() {
-  return Math.ceil(total.value / pageSize)
-}
-
-function formatTime(t) {
-  if (!t) return ''
-  return t.slice(0, 10)
-}
+function totalPages() { return Math.ceil(total.value / pageSize) }
+function formatTime(t) { return t ? t.slice(0, 10) : '' }
 </script>
 
 <template>
   <div class="guali-list">
     <div class="list-toolbar">
-      <input
-        v-model="keyword"
-        class="search-input"
-        placeholder="搜索占问事由..."
-        @input="onSearch"
-      />
+      <input v-model="keyword" class="search-input" placeholder="搜索占问事由..." @input="onSearch" />
     </div>
 
     <div class="tag-filters" v-if="store.tagTree.length">
-      <button
-        :class="{ active: !selectedTagId }"
-        @click="onTagFilter(null)"
-      >全部</button>
-      <button
-        v-for="t in store.tagTree"
-        :key="t.id"
-        :class="{ active: selectedTagId === t.id }"
-        @click="onTagFilter(t.id)"
-      >{{ t.name }}</button>
+      <button :class="{ active: !selectedTagId }" @click="onTagFilter(null)">全部</button>
+      <button v-for="t in store.tagTree" :key="t.id" :class="{ active: selectedTagId === t.id }" @click="onTagFilter(t.id)">{{ t.name }}</button>
     </div>
 
     <div class="cards" v-if="!loading">
-      <div
-        v-for="item in items"
-        :key="item.id"
-        class="card"
-        :class="{ selected: store.currentGualiId === item.id }"
-        @click="selectGuali(item)"
-      >
+      <div v-for="item in items" :key="item.id"
+        class="card" :class="{ selected: store.currentGualiId === item.id }"
+        @click="selectGuali(item)">
         <div class="card-top">
           <span class="card-id">ID: {{ item.id }}</span>
           <span class="card-time">{{ formatTime(item.zhanwen_time) }}</span>
@@ -133,33 +99,47 @@ function formatTime(t) {
 </template>
 
 <style scoped>
-.guali-list { padding: 12px; background: #313c4f; min-height: 100%; }
-.list-toolbar { margin-bottom: 12px; }
-.search-input { width: 100%; padding: 8px; border: 1px solid #555; border-radius: 4px; background: #545a61; color: #fff; }
-.search-input::placeholder { color: #8f969c; }
-.tag-filters { margin-bottom: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
+.guali-list { padding: var(--space-3); background: transparent; }
+.list-toolbar { margin-bottom: var(--space-3); }
+.search-input {
+  width: 100%; padding: var(--space-2); border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md); background: var(--color-bg-input);
+  color: var(--color-text-primary); font-size: var(--font-size-sm);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.search-input::placeholder { color: var(--color-text-muted); }
+.search-input:focus { border-color: var(--color-accent); box-shadow: var(--shadow-glow); }
+
+.tag-filters { margin-bottom: var(--space-3); display: flex; gap: 6px; flex-wrap: wrap; }
 .tag-filters button {
-  padding: 4px 12px; border: 1px solid #555; border-radius: 14px;
-  background: #545a61; color: #8f969c; cursor: pointer; font-size: 13px;
+  padding: 4px 12px; border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-full); background: var(--color-bg-secondary);
+  color: var(--color-text-secondary); cursor: pointer; font-size: var(--font-size-xs);
+  transition: all var(--transition-fast);
 }
-.tag-filters button.active { background: #64b5f6; color: #fff; border-color: #64b5f6; }
-.cards { display: flex; flex-direction: column; gap: 6px; }
+.tag-filters button:hover { background: var(--color-bg-tertiary); color: var(--color-text-primary); }
+.tag-filters button.active { background: var(--color-accent-gradient); color: #fff; border-color: transparent; }
+
+.cards { display: flex; flex-direction: column; gap: var(--space-2); }
 .card {
-  padding: 10px 12px; border: 1px solid #555; border-radius: 6px;
-  cursor: pointer; background: #545a61;
+  padding: var(--space-3); border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg); background: var(--color-bg-secondary);
+  cursor: pointer; box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
 }
-.card:hover { background: #4a5058; }
-.card.selected { background: #3a5060; border-color: #64b5f6; }
-.card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-.card-id { font-size: 11px; color: #8f969c; font-weight: bold; }
-.card-time { font-size: 12px; color: #8f969c; }
-.card-shiyou { font-size: 14px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.card-tags { margin-top: 4px; display: flex; gap: 4px; }
-.tag-badge { padding: 1px 8px; background: #4a6b8a; border-radius: 10px; font-size: 12px; color: #fff; }
-.empty { color: #8f969c; text-align: center; padding: 40px; }
-.loading { text-align: center; padding: 40px; color: #8f969c; }
-.pagination { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 16px; }
-.pagination button { padding: 6px 16px; border: 1px solid #555; border-radius: 4px; background: #545a61; color: #fff; cursor: pointer; }
-.pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
-.pagination span { color: #8f969c; }
+.card:hover { background: var(--color-bg-tertiary); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.card.selected { background: var(--color-accent-soft); border-color: var(--color-accent); box-shadow: var(--shadow-glow); }
+.card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-1); }
+.card-id { font-size: var(--font-size-xs); color: var(--color-text-muted); font-weight: bold; }
+.card-time { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+.card-shiyou { font-size: var(--font-size-base); color: var(--color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-tags { margin-top: var(--space-1); display: flex; gap: var(--space-1); }
+.tag-badge { padding: 1px 8px; background: var(--color-badge-bg); color: var(--color-badge-text); border-radius: var(--radius-sm); font-size: var(--font-size-xs); }
+
+.empty, .loading { color: var(--color-text-muted); text-align: center; padding: var(--space-10); }
+.pagination { display: flex; justify-content: center; align-items: center; gap: var(--space-4); margin-top: var(--space-4); }
+.pagination button { padding: 6px 16px; border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); background: var(--color-bg-secondary); color: var(--color-text-primary); cursor: pointer; transition: background var(--transition-fast); }
+.pagination button:hover:not(:disabled) { background: var(--color-bg-tertiary); }
+.pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+.pagination span { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
 </style>

@@ -5,7 +5,6 @@ import { importManual } from '../api/index.js'
 
 const router = useRouter()
 
-// 八单卦
 const TRIGRAMS = [
   { code: '111', name: '乾', symbol: '天' },
   { code: '110', name: '兑', symbol: '泽' },
@@ -17,7 +16,6 @@ const TRIGRAMS = [
   { code: '000', name: '坤', symbol: '地' },
 ]
 
-// 64 卦名列表（按京房八宫卦序，供手动输入校验）
 const GUA_NAMES = [
   '乾为天','坤为地','水雷屯','山水蒙','水天需','天水讼','地水师','水地比',
   '风天小畜','天泽履','地天泰','天地否','天火同人','火天大有','地山谦','雷地豫',
@@ -29,7 +27,6 @@ const GUA_NAMES = [
   '巽为风','兑为泽','风水涣','水泽节','风泽中孚','雷山小过','水火既济','火水未济',
 ]
 
-// 八宫卦序对应的 code（GUA_NAMES 对齐）
 const GUA_CODES = [
   '111111','000000','010001','001010','010111','111010','000010','010000',
   '011111','110111','000111','111000','101111','111101','000001','001000',
@@ -41,14 +38,12 @@ const GUA_CODES = [
   '011011','110110','110010','010011','110011','001100','010101','101010',
 ]
 
-// 下卦 + 上卦 → 卦名映射（三爻码 → 三爻码 → 卦名 index）
 function findGua(innerCode, outerCode) {
   const full = innerCode + outerCode
   const idx = GUA_CODES.indexOf(full)
   return idx >= 0 ? GUA_NAMES[idx] : null
 }
 
-// 表单
 const form = ref({
   zhanwen_time: new Date().toISOString().slice(0, 16),
   zhanwen_shiyou: '',
@@ -57,85 +52,51 @@ const form = ref({
   zhi_name: '',
 })
 
-// 本卦：模式切换
-const benMode = ref('select') // 'select' | 'input'
-// 二级下拉
+const benMode = ref('select')
 const benInner = ref('')
 const benOuter = ref('')
 const benManual = ref('')
 const benComputed = computed(() => {
-  if (benMode.value === 'select' && benInner.value && benOuter.value) {
-    return findGua(benInner.value, benOuter.value) || ''
-  }
+  if (benMode.value === 'select' && benInner.value && benOuter.value) return findGua(benInner.value, benOuter.value) || ''
   if (benMode.value === 'input') return benManual.value
   return ''
 })
-function onBenModeSwitch(mode) {
-  benMode.value = mode
-  form.value.ben_name = ''
-}
 
-// 之卦
-const zhiMode = ref('empty') // 'empty' | 'select' | 'input'
+const zhiMode = ref('empty')
 const zhiInner = ref('')
 const zhiOuter = ref('')
 const zhiManual = ref('')
 const zhiComputed = computed(() => {
   if (zhiMode.value === 'empty') return ''
-  if (zhiMode.value === 'select' && zhiInner.value && zhiOuter.value) {
-    return findGua(zhiInner.value, zhiOuter.value) || ''
-  }
+  if (zhiMode.value === 'select' && zhiInner.value && zhiOuter.value) return findGua(zhiInner.value, zhiOuter.value) || ''
   if (zhiMode.value === 'input') return zhiManual.value
   return ''
 })
-function onZhiModeSwitch(mode) {
-  zhiMode.value = mode
-  form.value.zhi_name = ''
-}
+
+function onBenModeSwitch(mode) { benMode.value = mode; form.value.ben_name = '' }
+function onZhiModeSwitch(mode) { zhiMode.value = mode; form.value.zhi_name = '' }
 
 const submitting = ref(false)
 const errorMsg = ref('')
 
 async function submit() {
   errorMsg.value = ''
-
-  // 时间秒数归零
   let t = form.value.zhanwen_time
-  if (t) {
-    t = t.slice(0, 14) + '00'  // 秒强制归 00
-  }
+  if (t) t = t.slice(0, 14) + '00'
 
   const benName = benComputed.value
-  if (!t || !form.value.zhanwen_shiyou || !benName) {
-    errorMsg.value = '占问时间、占问事由、本卦为必填项'
-    return
-  }
-  if (!GUA_NAMES.includes(benName)) {
-    errorMsg.value = '本卦名不在 64 卦中: ' + benName
-    return
-  }
+  if (!t || !form.value.zhanwen_shiyou || !benName) { errorMsg.value = '占问时间、占问事由、本卦为必填项'; return }
+  if (!GUA_NAMES.includes(benName)) { errorMsg.value = '本卦名不在64卦中: ' + benName; return }
 
   const zhiName = zhiComputed.value
-  if (zhiName && !GUA_NAMES.includes(zhiName)) {
-    errorMsg.value = '之卦名不在 64 卦中: ' + zhiName
-    return
-  }
+  if (zhiName && !GUA_NAMES.includes(zhiName)) { errorMsg.value = '之卦名不在64卦中: ' + zhiName; return }
 
   submitting.value = true
   try {
-    await importManual({
-      zhanwen_time: t,
-      zhanwen_shiyou: form.value.zhanwen_shiyou,
-      zhanduan: form.value.zhanduan,
-      ben_name: benName,
-      zhi_name: zhiName || undefined,
-    })
+    await importManual({ zhanwen_time: t, zhanwen_shiyou: form.value.zhanwen_shiyou, zhanduan: form.value.zhanduan, ben_name: benName, zhi_name: zhiName || undefined })
     router.push('/')
-  } catch (e) {
-    errorMsg.value = e.response?.data?.message || '导入失败'
-  } finally {
-    submitting.value = false
-  }
+  } catch (e) { errorMsg.value = e.response?.data?.message || '导入失败' }
+  finally { submitting.value = false }
 }
 </script>
 
@@ -143,37 +104,31 @@ async function submit() {
   <div class="guali-input">
     <h2>手动导入卦例</h2>
     <form @submit.prevent="submit" class="input-form">
-      <label>
-        占问时间 <span class="required">*</span>
+      <label>占问时间 <span class="required">*</span>
         <input type="datetime-local" v-model="form.zhanwen_time" step="60" />
       </label>
-      <label>
-        占问事由 <span class="required">*</span>
+      <label>占问事由 <span class="required">*</span>
         <input v-model="form.zhanwen_shiyou" placeholder="例：上证指数05.22走势" />
       </label>
-      <label>
-        占断内容
+      <label>占断内容
         <textarea v-model="form.zhanduan" rows="4" placeholder="可选" />
       </label>
 
-      <!-- 本卦 -->
       <fieldset>
         <legend>本卦 <span class="required">*</span></legend>
         <div class="mode-switch">
-          <label><input type="radio" value="select" v-model="benMode" @change="onBenModeSwitch('select')" /> 二级选择</label>
-          <label><input type="radio" value="input" v-model="benMode" @change="onBenModeSwitch('input')" /> 手动输入</label>
+          <label><input type="radio" value="select" v-model="benMode" @change="onBenModeSwitch('select')" />二级选择</label>
+          <label><input type="radio" value="input" v-model="benMode" @change="onBenModeSwitch('input')" />手动输入</label>
         </div>
         <template v-if="benMode === 'select'">
           <div class="gua-select-row">
             <label>外卦
-              <select v-model="benOuter">
-                <option value="">-- 选外卦 --</option>
+              <select v-model="benOuter"><option value="">-- 选外卦 --</option>
                 <option v-for="g in TRIGRAMS" :key="'bout'+g.code" :value="g.code">{{ g.symbol }}（{{ g.name }}）</option>
               </select>
             </label>
             <label>内卦
-              <select v-model="benInner">
-                <option value="">-- 选内卦 --</option>
+              <select v-model="benInner"><option value="">-- 选内卦 --</option>
                 <option v-for="g in TRIGRAMS" :key="'bin'+g.code" :value="g.code">{{ g.symbol }}（{{ g.name }}）</option>
               </select>
             </label>
@@ -184,25 +139,22 @@ async function submit() {
         <input v-else v-model="benManual" placeholder="输入卦名，如 天火同人" />
       </fieldset>
 
-      <!-- 之卦 -->
       <fieldset>
         <legend>之卦</legend>
         <div class="mode-switch">
-          <label><input type="radio" value="empty" v-model="zhiMode" @change="onZhiModeSwitch('empty')" /> 静卦（无之卦）</label>
-          <label><input type="radio" value="select" v-model="zhiMode" @change="onZhiModeSwitch('select')" /> 二级选择</label>
-          <label><input type="radio" value="input" v-model="zhiMode" @change="onZhiModeSwitch('input')" /> 手动输入</label>
+          <label><input type="radio" value="empty" v-model="zhiMode" @change="onZhiModeSwitch('empty')" />静卦</label>
+          <label><input type="radio" value="select" v-model="zhiMode" @change="onZhiModeSwitch('select')" />二级选择</label>
+          <label><input type="radio" value="input" v-model="zhiMode" @change="onZhiModeSwitch('input')" />手动输入</label>
         </div>
         <template v-if="zhiMode === 'select'">
           <div class="gua-select-row">
             <label>外卦
-              <select v-model="zhiOuter">
-                <option value="">-- 选外卦 --</option>
+              <select v-model="zhiOuter"><option value="">-- 选外卦 --</option>
                 <option v-for="g in TRIGRAMS" :key="'zout'+g.code" :value="g.code">{{ g.symbol }}（{{ g.name }}）</option>
               </select>
             </label>
             <label>内卦
-              <select v-model="zhiInner">
-                <option value="">-- 选内卦 --</option>
+              <select v-model="zhiInner"><option value="">-- 选内卦 --</option>
                 <option v-for="g in TRIGRAMS" :key="'zin'+g.code" :value="g.code">{{ g.symbol }}（{{ g.name }}）</option>
               </select>
             </label>
@@ -214,28 +166,42 @@ async function submit() {
       </fieldset>
 
       <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
-      <button type="submit" :disabled="submitting">
-        {{ submitting ? '提交中...' : '提交' }}
-      </button>
+      <button type="submit" :disabled="submitting">{{ submitting ? '提交中...' : '提交' }}</button>
     </form>
   </div>
 </template>
 
 <style scoped>
-.guali-input { max-width: 560px; margin: 20px auto; }
-.input-form { display: flex; flex-direction: column; gap: 12px; }
-label { display: flex; flex-direction: column; gap: 4px; font-weight: 500; }
-.required { color: red; }
-input, textarea, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-.error { color: red; }
-.hint { color: #999; }
-.computed { color: #2e7d32; font-weight: bold; }
-button { padding: 10px 24px; background: #409eff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-button:disabled { opacity: 0.6; }
-fieldset { border: 1px solid #ddd; border-radius: 4px; padding: 12px; }
-legend { font-weight: bold; }
-.mode-switch { display: flex; gap: 16px; margin-bottom: 8px; }
-.mode-switch label { flex-direction: row; font-weight: normal; }
-.gua-select-row { display: flex; gap: 12px; }
+.guali-input { max-width: 560px; margin: var(--space-5) auto; color: var(--color-text-primary); }
+h2 { color: var(--color-text-primary); margin-bottom: var(--space-4); }
+.input-form { display: flex; flex-direction: column; gap: var(--space-4); }
+label { display: flex; flex-direction: column; gap: var(--space-1); font-weight: 500; color: var(--color-text-secondary); }
+.required { color: var(--color-danger); }
+input, textarea, select {
+  padding: var(--space-2); border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md); background: var(--color-bg-input);
+  color: var(--color-text-primary); font-size: var(--font-size-base);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+input::placeholder, textarea::placeholder { color: var(--color-text-muted); }
+input:focus, textarea:focus, select:focus { border-color: var(--color-accent); box-shadow: var(--shadow-glow); }
+select option { background: var(--color-bg-secondary); color: var(--color-text-primary); }
+input[type="radio"] { accent-color: var(--color-accent); }
+.error { color: var(--color-danger); }
+.hint { color: var(--color-text-muted); }
+.computed { color: var(--color-accent-light); font-weight: bold; }
+button[type="submit"] {
+  padding: var(--space-2) var(--space-6); background: var(--color-accent-gradient);
+  color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer;
+  font-size: var(--font-size-base); box-shadow: var(--shadow-md);
+  transition: opacity var(--transition-fast), box-shadow var(--transition-fast);
+}
+button[type="submit"]:hover:not(:disabled) { opacity: 0.9; box-shadow: var(--shadow-glow); }
+button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
+fieldset { border: 1px solid var(--color-border-primary); border-radius: var(--radius-lg); padding: var(--space-3); background: var(--color-bg-secondary); }
+legend { font-weight: bold; color: var(--color-text-primary); }
+.mode-switch { display: flex; gap: var(--space-4); margin-bottom: var(--space-2); }
+.mode-switch label { flex-direction: row; font-weight: normal; color: var(--color-text-secondary); cursor: pointer; }
+.gua-select-row { display: flex; gap: var(--space-3); }
 .gua-select-row label { flex: 1; }
 </style>
