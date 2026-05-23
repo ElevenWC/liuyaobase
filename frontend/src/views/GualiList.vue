@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '../stores/index.js'
 import { fetchGualiList, fetchTagTree, deleteGualiBatch } from '../api/index.js'
 
@@ -10,10 +10,10 @@ const total = ref(0)
 const page = ref(1)
 const pageSize = 20
 const keyword = ref('')
-const selectedTagId = ref(null)
+const selectedLevel1 = ref(null)
+const selectedLevel2 = ref(null)
 const loading = ref(false)
 const selectedIds = ref(new Set())
-const tagTypeFilter = ref('all') // 'all' | 一级标签名
 
 let debounceTimer = null
 
@@ -37,7 +37,7 @@ async function loadData() {
       page: page.value,
       page_size: pageSize,
       keyword: keyword.value || undefined,
-      tag_id: selectedTagId.value || undefined,
+      tag_id: selectedLevel2.value || selectedLevel1.value || undefined,
     })
     items.value = res.data.data?.items || []
     total.value = res.data.data?.total || 0
@@ -51,10 +51,32 @@ function onSearch() {
   debounceTimer = setTimeout(() => { page.value = 1; loadData() }, 300)
 }
 
-function onTagFilter(tagId) {
-  selectedTagId.value = tagId
+const level2Options = computed(() => {
+  if (!selectedLevel1.value) return []
+  const parent = store.tagTree.find(t => t.id === selectedLevel1.value)
+  return parent?.children || []
+})
+
+function onLevel1Change(tagId) {
+  selectedLevel1.value = tagId || null
+  selectedLevel2.value = null
   page.value = 1
   loadData()
+}
+function onLevel2Change(tagId) {
+  selectedLevel2.value = tagId || null
+  page.value = 1
+  loadData()
+}
+
+// 获取标签对应的一级标签名（用于卡片显示）
+function rootTagName(tagName) {
+  const found = store.tagTree.find(t => t.name === tagName)
+  if (found) return found.name
+  for (const l1 of store.tagTree) {
+    if (l1.children?.some(c => c.name === tagName)) return l1.name
+  }
+  return tagName
 }
 
 function onPageChange(p) { page.value = p; loadData() }
@@ -77,10 +99,14 @@ function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of n
     </div>
 
     <div class="tag-filters" v-if="store.tagTree.length">
-      <button :class="{ active: !selectedTagId }" @click="onTagFilter(null)">全部</button>
-      <button v-for="t in flatTagNodes()" :key="t.id" :class="{ active: selectedTagId === t.id }"
-        :style="{ marginLeft: t.depth * 12 + 'px' }"
-        @click="onTagFilter(t.id)">{{ t.name }}</button>
+      <select v-model="selectedLevel1" @change="onLevel1Change(selectedLevel1)" class="tag-select">
+        <option :value="null">一级：全部</option>
+        <option v-for="t in store.tagTree" :key="t.id" :value="t.id">{{ t.name }}</option>
+      </select>
+      <select v-if="selectedLevel1" v-model="selectedLevel2" @change="onLevel2Change(selectedLevel2)" class="tag-select">
+        <option :value="null">二级：全部</option>
+        <option v-for="t in level2Options" :key="t.id" :value="t.id">{{ t.name }}</option>
+      </select>
     </div>
 
     <div class="batch-bar" v-if="selectedIds.size > 0">
@@ -100,7 +126,7 @@ function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of n
         </div>
         <div class="card-shiyou">{{ item.zhanwen_shiyou }}</div>
         <div class="card-tags" v-if="item.tags?.length">
-          <span v-for="t in item.tags" :key="t" class="tag-badge">{{ t }}</span>
+          <span v-for="t in item.tags" :key="t" class="tag-badge">{{ rootTagName(t) }}</span>
         </div>
       </div>
       <p v-if="!items.length" class="empty">暂无卦例</p>
@@ -127,15 +153,16 @@ function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of n
 .search-input::placeholder { color: var(--color-text-muted); }
 .search-input:focus { border-color: var(--color-accent); box-shadow: var(--shadow-glow); }
 
-.tag-filters { margin-bottom: var(--space-3); display: flex; gap: 6px; flex-wrap: wrap; }
-.tag-filters button {
-  padding: 4px 12px; border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-full); background: var(--color-bg-tertiary);
-  color: var(--color-text-primary); cursor: pointer; font-size: var(--font-size-xs);
-  transition: all var(--transition-fast);
+.tag-filters { margin-bottom: var(--space-3); display: flex; gap: var(--space-2); }
+.tag-select {
+  padding: 6px 10px; border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md); background: var(--color-bg-input);
+  color: var(--color-text-primary); font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
 }
-.tag-filters button:hover { background: var(--color-accent-soft); color: var(--color-accent-light); }
-.tag-filters button.active { background: var(--color-accent-gradient); color: #fff; border-color: transparent; }
+.tag-select:focus { border-color: var(--color-accent); box-shadow: var(--shadow-glow); }
 
 .cards { display: flex; flex-direction: column; gap: var(--space-2); }
 .card {

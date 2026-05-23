@@ -42,19 +42,26 @@ function openTagEditor() {
 function isTagSelected(name) { return editingTags.value.includes(name) }
 
 async function toggleTag(name) {
+  const tag = findTagByName(name)
+  if (!tag) return
+
   if (isTagSelected(name)) {
-    const tag = findTagByName(name)
-    if (tag) {
-      await removeGualiTag(detail.value.id, tag.id)
-      detail.value.tags = detail.value.tags.filter(t => t !== name)
-    }
+    // 移除
+    await removeGualiTag(detail.value.id, tag.id)
+    detail.value.tags = detail.value.tags.filter(t => t !== name)
     editingTags.value = editingTags.value.filter(t => t !== name)
   } else {
-    const tag = findTagByName(name)
-    if (tag) {
-      await addGualiTag(detail.value.id, tag.id)
-      if (!detail.value.tags.includes(name)) detail.value.tags.push(name)
+    // 添加二级标签时，去掉同组一级标签
+    if (tag.parent_id) {
+      const l1 = store.tagTree.find(n => n.id === tag.parent_id)
+      if (l1 && detail.value.tags.includes(l1.name)) {
+        await removeGualiTag(detail.value.id, l1.id)
+        detail.value.tags = detail.value.tags.filter(t => t !== l1.name)
+        editingTags.value = editingTags.value.filter(t => t !== l1.name)
+      }
     }
+    await addGualiTag(detail.value.id, tag.id)
+    if (!detail.value.tags.includes(name)) detail.value.tags.push(name)
     editingTags.value.push(name)
   }
 }
@@ -65,6 +72,22 @@ function tagColor(node) {
   // 按一级标签在 tagTree 中的索引分配颜色
   const idx = tagTree.value.findIndex(n => n.id === node.id || n.children?.some(c => c.id === node.id))
   return TAG_COLORS[idx >= 0 ? idx : 0]
+}
+
+// 显示标签：有同组二级则隐藏一级
+function showTag(name) {
+  const tag = findTagByName(name)
+  if (!tag) return true
+  if (tag.parent_id) return true // 是二级，显示
+  // 是一级：检查是否有同组二级已在 tags 中
+  const children = tagTree.value.find(n => n.id === tag.id)?.children || []
+  return !children.some(c => detail.value?.tags?.includes(c.name))
+}
+
+function tagBadgeColor(name) {
+  const tag = findTagByName(name)
+  if (!tag) return TAG_COLORS[0]
+  return tagColor(tag.parent_id ? tagTree.value.find(n => n.id === tag.parent_id) : tag)
 }
 
 function findTagByName(name) {
@@ -189,10 +212,12 @@ function fanYinText() {
         </div>
         <div class="info-row">
           <span class="label">标签：</span>
-          <span v-for="t in detail.tags" :key="t" class="tag-badge">{{ t }}</span>
+          <template v-for="t in detail.tags" :key="t">
+            <span v-if="showTag(t)" class="tag-badge" :style="{ background: tagBadgeColor(t) }">{{ t }}</span>
+          </template>
           <span class="tag-add-btn" @click="openTagEditor">
             +
-            <span class="btn-edit-tip">点击管理标签：选中=关联，取消=移除</span>
+            <span class="btn-edit-tip">点击管理标签：选中=关联，再次点击=移除</span>
           </span>
         </div>
       </div>
