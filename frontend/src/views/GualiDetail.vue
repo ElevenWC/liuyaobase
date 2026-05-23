@@ -190,7 +190,7 @@ function fanYinText() {
         <div class="info-row">
           <span class="label">标签：</span>
           <span v-for="t in detail.tags" :key="t" class="tag-badge">{{ t }}</span>
-          <span class="tag-add-btn" @click="openTagEditor">+</span>
+          <span class="tag-add-btn" @click="openTagEditor" title="点击管理标签：选中=关联，取消=移除">+</span>
         </div>
       </div>
 
