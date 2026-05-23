@@ -108,6 +108,26 @@ a:hover { color: var(--color-accent-light); }
 /* 聚焦 */
 :focus-visible { outline: none; box-shadow: var(--shadow-glow); border-radius: var(--radius-md); }
 
+/* 自定义 checkbox */
+input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  width: 16px; height: 16px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 4px; background: var(--color-bg-input);
+  cursor: pointer; flex-shrink: 0; position: relative;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+input[type="checkbox"]:checked {
+  background: var(--color-accent); border-color: var(--color-accent);
+}
+input[type="checkbox"]:checked::after {
+  content: ''; position: absolute; left: 4px; top: 1px;
+  width: 6px; height: 10px;
+  border: solid #fff; border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+input[type="checkbox"]:hover { border-color: var(--color-accent); }
+
 /* 自动补全防黄色 */
 input:-webkit-autofill, textarea:-webkit-autofill {
   -webkit-box-shadow: 0 0 0 30px var(--color-bg-input) inset;

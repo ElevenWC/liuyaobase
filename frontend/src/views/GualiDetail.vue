@@ -19,6 +19,7 @@ const editingShiyou = ref(false)
 const editingZhanduan = ref(false)
 const editShiyou = ref('')
 const editZhanduan = ref('')
+const saving = ref(false)
 
 const activeFloats = ref([])
 
@@ -115,18 +116,29 @@ function yaoMark(y) {
   return ''
 }
 
+function startEdit() {
+  editingShiyou.value = true; editShiyou.value = detail.value.zhanwen_shiyou
+  editingZhanduan.value = true; editZhanduan.value = detail.value.zhanduan
+}
+function onDblClickShiyou() { if (!editingShiyou.value) { editingShiyou.value = true; editShiyou.value = detail.value.zhanwen_shiyou } }
+function onDblClickZhanduan() { if (!editingZhanduan.value) { editingZhanduan.value = true; editZhanduan.value = detail.value.zhanduan } }
+
 async function saveShiyou() {
+  if (saving.value) return; saving.value = true
   try { await updateGuali(detail.value.id, { zhanwen_shiyou: editShiyou.value }); detail.value.zhanwen_shiyou = editShiyou.value; editingShiyou.value = false }
   catch { error.value = '保存失败' }
+  finally { saving.value = false }
 }
 async function saveZhanduan() {
+  if (saving.value) return; saving.value = true
   try { await updateGuali(detail.value.id, { zhanduan: editZhanduan.value }); detail.value.zhanduan = editZhanduan.value; editingZhanduan.value = false }
   catch { error.value = '保存失败' }
+  finally { saving.value = false }
 }
 async function onDelete() {
   if (!confirm('确定删除此卦例？')) return
   try { await deleteGuali(detail.value.id); detail.value = null; store.currentGualiId = null }
-  catch { error.value = '删除失败' }
+  catch (e) { error.value = '删除失败：' + (e.response?.data?.message || '未知错误') }
 }
 function openGuaCi(guaCode, guaName) {
   activeFloats.value.push({ id: Date.now() + Math.random(), guaCode, guaName })
@@ -149,12 +161,16 @@ function fanYinText() {
     <div v-else-if="error" class="error-msg">{{ error }}</div>
     <template v-else-if="detail">
       <div class="top-bar">
-        <span class="top-shiyou" @dblclick="editingShiyou = true; editShiyou = detail.zhanwen_shiyou">
+        <span class="top-shiyou" @dblclick="onDblClickShiyou">
           <template v-if="!editingShiyou">{{ detail.zhanwen_shiyou }}</template>
           <input v-else v-model="editShiyou" @blur="saveShiyou" @keyup.enter="saveShiyou" autofocus class="edit-input" />
         </span>
         <div class="top-right">
           <span class="guali-id">#{{ detail.id }}</span>
+          <div class="btn-edit-wrap">
+            <button @click="startEdit" class="btn-edit">编辑</button>
+            <span class="btn-edit-tip">直接双击文本或者点击按钮后进行占问事由和占断编辑</span>
+          </div>
           <button class="btn-jiegua" title="解卦（v0.5 实现）" disabled>解卦</button>
           <button @click="onDelete" class="btn-del">删除</button>
         </div>
@@ -281,7 +297,7 @@ function fanYinText() {
         </div>
       </div>
 
-      <div class="info-section" @dblclick="editingZhanduan = true; editZhanduan = detail.zhanduan">
+      <div class="info-section" @dblclick="onDblClickZhanduan">
         <div class="label">占断内容：</div>
         <p v-if="!editingZhanduan" class="zhanduan-text">{{ detail.zhanduan }}</p>
         <textarea v-else v-model="editZhanduan" @blur="saveZhanduan" rows="6" autofocus class="edit-textarea" />
@@ -327,6 +343,11 @@ function fanYinText() {
 .btn-del { padding: 3px 12px; background: var(--color-danger); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-sm); transition: background var(--transition-fast); }
 .btn-del:hover { background: var(--color-danger-hover); }
 .btn-jiegua { padding: 3px 12px; background: var(--color-bg-tertiary); color: var(--color-text-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); cursor: not-allowed; font-size: var(--font-size-sm); opacity: 0.6; }
+.btn-edit-wrap { position: relative; display: inline-flex; }
+.btn-edit { padding: 3px 12px; background: var(--color-accent); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-sm); transition: background var(--transition-fast); }
+.btn-edit:hover { background: var(--color-accent-dark); }
+.btn-edit-tip { display: none; position: absolute; top: 110%; right: 0; width: 220px; padding: 6px 10px; background: var(--color-bg-tertiary); color: var(--color-text-secondary); font-size: var(--font-size-xs); border-radius: var(--radius-sm); border: 1px solid var(--color-border-primary); white-space: normal; z-index: 100; }
+.btn-edit-wrap:hover .btn-edit-tip { display: block; }
 
 .time-bold { font-weight: bold; }
 
