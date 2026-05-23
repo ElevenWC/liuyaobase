@@ -144,7 +144,7 @@ async function submit() {
     <h2>手动导入卦例</h2>
     <form @submit.prevent="submit" class="input-form">
       <label>
-        占问时间 <span class="required">*</span>（秒自动归 00）
+        占问时间 <span class="required">*</span>
         <input type="datetime-local" v-model="form.zhanwen_time" step="60" />
       </label>
       <label>
@@ -165,21 +165,21 @@ async function submit() {
         </div>
         <template v-if="benMode === 'select'">
           <div class="gua-select-row">
-            <label>下卦（内卦）
-              <select v-model="benInner">
-                <option value="">-- 选下卦 --</option>
-                <option v-for="g in TRIGRAMS" :key="'bin'+g.code" :value="g.code">{{ g.symbol }}（{{ g.name }}）</option>
+            <label>外卦
+              <select v-model="benOuter">
+                <option value="">-- 选外卦 --</option>
+                <option v-for="g in TRIGRAMS" :key="'bout'+g.code" :value="g.code">{{ g.symbol }}（{{ g.name }}）</option>
               </select>
             </label>
-            <label>上卦（外卦）
-              <select v-model="benOuter">
-                <option value="">-- 选上卦 --</option>
-                <option v-for="g in TRIGRAMS" :key="'bout'+g.code" :value="g.code">{{ g.symbol }}（{{ g.name }}）</option>
+            <label>内卦
+              <select v-model="benInner">
+                <option value="">-- 选内卦 --</option>
+                <option v-for="g in TRIGRAMS" :key="'bin'+g.code" :value="g.code">{{ g.symbol }}（{{ g.name }}）</option>
               </select>
             </label>
           </div>
           <p v-if="benComputed" class="computed">→ {{ benComputed }}</p>
-          <p v-else-if="benInner || benOuter" class="hint">请完整选择上下卦</p>
+          <p v-else-if="benInner || benOuter" class="hint">请完整选择内外卦</p>
         </template>
         <input v-else v-model="benManual" placeholder="输入卦名，如 天火同人" />
       </fieldset>
@@ -194,21 +194,21 @@ async function submit() {
         </div>
         <template v-if="zhiMode === 'select'">
           <div class="gua-select-row">
-            <label>下卦（内卦）
-              <select v-model="zhiInner">
-                <option value="">-- 选下卦 --</option>
-                <option v-for="g in TRIGRAMS" :key="'zin'+g.code" :value="g.code">{{ g.symbol }}（{{ g.name }}）</option>
+            <label>外卦
+              <select v-model="zhiOuter">
+                <option value="">-- 选外卦 --</option>
+                <option v-for="g in TRIGRAMS" :key="'zout'+g.code" :value="g.code">{{ g.symbol }}（{{ g.name }}）</option>
               </select>
             </label>
-            <label>上卦（外卦）
-              <select v-model="zhiOuter">
-                <option value="">-- 选上卦 --</option>
-                <option v-for="g in TRIGRAMS" :key="'zout'+g.code" :value="g.code">{{ g.symbol }}（{{ g.name }}）</option>
+            <label>内卦
+              <select v-model="zhiInner">
+                <option value="">-- 选内卦 --</option>
+                <option v-for="g in TRIGRAMS" :key="'zin'+g.code" :value="g.code">{{ g.symbol }}（{{ g.name }}）</option>
               </select>
             </label>
           </div>
           <p v-if="zhiComputed" class="computed">→ {{ zhiComputed }}</p>
-          <p v-else-if="zhiInner || zhiOuter" class="hint">请完整选择上下卦</p>
+          <p v-else-if="zhiInner || zhiOuter" class="hint">请完整选择内外卦</p>
         </template>
         <input v-if="zhiMode === 'input'" v-model="zhiManual" placeholder="输入卦名，如 风火家人" />
       </fieldset>
