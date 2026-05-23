@@ -17,9 +17,11 @@ _NAJIA_DIZHI: dict[str, list[str]] = {
     "110": ["巳", "卯", "丑", "亥", "酉", "未"],  # 兑
 }
 
-# 乾坤双天干: (内卦summer, 内卦winter, 外卦summer, 外卦winter)
-_QIAN_TIANGAN = ("甲", "壬", "壬", "甲")
-_KUN_TIANGAN = ("乙", "癸", "癸", "乙")
+# 乾坤双天干: (内卦夏至, 内卦冬至, 外卦夏至, 外卦冬至)
+# 冬至→夏至(阳遁): 乾内甲乾外壬 / 坤内乙坤外癸
+# 夏至→冬至(阴遁): 乾内壬乾外甲 / 坤内癸坤外乙
+_QIAN_TIANGAN = ("壬", "甲", "甲", "壬")
+_KUN_TIANGAN = ("癸", "乙", "乙", "癸")
 
 
 def get_neigua_code(code: str) -> str:
