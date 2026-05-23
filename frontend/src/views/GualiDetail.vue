@@ -254,9 +254,9 @@ function fanYinText() {
 .toggles select { padding: 2px 4px; background: var(--color-bg-tertiary); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); transition: border-color var(--transition-fast); }
 
 .gua-cards-row { display: flex; margin-bottom: var(--space-2); }
-.gua-spacer { width: 144px; flex-shrink: 0; }
-.gua-card-slot { display: flex; gap: 24px; }
-.gua-card-slot.wide { gap: 164px; }
+.gua-spacer { width: 150px; flex-shrink: 0; }
+.gua-card-slot { display: flex; gap: 40px; }
+.gua-card-slot.wide { gap: 60px; }
 .gua-info-card {
   background: var(--color-bg-secondary); border-radius: var(--radius-lg);
   padding: var(--space-2) var(--space-4); box-shadow: var(--shadow-sm);
@@ -289,7 +289,7 @@ function fanYinText() {
 .hdr { font-size: var(--font-size-xs); color: var(--color-text-secondary); font-weight: 500; text-align: center; flex-shrink: 0; }
 .hdr-ls { width: 44px; }
 .hdr-ym { width: 50px; }
-.hdr-zs { width: 50px; }
+.hdr-zs { width: 56px; }
 
 .yao-rows { display: flex; flex-direction: column; }
 .yao-row { display: flex; align-items: center; padding: 4px 0; min-height: 34px; }
@@ -298,7 +298,7 @@ function fanYinText() {
 .col { font-size: var(--font-size-sm); color: var(--color-text-primary); text-align: center; white-space: nowrap; flex-shrink: 0; }
 .col-ls { width: 44px; color: var(--color-text-secondary); }
 .col-ym { width: 50px; font-size: var(--font-size-xs); }
-.col-zs { width: 50px; font-size: var(--font-size-xs); color: var(--color-accent-light); }
+.col-zs { width: 56px; font-size: var(--font-size-sm); color: var(--color-accent-light); }
 .col-ben { text-align: left; padding-left: var(--space-2); }
 .col-line { display: flex; justify-content: center; align-items: center; }
 .col-mark { font-size: var(--font-size-md); font-weight: bold; }
@@ -314,13 +314,13 @@ function fanYinText() {
   border-top: 4px solid var(--color-text-primary);
   border-radius: 2px;
 }
-.yao-line.yin { gap: 10px; }
+.yao-line.yin { gap: 6px; }
 .yao-line .seg {
-  width: 26px; height: 0;
+  width: 28px; height: 0;
   border-top: 4px solid var(--color-text-primary);
   border-radius: 2px;
 }
-.yao-line .gap { width: 2px; }
+.yao-line .gap { width: 0; }
 
 .zhanduan-text { white-space: pre-wrap; line-height: var(--line-height); }
 .tag-badge { padding: 1px 8px; background: var(--color-badge-bg); color: var(--color-badge-text); border-radius: var(--radius-sm); font-size: var(--font-size-xs); margin-right: var(--space-1); }
