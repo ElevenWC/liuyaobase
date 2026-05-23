@@ -269,8 +269,8 @@ function fanYinText() {
 .gua-info-detail { font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: 2px; }
 
 /* 卦爻列对齐 */
-.hdr-ben, .col-ben { width: 100px; }
-.hdr-zhi, .col-zhi { width: 100px; }
+.hdr-ben, .col-ben { width: 75px; }
+.hdr-zhi, .col-zhi { width: 75px; }
 .hdr-line, .col-line { width: 72px; }
 .hdr-zx, .col-line.zx { width: 72px; }
 .hdr-mark, .col-mark { width: 28px; }
