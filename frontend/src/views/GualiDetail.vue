@@ -67,12 +67,24 @@ async function toggleTag(name) {
   }
 }
 
-const TAG_COLORS = ['#818CF8','#A78BFA','#F472B6','#FBBF24','#34D399','#60A5FA','#F87171','#2DD4BF']
+const TAG_COLORS = ['#6366F1','#A855F7','#EC4899','#F59E0B','#10B981','#3B82F6','#EF4444','#14B8A6']
 
 function tagColor(node) {
+  // 用一级标签 ID 取模，颜色稳定不随顺序变化
   const tree = store.tagTree.length ? store.tagTree : tagTree.value
-  const idx = tree.findIndex(n => n.id === node.id || n.children?.some(c => c.id === node.id))
-  return TAG_COLORS[idx >= 0 ? idx : 0]
+  const root = _findRootTag(tree, node)
+  return TAG_COLORS[(root?.id || 0) % TAG_COLORS.length]
+}
+
+function _findRootTag(nodes, node) {
+  // node 本身可能就是一/二级标签节点；返回它所属的一级标签
+  for (const n of nodes) {
+    if (n.id === node.id) return n
+    if (n.children?.some(c => c.id === node.id)) return n
+    const found = _findRootTag(n.children || [], node)
+    if (found) return found
+  }
+  return null
 }
 
 // 显示标签：有同组二级则隐藏一级
@@ -220,7 +232,7 @@ function fanYinText() {
         <div class="info-row">
           <span class="label">标签：</span>
           <template v-for="t in detail.tags" :key="t">
-            <span v-if="showTag(t)" class="tag-badge">{{ t }}</span>
+            <span v-if="showTag(t)" class="tag-badge" :style="{ background: tagBadgeColor(t) }">{{ t }}</span>
           </template>
           <span class="tag-add-btn" @click="openTagEditor">
             +

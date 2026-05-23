@@ -79,6 +79,17 @@ function rootTagName(tagName) {
   return tagName
 }
 
+const TAG_COLORS = ['#6366F1','#A855F7','#EC4899','#F59E0B','#10B981','#3B82F6','#EF4444','#14B8A6']
+
+function cardTagColor(tagName) {
+  const found = store.tagTree.find(t => t.name === tagName)
+  if (found) return TAG_COLORS[(found.id) % TAG_COLORS.length]
+  for (const l1 of store.tagTree) {
+    if (l1.children?.some(c => c.name === tagName)) return TAG_COLORS[(l1.id) % TAG_COLORS.length]
+  }
+  return TAG_COLORS[0]
+}
+
 function onPageChange(p) { page.value = p; loadData() }
 function selectGuali(item) { store.selectGuali(item.id) }
 
@@ -126,7 +137,7 @@ function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of n
         </div>
         <div class="card-shiyou">{{ item.zhanwen_shiyou }}</div>
         <div class="card-tags" v-if="item.tags?.length">
-          <span v-for="t in item.tags" :key="t" class="tag-badge">{{ rootTagName(t) }}</span>
+          <span v-for="t in item.tags" :key="t" class="tag-badge" :style="{ background: cardTagColor(t) }">{{ rootTagName(t) }}</span>
         </div>
       </div>
       <p v-if="!items.length" class="empty">暂无卦例</p>
