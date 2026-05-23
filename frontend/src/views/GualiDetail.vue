@@ -150,22 +150,28 @@ function fanYinText() {
         </label>
       </div>
 
-      <!-- 本卦/之卦 卡片（对齐卦象列） -->
-      <div class="gua-cards-row">
-        <div class="gua-spacer"></div>
-        <div class="gua-card-slot" :class="{ wide: showZhiColumns }">
+      <div class="yao-card">
+        <!-- 卦名卡片行（与下方卦象列对齐） -->
+        <div class="gua-cards-row">
+          <span v-if="showLiuShen" class="col col-ls"></span>
+          <span v-if="showYiMao" class="col col-ym"></span>
+          <span v-if="hasZengshan" class="col col-zs"></span>
           <div class="gua-info-card clickable" @click="openGuaCi(detail.ben_code, detail.ben_name || detail.ben_code)">
             <span class="gua-info-name">{{ detail.ben_name || detail.ben_code }}</span>
             <span class="gua-info-detail">{{ detail.ben_palace }}{{ detail.ben_palace_type }}<template v-if="detail.ben_special_type !== '普通'">·{{ detail.ben_special_type }}</template></span>
           </div>
-          <div v-if="!isJingGua" class="gua-info-card clickable" @click="openGuaCi(detail.zhi_code, detail.zhi_name)">
-            <span class="gua-info-name">{{ detail.zhi_name }}</span>
-            <span class="gua-info-detail">{{ detail.zhi_palace }}{{ detail.zhi_palace_type }}<template v-if="detail.zhi_special_type !== '普通'">·{{ detail.zhi_special_type }}</template></span>
-          </div>
+          <span class="col col-line"></span>
+          <span class="col col-mark"></span>
+          <span class="col col-sy"></span>
+          <template v-if="showZhiColumns">
+            <div class="gua-info-card clickable" @click="openGuaCi(detail.zhi_code, detail.zhi_name)">
+              <span class="gua-info-name">{{ detail.zhi_name }}</span>
+              <span class="gua-info-detail">{{ detail.zhi_palace }}{{ detail.zhi_palace_type }}<template v-if="detail.zhi_special_type !== '普通'">·{{ detail.zhi_special_type }}</template></span>
+            </div>
+            <span class="col col-line"></span>
+            <span class="col col-sy"></span>
+          </template>
         </div>
-      </div>
-
-      <div class="yao-card">
         <div class="yao-header">
           <span v-if="showLiuShen" class="hdr hdr-ls">六神</span>
           <span v-if="showYiMao" class="hdr hdr-ym">易冒</span>
@@ -253,15 +259,17 @@ function fanYinText() {
 .toggles label { display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--color-text-secondary); }
 .toggles select { padding: 2px 4px; background: var(--color-bg-tertiary); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); transition: border-color var(--transition-fast); }
 
-.gua-cards-row { display: flex; margin-bottom: var(--space-2); }
-.gua-spacer { width: 150px; flex-shrink: 0; }
-.gua-card-slot { display: flex; gap: 40px; }
-.gua-card-slot.wide { gap: 60px; }
+.gua-cards-row {
+  display: flex; align-items: stretch;
+  padding-bottom: var(--space-3); margin-bottom: var(--space-2);
+  border-bottom: 1px dashed var(--color-border-primary);
+}
+.gua-cards-row .col { visibility: hidden; }
 .gua-info-card {
-  background: var(--color-bg-secondary); border-radius: var(--radius-lg);
-  padding: var(--space-2) var(--space-4); box-shadow: var(--shadow-sm);
-  display: flex; flex-direction: column; align-items: center;
-  border: 2px solid transparent; cursor: pointer; min-width: 180px;
+  background: var(--color-bg-secondary); border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3); box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: 2px solid transparent; cursor: pointer; flex-shrink: 0;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 .gua-info-card:hover { border-color: var(--color-accent); box-shadow: var(--shadow-glow); }
