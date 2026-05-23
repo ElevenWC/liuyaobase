@@ -156,19 +156,17 @@ function fanYinText() {
           <span v-if="showLiuShen" class="col col-ls"></span>
           <span v-if="showYiMao" class="col col-ym"></span>
           <span v-if="hasZengshan" class="col col-zs"></span>
-          <div class="gua-info-card clickable" @click="openGuaCi(detail.ben_code, detail.ben_name || detail.ben_code)">
+          <div class="gua-info-card gua-ben clickable" @click="openGuaCi(detail.ben_code, detail.ben_name || detail.ben_code)">
             <span class="gua-info-name">{{ detail.ben_name || detail.ben_code }}</span>
             <span class="gua-info-detail">{{ detail.ben_palace }}{{ detail.ben_palace_type }}<template v-if="detail.ben_special_type !== '普通'">·{{ detail.ben_special_type }}</template></span>
           </div>
-          <span class="col col-line"></span>
           <span class="col col-mark"></span>
           <span class="col col-sy"></span>
           <template v-if="showZhiColumns">
-            <div class="gua-info-card clickable" @click="openGuaCi(detail.zhi_code, detail.zhi_name)">
+            <div class="gua-info-card gua-zhi clickable" @click="openGuaCi(detail.zhi_code, detail.zhi_name)">
               <span class="gua-info-name">{{ detail.zhi_name }}</span>
               <span class="gua-info-detail">{{ detail.zhi_palace }}{{ detail.zhi_palace_type }}<template v-if="detail.zhi_special_type !== '普通'">·{{ detail.zhi_special_type }}</template></span>
             </div>
-            <span class="col col-line"></span>
             <span class="col col-sy"></span>
           </template>
         </div>
@@ -272,6 +270,8 @@ function fanYinText() {
   border: 2px solid transparent; cursor: pointer; flex-shrink: 0;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
+.gua-ben { width: 147px; }
+.gua-zhi { width: 147px; }
 .gua-info-card:hover { border-color: var(--color-accent); box-shadow: var(--shadow-glow); }
 .gua-info-name { font-size: var(--font-size-md); font-weight: bold; color: var(--color-text-primary); }
 .gua-info-detail { font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: 2px; }
