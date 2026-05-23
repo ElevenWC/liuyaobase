@@ -11,7 +11,7 @@ from backend.core.shi_ying import get_shi_ying_labels
 from backend.core.fushen_yimao import get_all_fushen as get_all_fushen_ym
 from backend.core.fushen_zengshan import get_fushen as get_fushen_zs
 from backend.core.an_dong import check_an_dong
-from backend.core.shensha import calc_shensha_status
+from backend.core.shensha import calc_shensha_status, get_shensha_dizhi
 from backend.core.liuqin import calc_liuqin
 from backend.core.gua_type import (
     check_fan_yin_yimao, check_fan_yin_yaobian, check_fu_yin, get_special_type,
@@ -168,6 +168,9 @@ def precalculate(session: Session, guali_id: int):
         ben_dizhi_list, zhi_dizhi_list,
         yimao_dizhi_list, zengshan_dizhi_list,
     )
+    # calc_shensha_status 只返回 32 组是/带状态，神煞地支需额外取
+    ss_dizhi = get_shensha_dizhi(day_gan, day_zhi)
+    shensha_result.update(ss_dizhi)
     session.add(GualiShensha(guali_id=guali_id, **shensha_result))
 
     # ── 12. B6 卦类型 + bagong_gua → guali_gua ────
