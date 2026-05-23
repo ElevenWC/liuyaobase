@@ -171,6 +171,17 @@ def precalculate(session: Session, guali_id: int):
     # calc_shensha_status 只返回 32 组是/带状态，神煞地支需额外取
     ss_dizhi = get_shensha_dizhi(day_gan, day_zhi)
     shensha_result.update(ss_dizhi)
+    # 键名翻译：算法用 gan_lu/yi_ma（带下划线），模型用 ganlu/yima（无下划线）
+    _SS_KEY_MAP = {
+        "gan_lu": "ganlu", "yi_ma": "yima",
+        "yang_ren": "yangren", "tao_hua": "taohua",
+    }
+    for old, new in list(_SS_KEY_MAP.items()):
+        for prefix in ("ben_is_", "ben_dai_", "zhi_is_", "zhi_dai_",
+                       "yimao_is_", "yimao_dai_", "zengshan_is_", "zengshan_dai_"):
+            old_key = prefix + old
+            if old_key in shensha_result:
+                shensha_result[prefix + new] = shensha_result.pop(old_key)
     session.add(GualiShensha(guali_id=guali_id, **shensha_result))
 
     # ── 12. B6 卦类型 + bagong_gua → guali_gua ────
