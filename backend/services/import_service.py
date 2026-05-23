@@ -30,7 +30,7 @@ _DDATE_RE = re.compile(r"(\d{2})\.(\d{2})")
 
 
 def import_from_json(file_path: str, session: Session) -> dict:
-    """从 JSON 文件导入卦例。
+    """从 JSON 文件导入卦例。增量导入：只导入上次导入时间之后的新记录。
 
     返回 {"imported": 数量, "skipped": 数量, "errors": [...]}
     """
@@ -44,7 +44,7 @@ def import_from_json(file_path: str, session: Session) -> dict:
     if not isinstance(data, list):
         raise ValueError("JSON 应为数组格式")
 
-    # 增量：只导入 last_import_time 之前的卦例
+    # 增量：只导入 last_import_time 之后的新记录
     last_time_str = get_config(session, _CONFIG_KEY)
     last_time = datetime.fromisoformat(last_time_str) if last_time_str else None
     newest_time: datetime | None = None
@@ -65,8 +65,8 @@ def import_from_json(file_path: str, session: Session) -> dict:
             errors.append(f"dIniTime 格式错误: {dinitime_str}")
             continue
 
-        # 增量过滤：以 dIniTime 判断（精确到分钟）
-        if last_time is not None and dinitime >= last_time:
+        # 增量：上次导入时间之后的才需要导入
+        if last_time is not None and dinitime <= last_time:
             skipped += 1
             continue
 
@@ -90,7 +90,7 @@ def import_from_json(file_path: str, session: Session) -> dict:
         if newest_time is None or dinitime > newest_time:
             newest_time = dinitime
 
-    # 更新 last_import_time 为本次导入的最新时间
+    # 更新 last_import_time 为本次导入的最晚记录时间
     if newest_time is not None:
         set_config(session, _CONFIG_KEY, newest_time.isoformat())
 
