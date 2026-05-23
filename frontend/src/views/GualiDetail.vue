@@ -116,9 +116,16 @@ function yaoMark(y) {
   return ''
 }
 
-function startEdit() {
-  editingShiyou.value = true; editShiyou.value = detail.value.zhanwen_shiyou
-  editingZhanduan.value = true; editZhanduan.value = detail.value.zhanduan
+const isEditing = computed(() => editingShiyou.value || editingZhanduan.value)
+
+function toggleEdit() {
+  if (isEditing.value) {
+    if (editingShiyou.value) saveShiyou()
+    if (editingZhanduan.value) saveZhanduan()
+  } else {
+    editingShiyou.value = true; editShiyou.value = detail.value.zhanwen_shiyou
+    editingZhanduan.value = true; editZhanduan.value = detail.value.zhanduan
+  }
 }
 function onDblClickShiyou() { if (!editingShiyou.value) { editingShiyou.value = true; editShiyou.value = detail.value.zhanwen_shiyou } }
 function onDblClickZhanduan() { if (!editingZhanduan.value) { editingZhanduan.value = true; editZhanduan.value = detail.value.zhanduan } }
@@ -168,7 +175,7 @@ function fanYinText() {
         <div class="top-right">
           <span class="guali-id">#{{ detail.id }}</span>
           <div class="btn-edit-wrap">
-            <button @click="startEdit" class="btn-edit">编辑</button>
+            <button @click="toggleEdit" class="btn-edit">{{ isEditing ? '保存' : '编辑' }}</button>
             <span class="btn-edit-tip">直接双击文本或者点击按钮后进行占问事由和占断编辑</span>
           </div>
           <button class="btn-jiegua" title="解卦（v0.5 实现）" disabled>解卦</button>
@@ -435,7 +442,7 @@ function fanYinText() {
 .zhanduan-text { white-space: pre-wrap; line-height: var(--line-height); }
 .tag-badge { padding: 1px 8px; background: var(--color-badge-bg); color: var(--color-badge-text); border-radius: var(--radius-sm); font-size: var(--font-size-xs); margin-right: var(--space-1); }
 
-.edit-input, .edit-textarea { background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-accent); border-radius: var(--radius-md); padding: var(--space-1) var(--space-2); width: 100%; }
+.edit-input, .edit-textarea { background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-accent); border-radius: var(--radius-md); padding: var(--space-1) var(--space-2); width: 100%; font-family: var(--font-family); }
 .edit-textarea { padding: var(--space-2); min-height: 120px; }
 
 .tag-add-btn { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: 1px dashed var(--color-border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-text-muted); font-size: 14px; margin-left: 4px; transition: border-color var(--transition-fast); }

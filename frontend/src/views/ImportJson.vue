@@ -4,6 +4,7 @@ import { importJson } from '../api/index.js'
 
 const fileInput = ref(null)
 const droppedFile = ref(null)
+const selectedFileName = ref('')
 const result = ref(null)
 const error = ref('')
 const uploading = ref(false)
@@ -11,8 +12,9 @@ const uploading = ref(false)
 function onFileSelect(e) {
   droppedFile.value = null
   const f = e.target.files?.[0]
-  if (!f) return
-  if (!f.name.endsWith('.json')) { error.value = '仅支持 JSON 文件'; return }
+  if (!f) { selectedFileName.value = ''; return }
+  if (!f.name.endsWith('.json')) { error.value = '仅支持 JSON 文件'; selectedFileName.value = ''; return }
+  selectedFileName.value = f.name
   error.value = ''
 }
 
@@ -35,6 +37,7 @@ function onDrop(e) {
   if (!f) return
   if (!f.name.endsWith('.json')) { error.value = '仅支持 JSON 文件'; return }
   droppedFile.value = f
+  selectedFileName.value = f.name
   error.value = ''
 }
 
@@ -46,8 +49,8 @@ function triggerBrowse() { fileInput.value?.click() }
     <h2>JSON 批量导入</h2>
     <input ref="fileInput" type="file" accept=".json" @change="onFileSelect" hidden />
     <div class="drop-zone" @dragover.prevent @drop="onDrop" @click="triggerBrowse">
-      <p>{{ droppedFile ? droppedFile.name : '选择 JSON 文件或拖拽到此处' }}</p>
-      <button @click.stop="upload" :disabled="uploading || (!droppedFile && !fileInput?.files?.length)" class="btn-upload">
+      <p>{{ selectedFileName || '选择 JSON 文件或拖拽到此处' }}</p>
+      <button @click.stop="upload" :disabled="uploading || !selectedFileName" class="btn-upload">
         {{ uploading ? '导入中...' : '开始导入' }}
       </button>
     </div>

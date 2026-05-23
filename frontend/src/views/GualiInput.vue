@@ -103,10 +103,10 @@ async function submit() {
   <div class="guali-input">
     <h2>手动导入卦例</h2>
     <form @submit.prevent="submit" class="input-form">
-      <label>占问时间 <span class="required">*</span>
+      <label class="field-label"><span class="label-text">占问时间 <span class="required">*</span></span>
         <input type="date" v-model="form.zhanwen_time" />
       </label>
-      <label>占问事由 <span class="required">*</span>
+      <label class="field-label"><span class="label-text">占问事由 <span class="required">*</span></span>
         <input v-model="form.zhanwen_shiyou" placeholder="例：上证指数05.22走势" />
       </label>
       <label>占断内容
@@ -175,11 +175,13 @@ async function submit() {
 h2 { color: var(--color-text-primary); margin-bottom: var(--space-4); }
 .input-form { display: flex; flex-direction: column; gap: var(--space-4); }
 label { display: flex; flex-direction: column; gap: var(--space-1); font-weight: 500; color: var(--color-text-secondary); }
+.field-label .label-text { display: inline; }
 .required { color: var(--color-danger); }
 input, textarea, select {
   padding: var(--space-2); border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-md); background: var(--color-bg-input);
   color: var(--color-text-primary); font-size: var(--font-size-base);
+  font-family: var(--font-family);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 input::placeholder, textarea::placeholder { color: var(--color-text-muted); }
