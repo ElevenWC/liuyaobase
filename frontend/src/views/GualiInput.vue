@@ -45,7 +45,7 @@ function findGua(innerCode, outerCode) {
 }
 
 const form = ref({
-  zhanwen_time: new Date().toISOString().slice(0, 16),
+  zhanwen_time: new Date().toISOString().slice(0, 10),
   zhanwen_shiyou: '',
   zhanduan: '',
   ben_name: '',
@@ -81,8 +81,7 @@ const errorMsg = ref('')
 
 async function submit() {
   errorMsg.value = ''
-  let t = form.value.zhanwen_time
-  if (t) t = t.slice(0, 14) + '00'
+  const t = form.value.zhanwen_time
 
   const benName = benComputed.value
   if (!t || !form.value.zhanwen_shiyou || !benName) { errorMsg.value = '占问时间、占问事由、本卦为必填项'; return }
@@ -105,7 +104,7 @@ async function submit() {
     <h2>手动导入卦例</h2>
     <form @submit.prevent="submit" class="input-form">
       <label>占问时间 <span class="required">*</span>
-        <input type="datetime-local" v-model="form.zhanwen_time" step="60" />
+        <input type="date" v-model="form.zhanwen_time" />
       </label>
       <label>占问事由 <span class="required">*</span>
         <input v-model="form.zhanwen_shiyou" placeholder="例：上证指数05.22走势" />

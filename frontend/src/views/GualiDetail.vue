@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
 import { useAppStore } from '../stores/index.js'
-import { fetchGualiDetail, updateGuali, deleteGuali } from '../api/index.js'
+import { fetchGualiDetail, updateGuali, deleteGuali, fetchTagTree, addGualiTag, removeGualiTag } from '../api/index.js'
 import GuaCiFloat from '../components/shared/GuaCiFloat.vue'
 
 const store = useAppStore()
@@ -21,6 +21,61 @@ const editShiyou = ref('')
 const editZhanduan = ref('')
 
 const activeFloats = ref([])
+
+// 标签编辑
+const showTagEditor = ref(false)
+const tagTree = ref([])
+const editingTags = ref([])
+
+async function loadTagTree() {
+  try { const r = await fetchTagTree(); tagTree.value = r.data.data || [] }
+  catch { /* ok */ }
+}
+
+function openTagEditor() {
+  loadTagTree()
+  editingTags.value = detail.value?.tags ? [...detail.value.tags] : []
+  showTagEditor.value = true
+}
+
+function isTagSelected(name) { return editingTags.value.includes(name) }
+
+async function toggleTag(name) {
+  if (isTagSelected(name)) {
+    const tag = findTagByName(name)
+    if (tag) {
+      await removeGualiTag(detail.value.id, tag.id)
+      detail.value.tags = detail.value.tags.filter(t => t !== name)
+    }
+    editingTags.value = editingTags.value.filter(t => t !== name)
+  } else {
+    const tag = findTagByName(name)
+    if (tag) {
+      await addGualiTag(detail.value.id, tag.id)
+      if (!detail.value.tags.includes(name)) detail.value.tags.push(name)
+    }
+    editingTags.value.push(name)
+  }
+}
+
+const TAG_COLORS = ['#6366F1','#8B5CF6','#EC4899','#F59E0B','#22C55E','#3B82F6','#EF4444','#14B8A6']
+
+function tagColor(node) {
+  // 按一级标签在 tagTree 中的索引分配颜色
+  const idx = tagTree.value.findIndex(n => n.id === node.id || n.children?.some(c => c.id === node.id))
+  return TAG_COLORS[idx >= 0 ? idx : 0]
+}
+
+function findTagByName(name) {
+  function search(nodes) {
+    for (const n of nodes) {
+      if (n.name === name) return n
+      if (n.children?.length) { const r = search(n.children); if (r) return r }
+    }
+    return null
+  }
+  return search(tagTree.value)
+}
 
 const WUXING = {
   '子': '水', '丑': '土', '寅': '木', '卯': '木',
@@ -100,6 +155,7 @@ function fanYinText() {
         </span>
         <div class="top-right">
           <span class="guali-id">#{{ detail.id }}</span>
+          <button class="btn-jiegua" title="解卦（v0.5 实现）" disabled>解卦</button>
           <button @click="onDelete" class="btn-del">删除</button>
         </div>
       </div>
@@ -108,8 +164,10 @@ function fanYinText() {
         <div class="info-row">
           <span class="label">占问时间：</span><span class="time-bold">{{ detail.zhanwen_time?.slice(0, 10) }}</span>
         </div>
-        <div class="info-row" v-if="detail.tags?.length">
-          <span class="label">标签：</span><span v-for="t in detail.tags" :key="t" class="tag-badge">{{ t }}</span>
+        <div class="info-row">
+          <span class="label">标签：</span>
+          <span v-for="t in detail.tags" :key="t" class="tag-badge">{{ t }}</span>
+          <span class="tag-add-btn" @click="openTagEditor">+</span>
         </div>
       </div>
 
@@ -229,6 +287,28 @@ function fanYinText() {
         <textarea v-else v-model="editZhanduan" @blur="saveZhanduan" rows="6" autofocus class="edit-textarea" />
       </div>
 
+      <!-- 标签编辑弹窗 -->
+      <div v-if="showTagEditor" class="tag-editor-overlay" @click.self="showTagEditor = false">
+        <div class="tag-editor">
+          <div class="tag-editor-header">
+            <span>编辑标签</span><button @click="showTagEditor = false">&times;</button>
+          </div>
+          <div class="tag-editor-body">
+            <div v-for="node in tagTree" :key="node.id" class="tag-tree-item" :style="{ paddingLeft: '0' }">
+              <div class="tag-row" :class="{ selected: isTagSelected(node.name) }" @click="toggleTag(node.name)">
+                <span class="tag-badge-dot" :style="{ background: tagColor(node) }"></span>
+                {{ node.name }}
+              </div>
+              <div v-for="c in node.children" :key="c.id" class="tag-row child" :style="{ paddingLeft: '16px' }" :class="{ selected: isTagSelected(c.name) }" @click="toggleTag(c.name)">
+                <span class="tag-badge-dot" :style="{ background: tagColor(node) }"></span>
+                {{ c.name }}
+              </div>
+            </div>
+            <p v-if="!tagTree.length" class="hint">暂无标签，请先在标签管理页创建</p>
+          </div>
+        </div>
+      </div>
+
       <GuaCiFloat v-for="f in activeFloats" :key="f.id" :gua-code="f.guaCode" :gua-name="f.guaName" :visible="true" @close="closeFloat(f.id)" />
     </template>
   </div>
@@ -246,6 +326,7 @@ function fanYinText() {
 .guali-id { font-size: var(--font-size-base); color: var(--color-text-muted); font-weight: 500; }
 .btn-del { padding: 3px 12px; background: var(--color-danger); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-sm); transition: background var(--transition-fast); }
 .btn-del:hover { background: var(--color-danger-hover); }
+.btn-jiegua { padding: 3px 12px; background: var(--color-bg-tertiary); color: var(--color-text-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); cursor: not-allowed; font-size: var(--font-size-sm); opacity: 0.6; }
 
 .time-bold { font-weight: bold; }
 
@@ -270,8 +351,8 @@ function fanYinText() {
   border: 2px solid transparent; cursor: pointer; flex-shrink: 0;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
-.gua-ben { width: 147px; }
-.gua-zhi { width: 147px; }
+.gua-ben { width: 147px; margin-left: 36px;}
+.gua-zhi { width: 147px; margin-left: 2px;}
 .gua-info-card:hover { border-color: var(--color-accent); box-shadow: var(--shadow-glow); }
 .gua-info-name { font-size: var(--font-size-md); font-weight: bold; color: var(--color-text-primary); }
 .gua-info-detail { font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: 2px; }
@@ -335,4 +416,18 @@ function fanYinText() {
 
 .edit-input, .edit-textarea { background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-accent); border-radius: var(--radius-md); padding: var(--space-1) var(--space-2); width: 100%; }
 .edit-textarea { padding: var(--space-2); min-height: 120px; }
+
+.tag-add-btn { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: 1px dashed var(--color-border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-text-muted); font-size: 14px; margin-left: 4px; transition: border-color var(--transition-fast); }
+.tag-add-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
+
+.tag-editor-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 5000; display: flex; align-items: center; justify-content: center; }
+.tag-editor { background: var(--color-bg-secondary); border-radius: var(--radius-xl); width: 360px; max-height: 480px; overflow: hidden; box-shadow: var(--shadow-lg); }
+.tag-editor-header { display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); border-bottom: 1px solid var(--color-border-primary); }
+.tag-editor-header span { font-weight: bold; }
+.tag-editor-header button { background: none; border: none; color: var(--color-text-secondary); font-size: 20px; cursor: pointer; }
+.tag-editor-body { padding: var(--space-2) var(--space-3); overflow-y: auto; max-height: 380px; }
+.tag-row { padding: 6px 8px; cursor: pointer; border-radius: var(--radius-sm); color: var(--color-text-secondary); display: flex; align-items: center; gap: 6px; transition: background var(--transition-fast); }
+.tag-row:hover { background: var(--color-bg-tertiary); }
+.tag-row.selected { color: var(--color-accent-light); }
+.tag-badge-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 </style>

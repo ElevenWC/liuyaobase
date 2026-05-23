@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useAppStore } from '../stores/index.js'
-import { fetchGualiList, fetchTagTree } from '../api/index.js'
+import { fetchGualiList, fetchTagTree, deleteGualiBatch } from '../api/index.js'
 
 const store = useAppStore()
 
@@ -12,6 +12,8 @@ const pageSize = 20
 const keyword = ref('')
 const selectedTagId = ref(null)
 const loading = ref(false)
+const selectedIds = ref(new Set())
+const tagTypeFilter = ref('all') // 'all' | 一级标签名
 
 let debounceTimer = null
 
@@ -58,8 +60,14 @@ function onTagFilter(tagId) {
 function onPageChange(p) { page.value = p; loadData() }
 function selectGuali(item) { store.selectGuali(item.id) }
 
+function toggleSelect(id, e) { e.stopPropagation(); const s = new Set(selectedIds.value); if (s.has(id)) s.delete(id); else s.add(id); selectedIds.value = s }
+function selectAll() { if (selectedIds.value.size === items.value.length) selectedIds.value = new Set(); else selectedIds.value = new Set(items.value.map(i => i.id)) }
+async function batchDelete() { if (!selectedIds.value.size) return; if (!confirm('删除选中的 ' + selectedIds.value.size + ' 条卦例？')) return; try { await deleteGualiBatch([...selectedIds.value]); selectedIds.value = new Set(); await loadData(); } catch { /* ok */ } }
+
 function totalPages() { return Math.ceil(total.value / pageSize) }
 function formatTime(t) { return t ? t.slice(0, 10) : '' }
+
+function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of nodes) { r.push({ ...n, depth: d }); if (n.children) w(n.children, d+1); } }; w(store.tagTree, 0); return r }
 </script>
 
 <template>
@@ -70,7 +78,15 @@ function formatTime(t) { return t ? t.slice(0, 10) : '' }
 
     <div class="tag-filters" v-if="store.tagTree.length">
       <button :class="{ active: !selectedTagId }" @click="onTagFilter(null)">全部</button>
-      <button v-for="t in store.tagTree" :key="t.id" :class="{ active: selectedTagId === t.id }" @click="onTagFilter(t.id)">{{ t.name }}</button>
+      <button v-for="t in flatTagNodes()" :key="t.id" :class="{ active: selectedTagId === t.id }"
+        :style="{ marginLeft: t.depth * 12 + 'px' }"
+        @click="onTagFilter(t.id)">{{ t.name }}</button>
+    </div>
+
+    <div class="batch-bar" v-if="selectedIds.size > 0">
+      <span>已选 {{ selectedIds.size }} 条</span>
+      <button @click="selectAll">{{ selectedIds.size === items.length ? '取消全选' : '全选' }}</button>
+      <button @click="batchDelete" class="btn-batch-del">批量删除</button>
     </div>
 
     <div class="cards" v-if="!loading">
@@ -78,6 +94,7 @@ function formatTime(t) { return t ? t.slice(0, 10) : '' }
         class="card" :class="{ selected: store.currentGualiId === item.id }"
         @click="selectGuali(item)">
         <div class="card-top">
+          <input type="checkbox" :checked="selectedIds.has(item.id)" @click="toggleSelect(item.id, $event)" class="card-check" />
           <span class="card-id">ID: {{ item.id }}</span>
           <span class="card-time">{{ formatTime(item.zhanwen_time) }}</span>
         </div>
@@ -129,8 +146,9 @@ function formatTime(t) { return t ? t.slice(0, 10) : '' }
 }
 .card:hover { background: var(--color-bg-tertiary); box-shadow: var(--shadow-md); transform: translateY(-1px); }
 .card.selected { background: var(--color-accent-soft); border-color: var(--color-accent); box-shadow: var(--shadow-glow); }
-.card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-1); }
-.card-id { font-size: var(--font-size-xs); color: var(--color-text-muted); font-weight: bold; }
+.card-top { display: flex; align-items: center; gap: var(--space-1); margin-bottom: var(--space-1); }
+.card-check { flex-shrink: 0; accent-color: var(--color-accent); }
+.card-id { font-size: var(--font-size-xs); color: var(--color-text-muted); font-weight: bold; flex: 1; }
 .card-time { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
 .card-shiyou { font-size: var(--font-size-base); color: var(--color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .card-tags { margin-top: var(--space-1); display: flex; gap: var(--space-1); }
@@ -142,4 +160,9 @@ function formatTime(t) { return t ? t.slice(0, 10) : '' }
 .pagination button:hover:not(:disabled) { background: var(--color-bg-tertiary); }
 .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
 .pagination span { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+
+.batch-bar { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); background: var(--color-accent-soft); border-radius: var(--radius-md); margin-bottom: var(--space-2); font-size: var(--font-size-sm); }
+.batch-bar span { color: var(--color-accent-light); }
+.batch-bar button { padding: 4px 12px; border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); background: var(--color-bg-secondary); color: var(--color-text-primary); cursor: pointer; font-size: var(--font-size-xs); }
+.btn-batch-del { color: var(--color-danger) !important; border-color: var(--color-danger) !important; }
 </style>
