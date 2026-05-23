@@ -4,8 +4,8 @@ import GualiInput from '../views/GualiInput.vue'
 import NotFound from '../views/NotFound.vue'
 
 const routes = [
-  { path: '/', component: Home },
-  { path: '/input', component: GualiInput },
+  { path: '/', name: 'home', component: Home },
+  { path: '/input', name: 'input', component: GualiInput },
   { path: '/:pathMatch(.*)*', component: NotFound },
 ]
 

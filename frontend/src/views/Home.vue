@@ -1,24 +1,21 @@
 <script setup>
+import GualiList from './GualiList.vue'
+import GualiDetail from './GualiDetail.vue'
 </script>
 
 <template>
-  <div class="home">
-    <h1>liuyaobase</h1>
-    <p>六爻数据库系统</p>
+  <div class="home-layout">
+    <aside class="left-panel">
+      <GualiList />
+    </aside>
+    <main class="right-panel">
+      <GualiDetail />
+    </main>
   </div>
 </template>
 
 <style scoped>
-.home {
-  max-width: 800px;
-  margin: 60px auto;
-  text-align: center;
-}
-.home h1 {
-  font-size: 2rem;
-  margin-bottom: 12px;
-}
-.home p {
-  color: #666;
-}
+.home-layout { display: flex; height: calc(100vh - 48px); }
+.left-panel { width: 320px; min-width: 280px; border-right: 1px solid #e0e0e0; overflow-y: auto; }
+.right-panel { flex: 1; overflow-y: auto; }
 </style>
