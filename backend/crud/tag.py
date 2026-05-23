@@ -93,3 +93,11 @@ def get_guali_ids_by_tag(session: Session, tag_id: int) -> list[int]:
         select(GualiTag.guali_id).where(GualiTag.tag_id == tag_id)
     ).all()
     return list(links)
+
+
+def get_child_tag_ids(session: Session, parent_id: int) -> list[int]:
+    """获取某父标签下的所有子标签 ID（不含父标签自身）"""
+    children = session.exec(
+        select(Tag.id).where(Tag.parent_id == parent_id)
+    ).all()
+    return list(children)

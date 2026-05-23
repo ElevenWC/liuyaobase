@@ -15,7 +15,7 @@
 
 详细规划已完成（63 个规划文档在 `.specs/` 下，13 个设计文档在 `.AIDiscuss/` 下），当前正在**按 Issue → 分支 → PR** 流程逐单元编码。
 
-## 工作流程
+## 工作流程（重要！）
 
 ```
 用户选 Issue（对应一个 .specs/ 规划文档）
@@ -24,42 +24,55 @@
   → AI 切分支 feat/issue-N，写代码
   → AI 自审两遍（对照规划文档 §7 陷阱）
   → 跑规划文档 §6 的测试命令
-  → commit + push（不创建 PR）
-  → 用户跑测试命令验收
-  → 验收通过 → AI 创建 PR → squash merge → 删除分支
-  → AI 逐项检查：Issue关闭/本地分支/远程分支/工作区干净
+  → commit + push（不创建 PR！）
+  → 通知用户跑测试命令
+  → 用户验收通过 → AI 创建 PR → squash merge → 删除分支
+  → AI 逐项检查（squash merge 后必做）：
+      ├── Issue 是否已关闭？
+      ├── 本地分支是否已删除？
+      ├── 远程分支是否已删除？（git fetch --prune）
+      └── git status 确认工作区干净
   → 验收有问题 → 同分支修改 → push → 用户再测
 ```
 
+> **关键规则**：PR 在用户验收通过后才创建，不是在 push 时创建。确保 PR 内容一次性正确。
+
 ## 当前进度
 
-v0.0 里程碑的 9 个 Issue 已全部创建完毕，**待开发**：
+### v0.0 里程碑：9 个 Issue，已完成 1 个
 
-| Issue | 标题 | 标记 |
+| Issue | 标题 | 状态 |
 |:--:|------|:--:|
-| [#1](https://github.com/ElevenWC/liuyaobase/issues/1) | 00.1 backend/config.py | 普通 |
-| [#2](https://github.com/ElevenWC/liuyaobase/issues/2) | 00.2 backend/main.py | 普通 |
-| [#3](https://github.com/ElevenWC/liuyaobase/issues/3) | 00.3 backend/requirements.txt | 普通 |
-| [#4](https://github.com/ElevenWC/liuyaobase/issues/4) | 00.4 backend/db/connection.py | 普通 |
-| [#5](https://github.com/ElevenWC/liuyaobase/issues/5) | ★00.5 backend/db/init_db.py | ★需逐条审查 |
-| [#6](https://github.com/ElevenWC/liuyaobase/issues/6) | 00.6 backend/models/ (17个) | 普通 |
-| [#7](https://github.com/ElevenWC/liuyaobase/issues/7) | ★00.7 stored_functions/ (8个) | ★需逐条审查 |
-| [#8](https://github.com/ElevenWC/liuyaobase/issues/8) | 00.8 frontend/ 骨架 | 普通 |
-| [#9](https://github.com/ElevenWC/liuyaobase/issues/9) | 00.9 .gitignore | 普通 |
+| [#1](https://github.com/ElevenWC/liuyaobase/issues/1) | 00.1 backend/config.py | ⬜ 待开发 |
+| [#2](https://github.com/ElevenWC/liuyaobase/issues/2) | 00.2 backend/main.py | ⬜ 待开发 |
+| [#3](https://github.com/ElevenWC/liuyaobase/issues/3) | 00.3 backend/requirements.txt | ✅ 已完成 |
+| [#4](https://github.com/ElevenWC/liuyaobase/issues/4) | 00.4 backend/db/connection.py | ⬜ 待开发 |
+| [#5](https://github.com/ElevenWC/liuyaobase/issues/5) | ★00.5 backend/db/init_db.py | ⬜ ★需逐条审查 |
+| [#6](https://github.com/ElevenWC/liuyaobase/issues/6) | 00.6 backend/models/ (17个) | ⬜ 待开发 |
+| [#7](https://github.com/ElevenWC/liuyaobase/issues/7) | ★00.7 stored_functions/ (8个) | ⬜ ★需逐条审查 |
+| [#8](https://github.com/ElevenWC/liuyaobase/issues/8) | 00.8 frontend/ 骨架 | ⬜ 待开发 |
+| [#9](https://github.com/ElevenWC/liuyaobase/issues/9) | 00.9 .gitignore | ⬜ 待开发 |
 
-**建议开发顺序**：
+### 建议开发顺序
 
 ```
-第1步: Issue #3  requirements.txt     ← 先装依赖
-第2步: Issue #1  config.py            ← 数据库连接参数
-第3步: Issue #4  connection.py        ← 数据库引擎
-第4步: Issue #2  main.py              ← 启动入口
-第5步: Issue #6  models/              ← 表定义（📦 可与第4步并行）
-第6步: Issue #5  ★init_db.py          ← 建表+填充数据（★逐条审查）
-第7步: Issue #7  ★stored_functions    ← 存储函数注册（★逐条审查）
-第8步: Issue #9  .gitignore           ← 📦 可与第9步并行
-第9步: Issue #8  frontend/            ← 📦 可与第8步并行
+第1步: Issue #3  requirements.txt     ✅ 已完成
+第2步: Issue #1  config.py            ← 下一步
+第3步: Issue #4  connection.py
+第4步: Issue #2  main.py
+第5步: Issue #6  models/              （📦 可与第4步并行）
+第6步: Issue #5  ★init_db.py          （★需逐条审查）
+第7步: Issue #7  ★stored_functions    （★需逐条审查）
+第8步: Issue #9  .gitignore           （📦 可与第9步并行）
+第9步: Issue #8  frontend/            （📦 可与第8步并行）
 ```
+
+### 已完成的 commit
+
+```
+ef20fc3 feat: 添加Python依赖清单(requirements.txt)
+```
+该 commit 同时包含了编码工作流程更新和 squash merge 后检查清单。
 
 ## 关键文件索引
 
@@ -71,33 +84,22 @@ v0.0 里程碑的 9 个 Issue 已全部创建完毕，**待开发**：
 | 六爻算法规则（纳甲/六亲/神煞…） | `.AIDiscuss/.B核心算法.md` |
 | 各模块功能设计 | `.AIDiscuss/.C1~.C4*.md` |
 | 项目全局状态 | `.AIDiscuss/.Z项目总结.md` |
-| 开发流程详细规范 | `.user/AI协作工作流程指南(项目开发阶段).md` |
+| 开发流程详细规范 | `.user/AI协作工作流程指南(项目开发阶段).md` v1.2 |
+| AI 接手文档 | `.claude/handoff.md`（本文件） |
 | v0.0 规划文档 | `.specs/v0.0项目骨架_数据库/` |
 
 ## 重要约定
 
 1. **使用中文交流**
 2. **编码前先读 Issue 对应的规划文档**（§3 接口、§4 逻辑、§7 陷阱），规划文档 = 实现计划
-3. **Git 规范**：分支 `feat/issue-N`，commit 格式 `feat: <中文简述>`，禁止 force push、禁止 `--no-verify`
-4. **敏感信息**：`backend/config.py` 含数据库密码，已在 `.gitignore` 中，不提交
-5. **审查强度**：★★ 标记的文件需用户逐条审查代码逻辑，★ 标记需重点审查关键函数
-6. **测试**：每个 Issue 有用户测试命令（复制到终端即可执行），AI 写完代码后先自测
-7. **编辑优先于新建**：修改现有文件用 Edit 工具，不要随意新建文件
-8. **Markdown 表格前加空行**，否则表格无法渲染
-9. **CSV/数据文件只读前几行**确认格式，不读全部
-10. **不要主动提交代码**，等用户明确要求时再 commit
-
-## 7 个里程碑概览
-
-| 里程碑 | 内容 | Issue 数 |
-|:--:|------|:--:|
-| v0.0 | 项目骨架 + 数据库建表 | 9 |
-| v0.1 | 核心算法层 B1-B9 | ~15 |
-| v0.2 | 数据导入 + 预计算服务 | ~8 |
-| v0.3 | C1 卦例显示 | ~15 |
-| v0.4 | C3 复杂检索 | ~12 |
-| v0.5 | C2 解卦模块 | ~8 |
-| v0.6 | C4 股票关联 | ~9 |
+3. **先 push 后 PR**：commit + push 后等用户验收通过才创建 PR
+4. **squash merge 后必做检查**：Issue关闭 / 本地分支 / 远程分支 / 工作区干净
+5. **Git 规范**：分支 `feat/issue-N`，commit 格式 `feat: <中文简述>`，禁止 force push main，禁止 `--no-verify`
+6. **敏感信息**：`backend/config.py` 含数据库密码，在 `.gitignore` 中，不提交
+7. **审查强度**：★★ 需逐条审查代码逻辑，★ 需重点审查关键函数
+8. **Markdown 表格前加空行**
+9. **编辑优先于新建**，不要随意新建文件
+10. **不要主动 commit**，等用户明确要求时再操作
 
 ## 已确认的关键设计决定
 
@@ -107,3 +109,4 @@ v0.0 里程碑的 9 个 Issue 已全部创建完毕，**待开发**：
 - 建表 SQL 放独立文件 `backend/db/create_tables.sql`（与 init_db.py 分离）
 - static_* 三表 v0.0 建空表，v0.1 回填数据
 - v0.0 不加 Alembic、不加开发依赖（black/ruff/mypy）
+- `.vscode/` 忽略，`.claude/` 保留跟踪

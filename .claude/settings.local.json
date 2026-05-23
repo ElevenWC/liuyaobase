@@ -14,7 +14,24 @@
       "Bash(npm *)",
       "Bash(node *)",
       "Bash(curl *)",
-      "Bash(echo *)"
+      "Bash(echo *)",
+      "Bash(alembic init *)",
+      "Bash(alembic current *)",
+      "Bash(cd d:/Code/liuyao/liuyaobase && venv/Scripts/python *)",
+      "Bash(cd d:/Code/liuyao/liuyaobase && ls *)",
+      "Bash(venv/Scripts/pip *)",
+      "Bash(venv/Scripts/python *)",
+      "Bash(cd d:/Code/liuyao/liuyaobase && for *)",
+      "Bash(cd d:/Code/liuyao/liuyaobase && rm *)",
+      "Bash(cd d:/Code/liuyao/liuyaobase && venv/Scripts/python << *)",
+      "Bash(cd d:/Code/liuyao/liuyaobase && venv/Scripts/python -c \"import *\")",
+      "Bash(cd d:/Code/liuyao/liuyaobase && echo *)",
+      "Bash(cd d:/Code/liuyao/liuyaobase && gh *)",
+      "Bash(cd d:/Code/liuyao/liuyaobase && git *)",
+      "Bash(cd d:/Code/liuyao/liuyaobase && mkdir *)",
+      "Bash(timeout *)",
+      "Bash(head *)",
+      "Bash(tail *)"
     ]
   }
 }

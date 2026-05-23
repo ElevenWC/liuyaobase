@@ -104,6 +104,30 @@ AI 逐项检查（squash merge 后必做）：
 **数据流**：前后端字段名一致、保存后读取可恢复、区分 static_* vs guali_*
 **通用**：硬编码改配置、检查跨模块影响、错误信息中文友好
 
+### 2.8 遗留占位追踪
+
+当某个功能的实现因依赖后面的里程碑而暂时留空时，必须做到以下三点，防止遗忘：
+
+**（1）代码中用 `raise NotImplementedError` 替代空函数体或静默跳过：**
+
+```python
+def seed_static_data(session: Session):
+    """填充 static_* 三表数据，v0.2 预计算的前置条件"""
+    raise NotImplementedError("v0.2 编码前需实现：填充 static_gua_yao_info(384条) + static_fushen_zengshan(~64条) + static_fushen_yimao(384条)")
+```
+
+**（2）依赖方 Issue 正文中写明前置占位：**
+
+在 Issue 描述中增加"前置依赖"小节，列出需要先补上的占位代码（文件路径 + 函数名）。
+
+**（3）每个里程碑收尾时检查遗留清单，写入下一个里程碑描述：**
+
+```
+# AI 收尾命令（搜索所有占位标记）
+grep -rn "NotImplementedError\|TODO\|FIXME\|placeholder\|暂\|留空\|v0\." backend/ --include="*.py"
+```
+将结果汇总写入下一里程碑描述的"前置待办"区域。
+
 ---
 
 ## 四、项目文件结构
@@ -167,8 +191,8 @@ liuyaobase/
 
 ---
 
-*CLAUDE.md v2.0*
+*CLAUDE.md v2.1*
 *创建时间：2026-05-09*
-*更新时间：2026-05-19*
+*更新时间：2026-05-23*
 *当前阶段：编码实现阶段*
-*更新内容：详细规划阶段已完成，新增编码实现阶段规范——规划文档替代实现计划、精简Issue模板、审查强度分级、并行策略、代码审查清单*
+*更新内容：新增 §2.8 遗留占位追踪——代码中用 NotImplementedError 标注、Issue 中写明前置依赖、里程碑收尾时汇总清单到下一里程碑*

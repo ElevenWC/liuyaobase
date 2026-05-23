@@ -9,6 +9,7 @@ from backend.crud.guali_yao import get_by_guali_id as get_yaos
 from backend.crud.guali_shensha import get_by_guali_id as get_shensha
 from backend.crud.guali_gua import get_by_guali_id as get_gua
 from backend.crud.tag import get_tags_by_guali, get_all as get_all_tags
+from backend.core.enums import CODE_TO_NAME
 from backend.schemas.guali import GualiDetailResponse
 
 
@@ -75,6 +76,8 @@ def get_guali_detail(session: Session, guali_id: int) -> dict | None:
         "ben_code": guali.ben_code,
         "yao_bian_code": guali.yao_bian_code,
         "zhi_code": guali.zhi_code,
+        "ben_name": CODE_TO_NAME.get(guali.ben_code, ""),
+        "zhi_name": CODE_TO_NAME.get(guali.zhi_code, "") if guali.yao_bian_code != "000000" else "",
     }
 
     # 时间

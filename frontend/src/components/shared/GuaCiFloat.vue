@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch } from 'vue'
 import { fetchGuaci } from '../../api/index.js'
 
 const props = defineProps({
@@ -26,12 +26,8 @@ async function fetchData() {
   loading.value = true
   try {
     const res = await fetchGuaci(props.guaCode)
-    if (res.data.code === 200) {
-      data.value = res.data.data
-    }
-  } finally {
-    loading.value = false
-  }
+    if (res.data.code === 200) data.value = res.data.data
+  } finally { loading.value = false }
 }
 
 function onMouseDown(e) {
@@ -41,26 +37,20 @@ function onMouseDown(e) {
   document.addEventListener('mousemove', onMouseMove)
   document.addEventListener('mouseup', onMouseUp)
 }
-
 function onMouseMove(e) {
   if (!dragging.value) return
-  const x = e.clientX - dragStart.value.x
-  const y = e.clientY - dragStart.value.y
-  posX.value = Math.max(0, Math.min(x, window.innerWidth - 420))
-  posY.value = Math.max(0, Math.min(y, window.innerHeight - 100))
+  posX.value = Math.max(0, Math.min(e.clientX - dragStart.value.x, window.innerWidth - 420))
+  posY.value = Math.max(0, Math.min(e.clientY - dragStart.value.y, window.innerHeight - 100))
 }
-
 function onMouseUp() {
   dragging.value = false
   document.removeEventListener('mousemove', onMouseMove)
   document.removeEventListener('mouseup', onMouseUp)
 }
-
 function yaociLines() {
   if (!data.value?.yao_ci) return []
   return Object.entries(data.value.yao_ci).map(([k, v]) => `${k}: ${v}`)
 }
-
 function wenyanParagraphs() {
   if (!data.value?.wenyan) return []
   return data.value.wenyan.split('|')
@@ -68,11 +58,7 @@ function wenyanParagraphs() {
 </script>
 
 <template>
-  <div
-    v-if="visible"
-    class="guaci-float"
-    :style="{ left: posX + 'px', top: posY + 'px', zIndex }"
-  >
+  <div v-if="visible" class="guaci-float" :style="{ left: posX + 'px', top: posY + 'px', zIndex }">
     <div class="float-header" @mousedown="onMouseDown">
       <span>{{ guaName }}（{{ guaCode }}）</span>
       <button class="close-btn" @click="$emit('close')">&times;</button>
@@ -91,9 +77,7 @@ function wenyanParagraphs() {
           <b>文言：</b>
           <p v-for="(p, i) in wenyanParagraphs()" :key="i">{{ p }}</p>
         </div>
-        <p v-if="data.yong">
-          <b>{{ data.yong }}</b>
-        </p>
+        <p v-if="data.yong"><b>{{ data.yong }}</b></p>
       </template>
     </div>
   </div>
@@ -102,21 +86,30 @@ function wenyanParagraphs() {
 <style scoped>
 .guaci-float {
   position: fixed; width: 400px; max-height: 500px;
-  background: #fff; border: 2px solid #333; border-radius: 8px;
-  box-shadow: 2px 2px 10px rgba(0,0,0,0.3); overflow: hidden;
-  user-select: none;
+  background: var(--color-bg-overlay); backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border-primary); border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg); overflow: hidden;
+  user-select: none; color: var(--color-text-primary);
 }
 .float-header {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 12px; background: #f0f0f0; cursor: move;
+  padding: var(--space-2) var(--space-3); background: var(--color-bg-tertiary);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  cursor: grab;
 }
-.float-header span { font-weight: bold; }
+.float-header:active { cursor: grabbing; }
+.float-header span { font-weight: bold; color: var(--color-text-primary); }
 .close-btn {
   background: none; border: none; font-size: 18px; cursor: pointer;
+  color: var(--color-text-secondary); transition: color var(--transition-fast);
 }
+.close-btn:hover { color: var(--color-text-primary); }
 .float-body {
-  padding: 12px; overflow-y: auto; max-height: 420px;
-  font-size: 14px; line-height: 1.6;
+  padding: var(--space-3); overflow-y: auto; max-height: 420px;
+  font-size: var(--font-size-base); line-height: var(--line-height);
+  color: var(--color-text-primary);
 }
-.float-body b { color: #333; }
+.float-body b { color: var(--color-accent); }
+.float-body::-webkit-scrollbar { width: 5px; }
+.float-body::-webkit-scrollbar-thumb { background: var(--color-border-primary); border-radius: 3px; }
 </style>

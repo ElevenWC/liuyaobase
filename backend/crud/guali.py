@@ -2,7 +2,8 @@
 from sqlmodel import Session, select
 from sqlmodel.sql.expression import SelectOfScalar
 from backend.models.guali import Guali
-from backend.models.tag import GualiTag
+from backend.models.tag import GualiTag, Tag
+from backend.crud.tag import get_child_tag_ids
 
 
 def create(session: Session, data: dict) -> Guali:
@@ -38,9 +39,12 @@ def list_guali(
     base: SelectOfScalar = select(Guali)
 
     if tag_id is not None:
+        # 包含子标签：一级标签筛选时自动纳入其下二级标签的卦例
+        child_ids = get_child_tag_ids(session, tag_id)
+        tag_ids = [tag_id] + child_ids
         base = (
             base.join(GualiTag, Guali.id == GualiTag.guali_id)
-            .where(GualiTag.tag_id == tag_id)
+            .where(GualiTag.tag_id.in_(tag_ids))  # type: ignore[union-attr]
         )
 
     if keyword:
@@ -49,7 +53,8 @@ def list_guali(
     # 总数
     count_stmt = select(Guali.id)
     if tag_id is not None:
-        count_stmt = count_stmt.join(GualiTag, Guali.id == GualiTag.guali_id).where(GualiTag.tag_id == tag_id)
+        tag_ids = [tag_id] + get_child_tag_ids(session, tag_id)
+        count_stmt = count_stmt.join(GualiTag, Guali.id == GualiTag.guali_id).where(GualiTag.tag_id.in_(tag_ids))  # type: ignore[union-attr]
     if keyword:
         count_stmt = count_stmt.where(Guali.zhanwen_shiyou.contains(keyword))  # type: ignore[union-attr]
     total = len(session.exec(count_stmt).all())

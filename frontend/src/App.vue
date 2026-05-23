@@ -7,5 +7,4 @@ import NavBar from './components/NavBar.vue'
   <main>
     <router-view />
   </main>
-  <div id="float-layer"></div>
 </template>
