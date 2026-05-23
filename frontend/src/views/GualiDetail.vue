@@ -67,7 +67,7 @@ async function toggleTag(name) {
   }
 }
 
-const TAG_COLORS = ['#6366F1','#A855F7','#EC4899','#F59E0B','#10B981','#3B82F6','#EF4444','#14B8A6']
+const TAG_COLORS = ['#6E78C6','#9B7ED4','#CF7A97','#C49B4A','#4DA87A','#5F8EC0','#C46B6B','#4D9F99']
 
 function tagColor(node) {
   // 用一级标签 ID 取模，颜色稳定不随顺序变化
@@ -487,7 +487,7 @@ function fanYinText() {
 .yao-line .gap { width: 0; }
 
 .zhanduan-text { white-space: pre-wrap; line-height: var(--line-height); }
-.tag-badge { padding: 1px 8px; background: var(--color-badge-bg); color: var(--color-badge-text); border-radius: var(--radius-sm); font-size: var(--font-size-xs); margin-right: var(--space-1); }
+.tag-badge { padding: 1px 8px; color: #fff; border-radius: var(--radius-sm); font-size: var(--font-size-xs); margin-right: var(--space-1); }
 
 .edit-input, .edit-textarea { background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-accent); border-radius: var(--radius-md); padding: var(--space-1) var(--space-2); width: 100%; font-family: var(--font-family); }
 .edit-textarea { padding: var(--space-2); min-height: 120px; }

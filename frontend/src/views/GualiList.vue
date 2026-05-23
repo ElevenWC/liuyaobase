@@ -79,7 +79,7 @@ function rootTagName(tagName) {
   return tagName
 }
 
-const TAG_COLORS = ['#6366F1','#A855F7','#EC4899','#F59E0B','#10B981','#3B82F6','#EF4444','#14B8A6']
+const TAG_COLORS = ['#6E78C6','#9B7ED4','#CF7A97','#C49B4A','#4DA87A','#5F8EC0','#C46B6B','#4D9F99']
 
 function cardTagColor(tagName) {
   const found = store.tagTree.find(t => t.name === tagName)
@@ -190,7 +190,7 @@ function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of n
 .card-time { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
 .card-shiyou { font-size: var(--font-size-base); color: var(--color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .card-tags { margin-top: var(--space-1); display: flex; gap: var(--space-1); }
-.tag-badge { padding: 1px 8px; background: var(--color-badge-bg); color: var(--color-badge-text); border-radius: var(--radius-sm); font-size: var(--font-size-xs); }
+.tag-badge { padding: 1px 8px; color: #fff; border-radius: var(--radius-sm); font-size: var(--font-size-xs); }
 
 .empty, .loading { color: var(--color-text-muted); text-align: center; padding: var(--space-10); }
 .pagination { display: flex; justify-content: center; align-items: center; gap: var(--space-4); margin-top: var(--space-4); }
