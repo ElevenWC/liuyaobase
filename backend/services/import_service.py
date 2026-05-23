@@ -80,9 +80,10 @@ def import_from_json(file_path: str, session: Session) -> dict:
         if newest_time is None or dinitime > newest_time:
             newest_time = dinitime
 
-    # 更新 last_import_time 为本次导入的最晚记录时间
+    # 更新 last_import_time，只向前不倒退——防止导入旧文件后 checkpoint 回退
     if newest_time is not None:
-        set_config(session, _CONFIG_KEY, newest_time.isoformat())
+        if last_time is None or newest_time > last_time:
+            set_config(session, _CONFIG_KEY, newest_time.isoformat())
 
     return {"imported": imported, "skipped": skipped, "errors": errors}
 
