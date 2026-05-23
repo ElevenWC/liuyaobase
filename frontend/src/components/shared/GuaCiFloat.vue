@@ -102,21 +102,21 @@ function wenyanParagraphs() {
 <style scoped>
 .guaci-float {
   position: fixed; width: 400px; max-height: 500px;
-  background: #fff; border: 2px solid #333; border-radius: 8px;
-  box-shadow: 2px 2px 10px rgba(0,0,0,0.3); overflow: hidden;
-  user-select: none;
+  background: #545a61; border: 2px solid #666; border-radius: 8px;
+  box-shadow: 2px 2px 10px rgba(0,0,0,0.5); overflow: hidden;
+  user-select: none; color: #fff;
 }
 .float-header {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 12px; background: #f0f0f0; cursor: move;
+  padding: 8px 12px; background: #4a5058; cursor: move;
 }
-.float-header span { font-weight: bold; }
+.float-header span { font-weight: bold; color: #fff; }
 .close-btn {
-  background: none; border: none; font-size: 18px; cursor: pointer;
+  background: none; border: none; font-size: 18px; cursor: pointer; color: #8f969c;
 }
 .float-body {
   padding: 12px; overflow-y: auto; max-height: 420px;
-  font-size: 14px; line-height: 1.6;
+  font-size: 14px; line-height: 1.6; color: #fff;
 }
-.float-body b { color: #333; }
+.float-body b { color: #64b5f6; }
 </style>

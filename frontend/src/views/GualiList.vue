@@ -111,7 +111,10 @@ function formatTime(t) {
         :class="{ selected: store.currentGualiId === item.id }"
         @click="selectGuali(item)"
       >
-        <div class="card-time">{{ formatTime(item.zhanwen_time) }}</div>
+        <div class="card-top">
+          <span class="card-id">ID: {{ item.id }}</span>
+          <span class="card-time">{{ formatTime(item.zhanwen_time) }}</span>
+        </div>
         <div class="card-shiyou">{{ item.zhanwen_shiyou }}</div>
         <div class="card-tags" v-if="item.tags?.length">
           <span v-for="t in item.tags" :key="t" class="tag-badge">{{ t }}</span>
@@ -130,29 +133,33 @@ function formatTime(t) {
 </template>
 
 <style scoped>
-.guali-list { padding: 12px; }
+.guali-list { padding: 12px; background: #313c4f; min-height: 100%; }
 .list-toolbar { margin-bottom: 12px; }
-.search-input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+.search-input { width: 100%; padding: 8px; border: 1px solid #555; border-radius: 4px; background: #545a61; color: #fff; }
+.search-input::placeholder { color: #8f969c; }
 .tag-filters { margin-bottom: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
 .tag-filters button {
-  padding: 4px 12px; border: 1px solid #ccc; border-radius: 14px;
-  background: #fff; cursor: pointer; font-size: 13px;
+  padding: 4px 12px; border: 1px solid #555; border-radius: 14px;
+  background: #545a61; color: #8f969c; cursor: pointer; font-size: 13px;
 }
-.tag-filters button.active { background: #409eff; color: #fff; border-color: #409eff; }
-.cards { display: flex; flex-direction: column; gap: 8px; }
+.tag-filters button.active { background: #64b5f6; color: #fff; border-color: #64b5f6; }
+.cards { display: flex; flex-direction: column; gap: 6px; }
 .card {
-  padding: 10px 12px; border: 1px solid #eee; border-radius: 6px;
-  cursor: pointer; transition: background 0.2s;
+  padding: 10px 12px; border: 1px solid #555; border-radius: 6px;
+  cursor: pointer; background: #545a61;
 }
-.card:hover { background: #f5f5f5; }
-.card.selected { background: #e6f0ff; border-color: #409eff; }
-.card-time { font-size: 12px; color: #999; }
-.card-shiyou { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card:hover { background: #4a5058; }
+.card.selected { background: #3a5060; border-color: #64b5f6; }
+.card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.card-id { font-size: 11px; color: #8f969c; font-weight: bold; }
+.card-time { font-size: 12px; color: #8f969c; }
+.card-shiyou { font-size: 14px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .card-tags { margin-top: 4px; display: flex; gap: 4px; }
-.tag-badge { padding: 1px 8px; background: #e8f5e9; border-radius: 10px; font-size: 12px; }
-.empty { color: #999; text-align: center; padding: 40px; }
-.loading { text-align: center; padding: 40px; color: #999; }
+.tag-badge { padding: 1px 8px; background: #4a6b8a; border-radius: 10px; font-size: 12px; color: #fff; }
+.empty { color: #8f969c; text-align: center; padding: 40px; }
+.loading { text-align: center; padding: 40px; color: #8f969c; }
 .pagination { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 16px; }
-.pagination button { padding: 6px 16px; border: 1px solid #ccc; border-radius: 4px; background: #fff; cursor: pointer; }
+.pagination button { padding: 6px 16px; border: 1px solid #555; border-radius: 4px; background: #545a61; color: #fff; cursor: pointer; }
 .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+.pagination span { color: #8f969c; }
 </style>
