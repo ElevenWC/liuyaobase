@@ -129,12 +129,12 @@ function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of n
 
 .tag-filters { margin-bottom: var(--space-3); display: flex; gap: 6px; flex-wrap: wrap; }
 .tag-filters button {
-  padding: 4px 12px; border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-full); background: var(--color-bg-secondary);
-  color: var(--color-text-secondary); cursor: pointer; font-size: var(--font-size-xs);
+  padding: 4px 12px; border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-full); background: var(--color-bg-tertiary);
+  color: var(--color-text-primary); cursor: pointer; font-size: var(--font-size-xs);
   transition: all var(--transition-fast);
 }
-.tag-filters button:hover { background: var(--color-bg-tertiary); color: var(--color-text-primary); }
+.tag-filters button:hover { background: var(--color-accent-soft); color: var(--color-accent-light); }
 .tag-filters button.active { background: var(--color-accent-gradient); color: #fff; border-color: transparent; }
 
 .cards { display: flex; flex-direction: column; gap: var(--space-2); }

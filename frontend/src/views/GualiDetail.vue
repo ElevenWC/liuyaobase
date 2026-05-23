@@ -190,7 +190,10 @@ function fanYinText() {
         <div class="info-row">
           <span class="label">标签：</span>
           <span v-for="t in detail.tags" :key="t" class="tag-badge">{{ t }}</span>
-          <span class="tag-add-btn" @click="openTagEditor" title="点击管理标签：选中=关联，取消=移除">+</span>
+          <span class="tag-add-btn" @click="openTagEditor">
+            +
+            <span class="btn-edit-tip">点击管理标签：选中=关联，取消=移除</span>
+          </span>
         </div>
       </div>
 
@@ -445,8 +448,9 @@ function fanYinText() {
 .edit-input, .edit-textarea { background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-accent); border-radius: var(--radius-md); padding: var(--space-1) var(--space-2); width: 100%; font-family: var(--font-family); }
 .edit-textarea { padding: var(--space-2); min-height: 120px; }
 
-.tag-add-btn { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: 1px dashed var(--color-border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-text-muted); font-size: 14px; margin-left: 4px; transition: border-color var(--transition-fast); }
+.tag-add-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: 1px dashed var(--color-border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-text-muted); font-size: 14px; margin-left: 4px; transition: border-color var(--transition-fast); }
 .tag-add-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
+.tag-add-btn:hover .btn-edit-tip { display: block; }
 
 .tag-editor-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 5000; display: flex; align-items: center; justify-content: center; }
 .tag-editor { background: var(--color-bg-secondary); border-radius: var(--radius-xl); width: 360px; max-height: 480px; overflow: hidden; box-shadow: var(--shadow-lg); }
