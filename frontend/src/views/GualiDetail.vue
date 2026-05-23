@@ -94,27 +94,19 @@ function fanYinText() {
     <div v-else-if="error" class="error-msg">{{ error }}</div>
     <template v-else-if="detail">
       <div class="top-bar">
-        <span class="guali-id">卦例 #{{ detail.id }}</span>
-        <button @click="onDelete" class="btn-del">删除</button>
-      </div>
-
-      <div class="gua-names">
-        <span class="gua-name clickable" @click="openGuaCi(detail.ben_code, detail.ben_name || detail.ben_code)">
-          本卦：{{ detail.ben_name || detail.ben_code }}
+        <span class="top-shiyou" @dblclick="editingShiyou = true; editShiyou = detail.zhanwen_shiyou">
+          <template v-if="!editingShiyou">{{ detail.zhanwen_shiyou }}</template>
+          <input v-else v-model="editShiyou" @blur="saveShiyou" @keyup.enter="saveShiyou" autofocus class="edit-input" />
         </span>
-        <span v-if="detail.zhi_name" class="gua-name clickable" style="margin-left:16px" @click="openGuaCi(detail.zhi_code, detail.zhi_name)">
-          之卦：{{ detail.zhi_name }}
-        </span>
+        <div class="top-right">
+          <span class="guali-id">#{{ detail.id }}</span>
+          <button @click="onDelete" class="btn-del">删除</button>
+        </div>
       </div>
 
       <div class="info-section">
         <div class="info-row">
-          <span class="label">占问时间：</span>{{ detail.zhanwen_time?.slice(0, 10) }}
-        </div>
-        <div class="info-row" @dblclick="editingShiyou = true; editShiyou = detail.zhanwen_shiyou">
-          <span class="label">占问事由：</span>
-          <span v-if="!editingShiyou">{{ detail.zhanwen_shiyou }}</span>
-          <input v-else v-model="editShiyou" @blur="saveShiyou" @keyup.enter="saveShiyou" autofocus class="edit-input" />
+          <span class="label">占问时间：</span><span class="time-bold">{{ detail.zhanwen_time?.slice(0, 10) }}</span>
         </div>
         <div class="info-row" v-if="detail.tags?.length">
           <span class="label">标签：</span><span v-for="t in detail.tags" :key="t" class="tag-badge">{{ t }}</span>
@@ -139,16 +131,21 @@ function fanYinText() {
         </div>
       </div>
 
+      <!-- 反伏状态 -->
       <div class="info-section" v-if="detail.ben_palace">
-        <div class="info-row">
-          本卦：{{ detail.ben_name || detail.ben_code }}（{{ detail.ben_palace }}{{ detail.ben_palace_type }}<span v-if="detail.ben_special_type !== '普通'">·{{ detail.ben_special_type }}</span>）
-          <template v-if="!isJingGua">
-            <span style="margin-left:16px">
-              之卦：{{ detail.zhi_name || detail.zhi_code }}（{{ detail.zhi_palace }}{{ detail.zhi_palace_type }}<span v-if="detail.zhi_special_type !== '普通'">·{{ detail.zhi_special_type }}</span>）
-            </span>
-          </template>
-        </div>
         <div class="info-row">{{ fanYinText() }}</div>
+      </div>
+
+      <!-- 本卦/之卦 卡片 -->
+      <div class="gua-cards-row">
+        <div class="gua-info-card clickable" @click="openGuaCi(detail.ben_code, detail.ben_name || detail.ben_code)">
+          <span class="gua-info-name">{{ detail.ben_name || detail.ben_code }}</span>
+          <span class="gua-info-detail">{{ detail.ben_palace }}{{ detail.ben_palace_type }}<template v-if="detail.ben_special_type !== '普通'">·{{ detail.ben_special_type }}</template></span>
+        </div>
+        <div v-if="!isJingGua" class="gua-info-card clickable" @click="openGuaCi(detail.zhi_code, detail.zhi_name)">
+          <span class="gua-info-name">{{ detail.zhi_name }}</span>
+          <span class="gua-info-detail">{{ detail.zhi_palace }}{{ detail.zhi_palace_type }}<template v-if="detail.zhi_special_type !== '普通'">·{{ detail.zhi_special_type }}</template></span>
+        </div>
       </div>
 
       <div class="toggles">
@@ -237,12 +234,13 @@ function fanYinText() {
 .no-selection { text-align: center; color: var(--color-text-muted); padding: var(--space-10); }
 
 .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
-.guali-id { font-size: var(--font-size-lg); font-weight: bold; color: var(--color-text-primary); }
-.btn-del { padding: 4px 14px; background: var(--color-danger); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; transition: background var(--transition-fast); }
+.top-shiyou { font-size: var(--font-size-lg); font-weight: bold; color: var(--color-text-primary); flex: 1; }
+.top-right { display: flex; align-items: center; gap: var(--space-3); }
+.guali-id { font-size: var(--font-size-sm); color: var(--color-text-muted); font-weight: 500; }
+.btn-del { padding: 3px 12px; background: var(--color-danger); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-sm); transition: background var(--transition-fast); }
 .btn-del:hover { background: var(--color-danger-hover); }
 
-.gua-names { margin-bottom: var(--space-3); font-size: var(--font-size-md); }
-.gua-name.clickable { color: var(--color-accent); cursor: pointer; border-bottom: 1px dashed var(--color-accent); }
+.time-bold { font-weight: bold; }
 
 .info-section { background: var(--color-bg-secondary); border-radius: var(--radius-lg); padding: var(--space-3); margin-bottom: var(--space-3); box-shadow: var(--shadow-sm); }
 .info-row { line-height: var(--line-height); }
@@ -251,6 +249,19 @@ function fanYinText() {
 .toggles { display: flex; gap: 14px; align-items: center; margin: var(--space-3) 0; padding: var(--space-2) var(--space-3); background: var(--color-bg-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); font-size: var(--font-size-sm); }
 .toggles label { display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--color-text-secondary); }
 .toggles select { padding: 2px 4px; background: var(--color-bg-tertiary); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); transition: border-color var(--transition-fast); }
+
+.gua-cards-row { display: flex; gap: var(--space-3); margin-bottom: var(--space-3); }
+.gua-info-card {
+  background: var(--color-bg-secondary); border-radius: var(--radius-lg);
+  padding: var(--space-2) var(--space-4); box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; align-items: center;
+  border: 2px solid transparent; cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  min-width: 180px;
+}
+.gua-info-card:hover { border-color: var(--color-accent); box-shadow: var(--shadow-glow); }
+.gua-info-name { font-size: var(--font-size-md); font-weight: bold; color: var(--color-text-primary); }
+.gua-info-detail { font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: 2px; }
 
 .yao-card {
   width: fit-content; min-width: 360px; max-width: 100%;
