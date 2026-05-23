@@ -136,18 +136,6 @@ function fanYinText() {
         <div class="info-row">{{ fanYinText() }}</div>
       </div>
 
-      <!-- 本卦/之卦 卡片 -->
-      <div class="gua-cards-row">
-        <div class="gua-info-card clickable" @click="openGuaCi(detail.ben_code, detail.ben_name || detail.ben_code)">
-          <span class="gua-info-name">{{ detail.ben_name || detail.ben_code }}</span>
-          <span class="gua-info-detail">{{ detail.ben_palace }}{{ detail.ben_palace_type }}<template v-if="detail.ben_special_type !== '普通'">·{{ detail.ben_special_type }}</template></span>
-        </div>
-        <div v-if="!isJingGua" class="gua-info-card clickable" @click="openGuaCi(detail.zhi_code, detail.zhi_name)">
-          <span class="gua-info-name">{{ detail.zhi_name }}</span>
-          <span class="gua-info-detail">{{ detail.zhi_palace }}{{ detail.zhi_palace_type }}<template v-if="detail.zhi_special_type !== '普通'">·{{ detail.zhi_special_type }}</template></span>
-        </div>
-      </div>
-
       <div class="toggles">
         <label><input type="checkbox" v-model="showLiuShen" /> 六神</label>
         <label><input type="checkbox" v-model="showTianGan" /> 天干</label>
@@ -160,6 +148,21 @@ function fanYinText() {
             <option value="hide">隐藏</option>
           </select>
         </label>
+      </div>
+
+      <!-- 本卦/之卦 卡片（对齐卦象列） -->
+      <div class="gua-cards-row">
+        <div class="gua-spacer"></div>
+        <div class="gua-card-slot" :class="{ wide: showZhiColumns }">
+          <div class="gua-info-card clickable" @click="openGuaCi(detail.ben_code, detail.ben_name || detail.ben_code)">
+            <span class="gua-info-name">{{ detail.ben_name || detail.ben_code }}</span>
+            <span class="gua-info-detail">{{ detail.ben_palace }}{{ detail.ben_palace_type }}<template v-if="detail.ben_special_type !== '普通'">·{{ detail.ben_special_type }}</template></span>
+          </div>
+          <div v-if="!isJingGua" class="gua-info-card clickable" @click="openGuaCi(detail.zhi_code, detail.zhi_name)">
+            <span class="gua-info-name">{{ detail.zhi_name }}</span>
+            <span class="gua-info-detail">{{ detail.zhi_palace }}{{ detail.zhi_palace_type }}<template v-if="detail.zhi_special_type !== '普通'">·{{ detail.zhi_special_type }}</template></span>
+          </div>
+        </div>
       </div>
 
       <div class="yao-card">
@@ -236,7 +239,7 @@ function fanYinText() {
 .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
 .top-shiyou { font-size: var(--font-size-lg); font-weight: bold; color: var(--color-text-primary); flex: 1; }
 .top-right { display: flex; align-items: center; gap: var(--space-3); }
-.guali-id { font-size: var(--font-size-sm); color: var(--color-text-muted); font-weight: 500; }
+.guali-id { font-size: var(--font-size-base); color: var(--color-text-muted); font-weight: 500; }
 .btn-del { padding: 3px 12px; background: var(--color-danger); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-sm); transition: background var(--transition-fast); }
 .btn-del:hover { background: var(--color-danger-hover); }
 
@@ -250,18 +253,29 @@ function fanYinText() {
 .toggles label { display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--color-text-secondary); }
 .toggles select { padding: 2px 4px; background: var(--color-bg-tertiary); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); transition: border-color var(--transition-fast); }
 
-.gua-cards-row { display: flex; gap: var(--space-3); margin-bottom: var(--space-3); }
+.gua-cards-row { display: flex; margin-bottom: var(--space-2); }
+.gua-spacer { width: 144px; flex-shrink: 0; }
+.gua-card-slot { display: flex; gap: 24px; }
+.gua-card-slot.wide { gap: 164px; }
 .gua-info-card {
   background: var(--color-bg-secondary); border-radius: var(--radius-lg);
   padding: var(--space-2) var(--space-4); box-shadow: var(--shadow-sm);
   display: flex; flex-direction: column; align-items: center;
-  border: 2px solid transparent; cursor: pointer;
+  border: 2px solid transparent; cursor: pointer; min-width: 180px;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-  min-width: 180px;
 }
 .gua-info-card:hover { border-color: var(--color-accent); box-shadow: var(--shadow-glow); }
 .gua-info-name { font-size: var(--font-size-md); font-weight: bold; color: var(--color-text-primary); }
 .gua-info-detail { font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: 2px; }
+
+/* 卦爻列对齐 */
+.hdr-ben, .col-ben { width: 100px; }
+.hdr-zhi, .col-zhi { width: 100px; }
+.hdr-line, .col-line { width: 72px; }
+.hdr-zx, .col-line.zx { width: 72px; }
+.hdr-mark, .col-mark { width: 28px; }
+.hdr-sy, .col-sy { width: 36px; }
+.hdr-zsy, .col-zsy { width: 36px; }
 
 .yao-card {
   width: fit-content; min-width: 360px; max-width: 100%;
@@ -272,49 +286,41 @@ function fanYinText() {
   margin: var(--space-3) 0;
 }
 .yao-header { display: flex; align-items: center; padding: 0 0 var(--space-2) 0; border-bottom: 1px solid var(--color-border-primary); margin-bottom: var(--space-1); }
-.hdr { font-size: var(--font-size-xs); color: var(--color-text-secondary); font-weight: 500; text-align: center; }
-.hdr-ls { width: 44px; flex-shrink: 0; }
-.hdr-ym { width: 50px; flex-shrink: 0; }
-.hdr-zs { width: 50px; flex-shrink: 0; }
-.hdr-ben { width: 100px; flex-shrink: 0; }
-.hdr-line { width: 64px; flex-shrink: 0; }
-.hdr-mark { width: 24px; flex-shrink: 0; }
-.hdr-sy { width: 32px; flex-shrink: 0; }
-.hdr-zhi { width: 100px; flex-shrink: 0; }
-.hdr-zx { width: 64px; flex-shrink: 0; }
-.hdr-zsy { width: 32px; flex-shrink: 0; }
+.hdr { font-size: var(--font-size-xs); color: var(--color-text-secondary); font-weight: 500; text-align: center; flex-shrink: 0; }
+.hdr-ls { width: 44px; }
+.hdr-ym { width: 50px; }
+.hdr-zs { width: 50px; }
 
 .yao-rows { display: flex; flex-direction: column; }
 .yao-row { display: flex; align-items: center; padding: 4px 0; min-height: 34px; }
 .yao-row.shi-row { background: var(--color-accent-soft); border-radius: var(--radius-sm); }
 
-.col { font-size: var(--font-size-sm); color: var(--color-text-primary); text-align: center; white-space: nowrap; }
-.col-ls { width: 44px; flex-shrink: 0; color: var(--color-text-secondary); }
-.col-ym { width: 50px; flex-shrink: 0; font-size: var(--font-size-xs); }
-.col-zs { width: 50px; flex-shrink: 0; font-size: var(--font-size-xs); color: var(--color-accent-light); }
-.col-ben { width: 100px; flex-shrink: 0; text-align: left; padding-left: var(--space-2); }
-.col-line { width: 64px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; }
-.col-mark { width: 24px; flex-shrink: 0; font-size: var(--font-size-md); font-weight: bold; }
-.col-sy { width: 32px; flex-shrink: 0; color: var(--color-accent); font-weight: bold; }
-.col-zhi { width: 100px; flex-shrink: 0; text-align: left; padding-left: var(--space-2); }
+.col { font-size: var(--font-size-sm); color: var(--color-text-primary); text-align: center; white-space: nowrap; flex-shrink: 0; }
+.col-ls { width: 44px; color: var(--color-text-secondary); }
+.col-ym { width: 50px; font-size: var(--font-size-xs); }
+.col-zs { width: 50px; font-size: var(--font-size-xs); color: var(--color-accent-light); }
+.col-ben { text-align: left; padding-left: var(--space-2); }
+.col-line { display: flex; justify-content: center; align-items: center; }
+.col-mark { font-size: var(--font-size-md); font-weight: bold; }
+.col-zhi { text-align: left; padding-left: var(--space-2); }
 
 /* yao line drawing */
 .yao-line {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 56px; height: 14px;
+  width: 64px; height: 14px;
 }
 .yao-line.yang {
-  width: 56px; height: 0;
+  width: 64px; height: 0;
   border-top: 4px solid var(--color-text-primary);
   border-radius: 2px;
 }
-.yao-line.yin { gap: 8px; }
+.yao-line.yin { gap: 10px; }
 .yao-line .seg {
-  width: 22px; height: 0;
+  width: 26px; height: 0;
   border-top: 4px solid var(--color-text-primary);
   border-radius: 2px;
 }
-.yao-line .gap { width: 4px; }
+.yao-line .gap { width: 2px; }
 
 .zhanduan-text { white-space: pre-wrap; line-height: var(--line-height); }
 .tag-badge { padding: 1px 8px; background: var(--color-badge-bg); color: var(--color-badge-text); border-radius: var(--radius-sm); font-size: var(--font-size-xs); margin-right: var(--space-1); }
