@@ -1,11 +1,54 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { importManual } from '../api/index.js'
-import { fetchGualiList } from '../api/index.js'
 
 const router = useRouter()
 
+// 八单卦
+const TRIGRAMS = [
+  { code: '111', name: '乾', symbol: '天' },
+  { code: '110', name: '兑', symbol: '泽' },
+  { code: '101', name: '离', symbol: '火' },
+  { code: '100', name: '震', symbol: '雷' },
+  { code: '011', name: '巽', symbol: '风' },
+  { code: '010', name: '坎', symbol: '水' },
+  { code: '001', name: '艮', symbol: '山' },
+  { code: '000', name: '坤', symbol: '地' },
+]
+
+// 64 卦名列表（按京房八宫卦序，供手动输入校验）
+const GUA_NAMES = [
+  '乾为天','坤为地','水雷屯','山水蒙','水天需','天水讼','地水师','水地比',
+  '风天小畜','天泽履','地天泰','天地否','天火同人','火天大有','地山谦','雷地豫',
+  '泽雷随','山风蛊','地泽临','风地观','火雷噬嗑','山火贲','山地剥','地雷复',
+  '天雷无妄','山天大畜','山雷颐','泽风大过','坎为水','离为火','泽山咸','雷风恒',
+  '天山遁','雷天大壮','火地晋','地火明夷','风火家人','火泽睽','水山蹇','雷水解',
+  '山泽损','风雷益','泽天夬','天风姤','泽地萃','地风升','泽水困','水风井',
+  '泽火革','火风鼎','震为雷','艮为山','风山渐','雷泽归妹','雷火丰','火山旅',
+  '巽为风','兑为泽','风水涣','水泽节','风泽中孚','雷山小过','水火既济','火水未济',
+]
+
+// 八宫卦序对应的 code（GUA_NAMES 对齐）
+const GUA_CODES = [
+  '111111','000000','010001','001010','010111','111010','000010','010000',
+  '011111','110111','000111','111000','101111','111101','000001','001000',
+  '011001','100110','000011','011000','100101','101001','001000','000100',
+  '100111','001111','100001','011110','010010','101101','011100','001110',
+  '001111','111100','101000','000101','101011','110101','001010','010100',
+  '001110','011001','111110','011111','000110','011000','010110','001011',
+  '011101','101110','100100','001001','100011','011010','101100','001101',
+  '011011','110110','110010','010011','110011','001100','010101','101010',
+]
+
+// 下卦 + 上卦 → 卦名映射（三爻码 → 三爻码 → 卦名 index）
+function findGua(innerCode, outerCode) {
+  const full = innerCode + outerCode
+  const idx = GUA_CODES.indexOf(full)
+  return idx >= 0 ? GUA_NAMES[idx] : null
+}
+
+// 表单
 const form = ref({
   zhanwen_time: new Date().toISOString().slice(0, 16),
   zhanwen_shiyou: '',
@@ -14,42 +57,79 @@ const form = ref({
   zhi_name: '',
 })
 
-const guaList = ref([])
+// 本卦：模式切换
+const benMode = ref('select') // 'select' | 'input'
+// 二级下拉
+const benInner = ref('')
+const benOuter = ref('')
+const benManual = ref('')
+const benComputed = computed(() => {
+  if (benMode.value === 'select' && benInner.value && benOuter.value) {
+    return findGua(benInner.value, benOuter.value) || ''
+  }
+  if (benMode.value === 'input') return benManual.value
+  return ''
+})
+function onBenModeSwitch(mode) {
+  benMode.value = mode
+  form.value.ben_name = ''
+}
+
+// 之卦
+const zhiMode = ref('empty') // 'empty' | 'select' | 'input'
+const zhiInner = ref('')
+const zhiOuter = ref('')
+const zhiManual = ref('')
+const zhiComputed = computed(() => {
+  if (zhiMode.value === 'empty') return ''
+  if (zhiMode.value === 'select' && zhiInner.value && zhiOuter.value) {
+    return findGua(zhiInner.value, zhiOuter.value) || ''
+  }
+  if (zhiMode.value === 'input') return zhiManual.value
+  return ''
+})
+function onZhiModeSwitch(mode) {
+  zhiMode.value = mode
+  form.value.zhi_name = ''
+}
+
 const submitting = ref(false)
 const errorMsg = ref('')
 
-onMounted(async () => {
-  try {
-    const res = await fetchGualiList({ page: 1, page_size: 1 })
-    // 从 bagong_gua 加载卦名列表——用 /api/guaci 不行，直接用 guali 列表请求触发后端已运行
-  } catch { /* 列表可能空 */ }
-  // 通过单独的请求加载 64 卦名
-  try {
-    const res2 = await fetch(import.meta.env.BASE_URL + 'api/guaci/111111')
-    // 如果 guaci API 可用，说明后端在线
-  } catch { /* ok */ }
-  // 直接用静态的 64 卦名列表
-  guaList.value = [
-    '乾为天','坤为地','水雷屯','山水蒙','水天需','天水讼','地水师','水地比',
-    '风天小畜','天泽履','地天泰','天地否','天火同人','火天大有','地山谦','雷地豫',
-    '泽雷随','山风蛊','地泽临','风地观','火雷噬嗑','山火贲','山地剥','地雷复',
-    '天雷无妄','山天大畜','山雷颐','泽风大过','坎为水','离为火','泽山咸','雷风恒',
-    '天山遁','雷天大壮','火地晋','地火明夷','风火家人','火泽睽','水山蹇','雷水解',
-    '山泽损','风雷益','泽天夬','天风姤','泽地萃','地风升','泽水困','水风井',
-    '泽火革','火风鼎','震为雷','艮为山','风山渐','雷泽归妹','雷火丰','火山旅',
-    '巽为风','兑为泽','风水涣','水泽节','风泽中孚','雷山小过','水火既济','火水未济',
-  ]
-})
-
 async function submit() {
-  if (!form.value.zhanwen_time || !form.value.zhanwen_shiyou || !form.value.ben_name) {
-    errorMsg.value = '占问时间、占问事由、本卦名称为必填项'
+  errorMsg.value = ''
+
+  // 时间秒数归零
+  let t = form.value.zhanwen_time
+  if (t) {
+    t = t.slice(0, 14) + '00'  // 秒强制归 00
+  }
+
+  const benName = benComputed.value
+  if (!t || !form.value.zhanwen_shiyou || !benName) {
+    errorMsg.value = '占问时间、占问事由、本卦为必填项'
     return
   }
+  if (!GUA_NAMES.includes(benName)) {
+    errorMsg.value = '本卦名不在 64 卦中: ' + benName
+    return
+  }
+
+  const zhiName = zhiComputed.value
+  if (zhiName && !GUA_NAMES.includes(zhiName)) {
+    errorMsg.value = '之卦名不在 64 卦中: ' + zhiName
+    return
+  }
+
   submitting.value = true
-  errorMsg.value = ''
   try {
-    await importManual(form.value)
+    await importManual({
+      zhanwen_time: t,
+      zhanwen_shiyou: form.value.zhanwen_shiyou,
+      zhanduan: form.value.zhanduan,
+      ben_name: benName,
+      zhi_name: zhiName || undefined,
+    })
     router.push('/')
   } catch (e) {
     errorMsg.value = e.response?.data?.message || '导入失败'
@@ -64,8 +144,8 @@ async function submit() {
     <h2>手动导入卦例</h2>
     <form @submit.prevent="submit" class="input-form">
       <label>
-        占问时间
-        <input type="datetime-local" v-model="form.zhanwen_time" />
+        占问时间 <span class="required">*</span>（秒自动归 00）
+        <input type="datetime-local" v-model="form.zhanwen_time" step="60" />
       </label>
       <label>
         占问事由 <span class="required">*</span>
@@ -75,20 +155,64 @@ async function submit() {
         占断内容
         <textarea v-model="form.zhanduan" rows="4" placeholder="可选" />
       </label>
-      <label>
-        本卦 <span class="required">*</span>
-        <select v-model="form.ben_name">
-          <option value="">-- 请选择 --</option>
-          <option v-for="name in guaList" :key="name" :value="name">{{ name }}</option>
-        </select>
-      </label>
-      <label>
-        之卦
-        <select v-model="form.zhi_name">
-          <option value="">-- 无（静卦） --</option>
-          <option v-for="name in guaList" :key="name" :value="name">{{ name }}</option>
-        </select>
-      </label>
+
+      <!-- 本卦 -->
+      <fieldset>
+        <legend>本卦 <span class="required">*</span></legend>
+        <div class="mode-switch">
+          <label><input type="radio" value="select" v-model="benMode" @change="onBenModeSwitch('select')" /> 二级选择</label>
+          <label><input type="radio" value="input" v-model="benMode" @change="onBenModeSwitch('input')" /> 手动输入</label>
+        </div>
+        <template v-if="benMode === 'select'">
+          <div class="gua-select-row">
+            <label>下卦（内卦）
+              <select v-model="benInner">
+                <option value="">-- 选下卦 --</option>
+                <option v-for="g in TRIGRAMS" :key="'bin'+g.code" :value="g.code">{{ g.symbol }}（{{ g.name }}）</option>
+              </select>
+            </label>
+            <label>上卦（外卦）
+              <select v-model="benOuter">
+                <option value="">-- 选上卦 --</option>
+                <option v-for="g in TRIGRAMS" :key="'bout'+g.code" :value="g.code">{{ g.symbol }}（{{ g.name }}）</option>
+              </select>
+            </label>
+          </div>
+          <p v-if="benComputed" class="computed">→ {{ benComputed }}</p>
+          <p v-else-if="benInner || benOuter" class="hint">请完整选择上下卦</p>
+        </template>
+        <input v-else v-model="benManual" placeholder="输入卦名，如 天火同人" />
+      </fieldset>
+
+      <!-- 之卦 -->
+      <fieldset>
+        <legend>之卦</legend>
+        <div class="mode-switch">
+          <label><input type="radio" value="empty" v-model="zhiMode" @change="onZhiModeSwitch('empty')" /> 静卦（无之卦）</label>
+          <label><input type="radio" value="select" v-model="zhiMode" @change="onZhiModeSwitch('select')" /> 二级选择</label>
+          <label><input type="radio" value="input" v-model="zhiMode" @change="onZhiModeSwitch('input')" /> 手动输入</label>
+        </div>
+        <template v-if="zhiMode === 'select'">
+          <div class="gua-select-row">
+            <label>下卦（内卦）
+              <select v-model="zhiInner">
+                <option value="">-- 选下卦 --</option>
+                <option v-for="g in TRIGRAMS" :key="'zin'+g.code" :value="g.code">{{ g.symbol }}（{{ g.name }}）</option>
+              </select>
+            </label>
+            <label>上卦（外卦）
+              <select v-model="zhiOuter">
+                <option value="">-- 选上卦 --</option>
+                <option v-for="g in TRIGRAMS" :key="'zout'+g.code" :value="g.code">{{ g.symbol }}（{{ g.name }}）</option>
+              </select>
+            </label>
+          </div>
+          <p v-if="zhiComputed" class="computed">→ {{ zhiComputed }}</p>
+          <p v-else-if="zhiInner || zhiOuter" class="hint">请完整选择上下卦</p>
+        </template>
+        <input v-if="zhiMode === 'input'" v-model="zhiManual" placeholder="输入卦名，如 风火家人" />
+      </fieldset>
+
       <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
       <button type="submit" :disabled="submitting">
         {{ submitting ? '提交中...' : '提交' }}
@@ -98,12 +222,20 @@ async function submit() {
 </template>
 
 <style scoped>
-.guali-input { max-width: 500px; margin: 20px auto; }
+.guali-input { max-width: 560px; margin: 20px auto; }
 .input-form { display: flex; flex-direction: column; gap: 12px; }
 label { display: flex; flex-direction: column; gap: 4px; font-weight: 500; }
 .required { color: red; }
 input, textarea, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
 .error { color: red; }
+.hint { color: #999; }
+.computed { color: #2e7d32; font-weight: bold; }
 button { padding: 10px 24px; background: #409eff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
 button:disabled { opacity: 0.6; }
+fieldset { border: 1px solid #ddd; border-radius: 4px; padding: 12px; }
+legend { font-weight: bold; }
+.mode-switch { display: flex; gap: 16px; margin-bottom: 8px; }
+.mode-switch label { flex-direction: row; font-weight: normal; }
+.gua-select-row { display: flex; gap: 12px; }
+.gua-select-row label { flex: 1; }
 </style>
