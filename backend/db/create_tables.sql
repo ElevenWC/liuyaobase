@@ -40,7 +40,6 @@ CREATE TABLE guali (
     ben_code VARCHAR(6) NOT NULL COMMENT '本卦代码',
     yao_bian_code VARCHAR(6) NOT NULL DEFAULT '000000' COMMENT '爻变代码',
     zhi_code VARCHAR(6) NOT NULL DEFAULT '000000' COMMENT '之卦代码',
-    UNIQUE KEY uk_zhanwen_time (zhanwen_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '卦例主表';
 
 -- guali 索引

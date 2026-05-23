@@ -70,16 +70,6 @@ def import_from_json(file_path: str, session: Session) -> dict:
             skipped += 1
             continue
 
-        # 先提取 zhanwen_time（可能被 dTitle 中的 MM.DD 覆盖），再以此去重
-        zhanwen_time = _extract_zhanwen_time(item, dinitime)
-
-        existing = session.exec(
-            select(Guali).where(Guali.zhanwen_time == zhanwen_time)
-        ).first()
-        if existing is not None:
-            skipped += 1
-            continue
-
         try:
             _import_one(item, dinitime, session)
         except Exception as e:
