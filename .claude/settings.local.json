@@ -33,7 +33,9 @@
       "Bash(head *)",
       "Bash(tail *)",
       "Bash(taskkill //F //IM python.exe)",
-      "Bash(taskkill //F //IM node.exe)"
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(curl -s http://localhost:8001/api/jiegua/guaci/111111)",
+      "Bash(rm d:/Code/liuyao/liuyaobase/guaci_test.json)"
     ]
   }
 }

@@ -1,4 +1,5 @@
 """解卦 API —— 互卦计算、网络图谱数据、卦爻辞查询"""
+import json as _json
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
 from backend.db.connection import get_session
@@ -6,6 +7,16 @@ from backend.core.hugua import calc_hugua
 from backend.core.bagong_bian import calc_bagong_bian
 from backend.crud.bagong_gua import get_by_code, get_all
 from backend.crud.guaci import get_by_code as get_guaci_by_code
+
+
+def _parse_json_field(value):
+    """若数据库返回的是 JSON 字符串（双编码），解析为 dict"""
+    if isinstance(value, str):
+        try:
+            return _json.loads(value)
+        except (_json.JSONDecodeError, TypeError):
+            return value
+    return value
 
 router = APIRouter(prefix="/jiegua", tags=["解卦"])
 
@@ -136,9 +147,9 @@ async def get_guaci(
             "gua_ci": guaci.gua_ci,
             "tuan_zhuan": guaci.tuan_zhuan,
             "xiang_zhuan": guaci.xiang_zhuan,
-            "yao_ci": guaci.yao_ci,
+            "yao_ci": _parse_json_field(guaci.yao_ci),
             "wenyan": guaci.wenyan,
-            "yong": guaci.yong,
+            "yong": _parse_json_field(guaci.yong),
         },
         "message": "success",
     }
