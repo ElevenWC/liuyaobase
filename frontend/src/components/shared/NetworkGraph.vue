@@ -262,8 +262,8 @@ onUnmounted(() => {
 .label-toggle { display: flex; align-items: center; gap: 4px; font-size: var(--font-size-xs); color: var(--color-text-secondary); cursor: pointer; }
 .label-toggle input { accent-color: var(--color-accent); }
 
-.svg-wrapper { overflow: auto; display: flex; justify-content: center; padding: var(--space-1); background: var(--color-bg-tertiary); border-radius: var(--radius-lg); border: 1px solid var(--color-border-primary); }
-.graph-svg { background: var(--color-bg-secondary); border-radius: var(--radius-lg); cursor: grab; transform-origin: center center; transition: transform 0.1s ease-out; }
+.svg-wrapper { overflow: hidden; display: flex; justify-content: center; align-items: center; }
+.graph-svg { cursor: grab; transform-origin: center center; transition: transform 0.1s ease-out; }
 .graph-svg:active { cursor: grabbing; }
 .graph-edge { transition: stroke var(--transition-fast), stroke-width var(--transition-fast); }
 .graph-node { cursor: pointer; transition: r var(--transition-fast), fill var(--transition-fast); }
