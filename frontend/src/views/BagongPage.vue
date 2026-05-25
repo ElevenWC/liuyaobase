@@ -102,6 +102,7 @@ function setRowCustom(rowIndex, guaName) {
   const row = rows.value[rowIndex]
   row.mode = 'custom'; row.gualiId = null; row.guaCode = code; row.guaName = guaName
   loadRowBagong(rowIndex, code)
+  if (rowIndex === 0) loadGraph(code)
 }
 
 // ── 卦例编号入口（加载 guali_detail 一次，填充第1行+第2行） ──
@@ -167,6 +168,11 @@ watch(() => route.query.guali_id, (val) => {
 function clearRow(rowIndex) {
   const empty = makeRow()
   rows.value[rowIndex] = empty
+  // 清除第1行时，图谱跟随下一个有内容的行
+  if (rowIndex === 0) {
+    const next = rows.value.find(r => r.mode !== 'empty' && r.guaCode)
+    if (next) loadGraph(next.guaCode)
+  }
 }
 
 // ── 卦象渲染辅助 ──
@@ -274,7 +280,7 @@ function yaoType(code, pos) { return code[5 - pos] === '1' ? '阳' : '阴' }
         <NetworkGraph
           v-if="graphData.nodes.length"
           :nodes="graphData.nodes" :edges="graphData.edges"
-          :canvas-width="320" :canvas-height="420"
+          :canvas-width="360" :canvas-height="320"
           :show-controls="false" :show-legend="true"
           @select-node="onGraphSelect" @dblclick-node="onGraphDblClick"
         />
