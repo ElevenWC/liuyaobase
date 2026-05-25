@@ -79,6 +79,14 @@ def _parse_yao_object(value: str) -> tuple[str, str]:
 
 def _build_condition_clause(cond: Condition, params: dict, idx: int) -> str:
     """单个条件 → WHERE 子句片段，返回 SQL 文本"""
+    # 神煞字段：委托给 _build_shensha_clause
+    shensha_key = cond.field.replace("is_", "").replace("dai_", "")
+    if shensha_key in SHENSHA_MAP:
+        # mode 从 value 中解析或从 field 前缀推断
+        mode = cond.value if isinstance(cond.value, str) and cond.value in ("是", "带", "是或带") else "是"
+        obj_value = cond.value if mode == "是" else ""
+        return _build_shensha_clause(cond.field, mode, cond.scope or "", obj_value, params, idx)
+
     field_info = FIELD_MAP.get(cond.field)
     if not field_info:
         raise ValueError(f"未知字段: {cond.field}")
@@ -161,34 +169,37 @@ def _scope_filter(scope: str, field_info: dict) -> str:
     return ""
 
 
-def _build_shensha_clause(field: str, mode: str, obj_field: str, obj_value: str, params: dict, idx: int) -> str:
-    """神煞条件：FIND_IN_SET 方式"""
-    prefix_map = {"ben_gua": "ben", "zhi_gua": "zhi", "yimao": "yimao", "zengshan": "zengshan", "bian_yao": "ben"}
+def _build_shensha_clause(field: str, mode: str, scope: str, obj_value: str, params: dict, idx: int) -> str:
+    """神煞条件：FIND_IN_SET 方式
+    field: 如 is_ganlu / dai_yima / ganlu
+    mode: "是"→查 is 字段 / "带"→查 dai 字段 / "是或带"→两者 OR
+    scope: 限定来源（如果指定则只查该来源的字段）
+    """
     shensha_info = SHENSHA_MAP.get(field.replace("is_", "").replace("dai_", ""))
     if not shensha_info:
         raise ValueError(f"未知神煞字段: {field}")
 
     is_col, dai_col = shensha_info
-    # mode: "是"→is, "带"→dai, "是或带"→(is != '' OR dai != '')
+    # 确定要查哪些 scope
+    scope_prefixes = ["ben", "zhi", "yimao", "zengshan"]
+    if scope:
+        scope_map = {"ben_gua": ["ben"], "zhi_gua": ["zhi"], "bian_yao": ["ben"], "yimao": ["yimao"], "zengshan": ["zengshan"]}
+        scope_prefixes = scope_map.get(scope, scope_prefixes)
+
     clauses = []
-    for scope_prefix in ["ben", "zhi", "yimao", "zengshan"]:
+    for sp in scope_prefixes:
         if mode in ("是", "是或带"):
-            col = f"s.{scope_prefix}_{is_col}"
-            clauses.append(f"(FIND_IN_SET(y.yao_position, {col}) > 0)")
+            clauses.append(f"(FIND_IN_SET(y.yao_position, s.{sp}_{is_col}) > 0)")
         if mode in ("带", "是或带"):
-            col = f"s.{scope_prefix}_{dai_col}"
-            clauses.append(f"(FIND_IN_SET(y.yao_position, {col}) > 0)")
+            clauses.append(f"(FIND_IN_SET(y.yao_position, s.{sp}_{dai_col}) > 0)")
 
     sub = " OR ".join(clauses) if clauses else "FALSE"
 
-    # 同时需要匹配对象（如"妻财爻"）
-    if obj_value in YAO_OBJECTS:
+    # 同时需要匹配爻对象（如"妻财爻" → 限制六亲 + 神煞）
+    if obj_value and obj_value in YAO_OBJECTS:
         obj_col, obj_val = _parse_yao_object(obj_value)
-        return f"({sub}) AND y.{obj_col} = :sobj{idx}"
-
-    if obj_value:
-        params[f"sobj{idx}"] = obj_value
-        return f"({sub})"
+        params[f"s{idx}"] = obj_val
+        return f"({sub}) AND y.{obj_col} = :s{idx}"
 
     return f"({sub})"
 
@@ -200,20 +211,24 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int) -> st
     right_val = rel.right_value
     bureau = rel.bureau
 
-    # 获取地支值的方式：yao_object 查字段，time_object 查 guali_time
+    # 获取地支值：yao_object → 子查询查爻表，time_object → 时间表字段
     def resolve_dz(obj_type, obj_value, suffix):
         if obj_type == "yao_object":
             col, val = _parse_yao_object(obj_value)
-            # 找到对应爻的地支字段
-            dz_map = {"ben_shi_ying": "y.ben_dizhi", "ben_liuqin": "y.ben_dizhi"}
-            return f"(SELECT y_inner.ben_dizhi FROM guali_yao y_inner WHERE y_inner.guali_id = guali.id AND y_inner.{col} = :{suffix}_obj)"
+            params[suffix] = val
+            return f"(SELECT y_inner.ben_dizhi FROM guali_yao y_inner WHERE y_inner.guali_id = guali.id AND y_inner.{col} = :{suffix})"
         elif obj_type == "time_object":
             tm_map = {"年支": "t.year_zhi", "月支": "t.month_zhi", "日支": "t.day_zhi"}
-            return tm_map.get(obj_value, f":{suffix}_dz")
+            dz_col = tm_map.get(obj_value)
+            if dz_col:
+                return dz_col
+            params[suffix] = obj_value
+            return f":{suffix}"
         elif obj_type == "condition_group_ref":
-            # 返回引用条件组的爻位集合的子查询
-            return f"(SELECT y_ref.ben_dizhi FROM guali_yao y_ref WHERE y_ref.guali_id = guali.id AND y_ref.id IN (/* ref to {obj_value} */))"
-        return f":{suffix}_dz"
+            params[suffix] = obj_value
+            return f"(SELECT y_ref.ben_dizhi FROM guali_yao y_ref WHERE y_ref.guali_id = guali.id AND y_ref.id IN (SELECT id FROM guali_yao WHERE {obj_value}))"
+        params[suffix] = obj_value
+        return f":{suffix}"
 
     dz1 = resolve_dz(rel.left_type, rel.left_value, f"l{idx}")
     dz2 = resolve_dz(rel.right_type, rel.right_value, f"r{idx}")
@@ -284,7 +299,7 @@ def execute_search(session: Session, request: SearchRequest) -> SearchResponse:
             text("SELECT * FROM guali ORDER BY zhanwen_time DESC LIMIT :limit OFFSET :offset").bindparams(limit=ps, offset=(pg - 1) * ps)
         ).mappings().all()
         return SearchResponse(
-            data={"results": [dict(r) for r in rows], "total": total, "page": page, "page_size": page_size}
+            data={"results": [dict(r) for r in rows], "total": total, "page": pg, "page_size": ps}
         )
 
     # 收集 JOIN
