@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
 from backend.db.connection import get_session
 from backend.core.hugua import calc_hugua
-from backend.core.bagong_bian import calc_bagong_bian
 from backend.crud.bagong_gua import get_by_code, get_all
 from backend.crud.guaci import get_by_code as get_guaci_by_code
 
@@ -21,6 +20,32 @@ def _err(msg: str, code: int = 400) -> dict:
 # ── 图谱缓存（数据固定，首次计算后缓存） ──
 _graph_cache: dict[str, dict] = {}
 
+# 七变步骤：独立应用（非累积），对应 getDirectNeighbors 逻辑
+_STEPS: list[tuple[str, list[int]]] = [
+    ("一世", [0]),
+    ("二世", [1]),
+    ("三世", [2]),
+    ("四世", [3]),
+    ("五世", [4]),
+    ("游魂", [3]),
+    ("归魂", [0, 1, 2]),
+]
+
+
+def _get_direct_neighbors(code: str) -> list[tuple[str, str]]:
+    """对 code 独立应用每个八宫变化，返回 [(neighbor_code, change_type), ...]"""
+    result: list[tuple[str, str]] = []
+    seen: set[str] = set()
+    for name, indices in _STEPS:
+        arr = list(code)
+        for i in indices:
+            arr[i] = "1" if arr[i] == "0" else "0"
+        neighbor = "".join(arr)
+        if neighbor != code and neighbor not in seen:
+            seen.add(neighbor)
+            result.append((neighbor, name))
+    return result
+
 
 def _build_graph(graph_type: str, session: Session) -> dict:
     """构建网络图谱节点+边数据"""
@@ -29,7 +54,6 @@ def _build_graph(graph_type: str, session: Session) -> dict:
 
     target_upper = "1" if graph_type == "yang" else "0"
 
-    # 筛选上爻匹配的卦作为节点
     all_gua = get_all(session)
     matched = [g for g in all_gua if g.code[5] == target_upper]
     code_set = {g.code for g in matched}
@@ -39,16 +63,12 @@ def _build_graph(graph_type: str, session: Session) -> dict:
         for g in matched
     ]
 
-    # 只从本宫卦出发生成链，避免非本宫卦产生反向/重叠边
+    # 对每个节点独立应用 7 种变化 → 直接邻居边（参考 getDirectNeighbors）
     edge_set: set[tuple[str, str, str]] = set()
-    ben_gong = [g for g in matched if g.palace_type == "本宫卦"]
-    for bg in ben_gong:
-        steps = calc_bagong_bian(bg.code)
-        current = bg.code
-        for step in steps:
-            if step["code"] in code_set:
-                edge_set.add((current, step["code"], step["type"]))
-            current = step["code"]
+    for g in matched:
+        for neighbor_code, change_type in _get_direct_neighbors(g.code):
+            if neighbor_code in code_set:
+                edge_set.add((g.code, neighbor_code, change_type))
 
     edges = [
         {"source": s, "target": t, "type": tp} for s, t, tp in edge_set
