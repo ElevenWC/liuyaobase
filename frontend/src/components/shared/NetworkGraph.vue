@@ -18,6 +18,8 @@ const props = defineProps({
   showControls: { type: Boolean, default: true },
   /** 是否显示图例 */
   showLegend: { type: Boolean, default: true },
+  /** 初始缩放比例，默认 1.2（参考基准） */
+  initialScale: { type: Number, default: 1.2 },
 })
 
 const emit = defineEmits(['select-node', 'dblclick-node'])
@@ -28,7 +30,7 @@ const ELEMENT_COLORS = { 金: '#FFD700', 木: '#228B22', 水: '#1E90FF', 火: '#
 const simNodes = ref([])
 const selectedNode = ref(null)
 const alwaysShowLabels = ref(false)
-const scale = ref(1)
+const scale = ref(props.initialScale)
 let animationFrameId = null
 let stableFrames = 0
 
@@ -67,7 +69,7 @@ function getNodeSize(node) {
 
 function zoomIn() { scale.value = Math.min(3, scale.value + 0.2) }
 function zoomOut() { scale.value = Math.max(0.3, scale.value - 0.2) }
-function resetZoom() { scale.value = 1 }
+function resetZoom() { scale.value = props.initialScale }
 
 // ── 力导向模拟 ──
 // 参考基准：1200×900 画布，力参数按当前画布等比缩放
@@ -96,7 +98,8 @@ function simulate() {
   const cy = props.canvasHeight / 2
   const scale = Math.min(props.canvasWidth, props.canvasHeight) / REF_BASE
   const idealDist = 80 * scale
-  const repelRange = 150 * scale
+  // 斥力不缩放——保持绝对像素范围防止节点在密集图谱中挤在一起
+  const repelRange = 150
   const repelRangeSq = repelRange * repelRange
 
   let maxVelocity = 0

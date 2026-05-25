@@ -31,7 +31,9 @@
       "Bash(cd d:/Code/liuyao/liuyaobase && mkdir *)",
       "Bash(timeout *)",
       "Bash(head *)",
-      "Bash(tail *)"
+      "Bash(tail *)",
+      "Bash(taskkill //F //IM python.exe)",
+      "Bash(taskkill //F //IM node.exe)"
     ]
   }
 }

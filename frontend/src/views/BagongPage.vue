@@ -280,8 +280,9 @@ function yaoType(code, pos) { return code[5 - pos] === '1' ? '阳' : '阴' }
         <NetworkGraph
           v-if="graphData.nodes.length"
           :nodes="graphData.nodes" :edges="graphData.edges"
-          :canvas-width="340" :canvas-height="380"
+          :canvas-width="460" :canvas-height="420"
           :show-controls="false" :show-legend="true"
+          :initial-scale="0.75"
           @select-node="onGraphSelect" @dblclick-node="onGraphDblClick"
         />
         <div v-else class="graph-empty">加载图谱中...</div>
