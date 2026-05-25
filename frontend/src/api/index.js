@@ -88,7 +88,7 @@ export function fetchImportStatus() {
 // ── 卦爻辞 ────────────────────────────────────
 
 export function fetchGuaci(code) {
-  return api.get(`/guaci/${code}`)
+  return api.get(`/jiegua/guaci/${code}`)
 }
 
 export default api
