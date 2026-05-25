@@ -210,19 +210,21 @@ def _build_shensha_clause(field: str, mode: str, scope: str, obj_value: str, par
     return f"({sub})"
 
 
-def _build_relation_clause(rel: RelationCondition, params: dict, idx: int) -> str:
+def _build_relation_clause(rel: RelationCondition, params: dict, idx: int,
+                           all_conditions: list = (), cond_clauses: dict = {}) -> str:
     """关系条件 → MySQL 存储函数调用"""
     relation = rel.relation
-    left_val = rel.left_value
-    right_val = rel.right_value
     bureau = rel.bureau
+
+    # 条件组引用的子表别名计数器
+    cg_counter = [0]
 
     # 获取地支值：yao_object → 子查询查爻表，time_object → 时间表字段
     def resolve_dz(obj_type, obj_value, suffix):
         if obj_type == "yao_object":
             col, val = _parse_yao_object(obj_value)
             params[suffix] = val
-            return f"(SELECT y_inner.ben_dizhi FROM guali_yao y_inner WHERE y_inner.guali_id = guali.id AND y_inner.{col} = :{suffix})"
+            return f"(SELECT y_inner.ben_dizhi FROM guali_yao y_inner WHERE y_inner.guali_id = guali.id AND y_inner.{col} = :{suffix} LIMIT 1)"
         elif obj_type == "time_object":
             tm_map = {"年支": "t.year_zhi", "月支": "t.month_zhi", "日支": "t.day_zhi"}
             dz_col = tm_map.get(obj_value)
@@ -231,8 +233,25 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int) -> st
             params[suffix] = obj_value
             return f":{suffix}"
         elif obj_type == "condition_group_ref":
-            raise NotImplementedError(
-                f"条件组引用（condition_group_ref）尚未实现。引用目标: {obj_value}"
+            # 找到被引用的条件，以独立表别名重建其 SQL 子句
+            ref_cond = None
+            for c in all_conditions:
+                if c.id == obj_value:
+                    ref_cond = c
+                    break
+            if ref_cond is None:
+                raise ValueError(f"条件组引用目标不存在: {obj_value}")
+
+            alias = f"ycg{cg_counter[0]}"
+            cg_counter[0] += 1
+
+            # 为被引用条件生成带新表别名的 SQL（替换 y. 为 alias.）
+            ref_clause = cond_clauses.get(obj_value, "")
+            ref_sql = ref_clause.replace("y.", f"{alias}.")
+
+            return (
+                f"(SELECT {alias}.ben_dizhi FROM guali_yao {alias}"
+                f" WHERE {alias}.guali_id = guali.id AND ({ref_sql}) LIMIT 1)"
             )
         params[suffix] = obj_value
         return f":{suffix}"
@@ -251,7 +270,6 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int) -> st
         return f"check_banhe({dz1}, {dz2}) = TRUE"
     elif relation == "三合":
         b = f"'{bureau}'" if bureau else "'不限'"
-        # 三合需要 3 个地支，第三个从 bureau 推算或额外参数
         return f"check_sanhe({dz1}, {dz2}, {b}) = TRUE"
     elif relation == "=":
         return f"{dz1} = {dz2}"
@@ -324,12 +342,15 @@ def execute_search(session: Session, request: SearchRequest) -> SearchResponse:
     params: dict = {}
     cond_clauses: dict[str, str] = {}  # id → SQL clause
 
+    # 第一遍：先生成所有条件的 SQL 子句（关系条件稍后处理）
+    for i, cond in enumerate(conditions):
+        if not isinstance(cond, RelationCondition):
+            cond_clauses[cond.id] = _build_condition_clause(cond, params, i)
+
+    # 第二遍：处理关系条件（此时 cond_clauses 已完整，可供 condition_group_ref 引用）
     for i, cond in enumerate(conditions):
         if isinstance(cond, RelationCondition):
-            clause = _build_relation_clause(cond, params, i)
-        else:
-            clause = _build_condition_clause(cond, params, i)
-        cond_clauses[cond.id] = clause
+            cond_clauses[cond.id] = _build_relation_clause(cond, params, i, conditions, cond_clauses)
 
     # 解析逻辑链
     where_sql = _assemble_logic(logic, cond_clauses) if logic else " AND ".join(cond_clauses.values())
