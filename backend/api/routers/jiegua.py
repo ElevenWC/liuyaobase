@@ -39,11 +39,12 @@ def _build_graph(graph_type: str, session: Session) -> dict:
         for g in matched
     ]
 
-    # 对每个节点计算八宫变化 → 生成有向边 → 去重
+    # 只从本宫卦出发生成链，避免非本宫卦产生反向/重叠边
     edge_set: set[tuple[str, str, str]] = set()
-    for g in matched:
-        steps = calc_bagong_bian(g.code)
-        current = g.code
+    ben_gong = [g for g in matched if g.palace_type == "本宫卦"]
+    for bg in ben_gong:
+        steps = calc_bagong_bian(bg.code)
+        current = bg.code
         for step in steps:
             if step["code"] in code_set:
                 edge_set.add((current, step["code"], step["type"]))
