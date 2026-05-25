@@ -52,10 +52,10 @@ watch(graphType, loadGraph, { immediate: true })
   <div class="graph-page">
     <div class="graph-type-bar">
       <label :class="{ active: graphType === 'yang' }">
-        <input type="radio" value="yang" v-model="graphType" /> 阳图谱（上爻=1 · 32卦）
+        <input type="radio" value="yang" v-model="graphType" /> 阳图谱（上爻为阳爻 · 32卦）
       </label>
       <label :class="{ active: graphType === 'yin' }">
-        <input type="radio" value="yin" v-model="graphType" /> 阴图谱（上爻=0 · 32卦）
+        <input type="radio" value="yin" v-model="graphType" /> 阴图谱（上爻为阴爻 · 32卦）
       </label>
     </div>
 
