@@ -70,6 +70,9 @@ function zoomOut() { scale.value = Math.max(0.3, scale.value - 0.2) }
 function resetZoom() { scale.value = 1 }
 
 // ── 力导向模拟 ──
+// 参考基准：1200×900 画布，力参数按当前画布等比缩放
+const REF_BASE = 900
+
 function initSimulation() {
   const cx = props.canvasWidth / 2
   const cy = props.canvasHeight / 2
@@ -91,6 +94,11 @@ function initSimulation() {
 function simulate() {
   const cx = props.canvasWidth / 2
   const cy = props.canvasHeight / 2
+  const scale = Math.min(props.canvasWidth, props.canvasHeight) / REF_BASE
+  const idealDist = 80 * scale
+  const repelRange = 150 * scale
+  const repelRangeSq = repelRange * repelRange
+
   let maxVelocity = 0
 
   for (const node of simNodes.value) {
@@ -106,9 +114,9 @@ function simulate() {
       const dx = node.x - other.x
       const dy = node.y - other.y
       const distSq = dx * dx + dy * dy
-      if (distSq < 22500 && distSq > 0) {
+      if (distSq < repelRangeSq && distSq > 0) {
         const dist = Math.sqrt(distSq)
-        const force = (150 - dist) / 150 * 1.0
+        const force = (repelRange - dist) / repelRange * 1.0
         fx += (dx / dist) * force
         fy += (dy / dist) * force
       }
@@ -124,7 +132,7 @@ function simulate() {
         const dy = other.y - node.y
         const dist = Math.sqrt(dx * dx + dy * dy)
         if (dist > 0) {
-          const springForce = (dist - 80) * 0.01
+          const springForce = (dist - idealDist) * 0.01
           fx += (dx / dist) * springForce
           fy += (dy / dist) * springForce
         }

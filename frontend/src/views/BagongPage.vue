@@ -280,7 +280,7 @@ function yaoType(code, pos) { return code[5 - pos] === '1' ? '阳' : '阴' }
         <NetworkGraph
           v-if="graphData.nodes.length"
           :nodes="graphData.nodes" :edges="graphData.edges"
-          :canvas-width="360" :canvas-height="320"
+          :canvas-width="340" :canvas-height="380"
           :show-controls="false" :show-legend="true"
           @select-node="onGraphSelect" @dblclick-node="onGraphDblClick"
         />
@@ -312,7 +312,7 @@ function yaoType(code, pos) { return code[5 - pos] === '1' ? '阳' : '阴' }
 
 /* 主区域 */
 .main-area { display: flex; gap: var(--space-3); }
-.rows-area { flex: 1; display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.rows-area { flex: 1; display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; max-width: 55%; }
 
 /* 行 */
 .bagong-row { background: var(--color-bg-secondary); border-radius: var(--radius-lg); padding: var(--space-3); box-shadow: var(--shadow-sm); }
@@ -340,7 +340,7 @@ function yaoType(code, pos) { return code[5 - pos] === '1' ? '阳' : '阴' }
 .clickable:hover { color: var(--color-accent-light); }
 
 /* 图谱小窗 */
-.graph-mini { width: 340px; flex-shrink: 0; background: var(--color-bg-secondary); border-radius: var(--radius-lg); padding: var(--space-2); box-shadow: var(--shadow-sm); }
+.graph-mini { flex: 1; min-width: 320px; background: var(--color-bg-secondary); border-radius: var(--radius-lg); padding: var(--space-2); box-shadow: var(--shadow-sm); }
 .graph-mini-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-1); padding: 0 var(--space-1); }
 .graph-mini-header span { font-size: var(--font-size-sm); font-weight: 600; }
 .graph-expand { font-size: 16px; text-decoration: none; }
