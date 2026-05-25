@@ -220,7 +220,7 @@ function fanYinText() {
             <button @click="toggleEdit" class="btn-edit">{{ isEditing ? '保存' : '编辑' }}</button>
             <span class="btn-edit-tip">直接双击文本或者点击按钮后进行占问事由和占断编辑</span>
           </div>
-          <button class="btn-jiegua" title="解卦（v0.5 实现）" disabled>解卦</button>
+          <button class="btn-jiegua" title="解卦" @click="$router.push(`/jiegua/bagong?guali_id=${detail.id}`)">解卦</button>
           <button @click="onDelete" class="btn-del">删除</button>
         </div>
       </div>
@@ -396,7 +396,8 @@ function fanYinText() {
 .guali-id { font-size: var(--font-size-base); color: var(--color-text-muted); font-weight: 500; }
 .btn-del { padding: 3px 12px; background: var(--color-danger); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-sm); transition: background var(--transition-fast); }
 .btn-del:hover { background: var(--color-danger-hover); }
-.btn-jiegua { padding: 3px 12px; background: var(--color-bg-tertiary); color: var(--color-text-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); cursor: not-allowed; font-size: var(--font-size-sm); opacity: 0.6; }
+.btn-jiegua { padding: 3px 12px; background: var(--color-accent); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-sm); transition: background var(--transition-fast); }
+.btn-jiegua:hover { background: var(--color-accent-dark); }
 .btn-edit-wrap { position: relative; display: inline-flex; }
 .btn-edit { padding: 3px 12px; background: var(--color-accent); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-sm); transition: background var(--transition-fast); }
 .btn-edit:hover { background: var(--color-accent-dark); }

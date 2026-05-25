@@ -6,6 +6,7 @@
     <router-link to="/guali" class="brand">liuyaobase</router-link>
     <div class="nav-links">
       <router-link to="/guali">卦例</router-link>
+      <router-link to="/jiegua/bagong">解卦</router-link>
       <router-link to="/input">手动导入</router-link>
       <router-link to="/import">JSON导入</router-link>
       <router-link to="/tags">标签</router-link>
