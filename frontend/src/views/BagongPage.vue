@@ -163,6 +163,12 @@ watch(() => route.query.guali_id, (val) => {
   if (val) { gualiIdInput.value = val; onGualiLoad() }
 }, { immediate: true })
 
+// ── 清除行 ──
+function clearRow(rowIndex) {
+  const empty = makeRow()
+  rows.value[rowIndex] = empty
+}
+
 // ── 卦象渲染辅助 ──
 function yaoType(code, pos) { return code[5 - pos] === '1' ? '阳' : '阴' }
 </script>
@@ -201,6 +207,7 @@ function yaoType(code, pos) { return code[5 - pos] === '1' ? '阳' : '阴' }
             <template v-if="ri === 0">本卦</template>
             <template v-else-if="ri === 1">之卦</template>
             <template v-else>自定义{{ ri - 1 }}</template>
+            <button v-if="row.mode !== 'empty'" class="row-clear-btn" @click="clearRow(ri)" title="清除此行的卦">×</button>
           </div>
 
           <div v-if="row.loading" class="row-status">加载中...</div>
@@ -290,6 +297,9 @@ function yaoType(code, pos) { return code[5 - pos] === '1' ? '阳' : '阴' }
 .input-group { display: flex; align-items: center; gap: var(--space-2); }
 .input-group label { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
 .input-group input { padding: 3px 8px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); width: 100px; font-size: var(--font-size-sm); }
+.input-group input[type="number"] { -moz-appearance: textfield; }
+.input-group input[type="number"]::-webkit-outer-spin-button,
+.input-group input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .input-group select { padding: 3px 6px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); font-size: var(--font-size-sm); }
 .input-group button { padding: 3px 14px; background: var(--color-accent); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-sm); }
 .input-group button:hover { background: var(--color-accent-dark); }
@@ -301,7 +311,9 @@ function yaoType(code, pos) { return code[5 - pos] === '1' ? '阳' : '阴' }
 /* 行 */
 .bagong-row { background: var(--color-bg-secondary); border-radius: var(--radius-lg); padding: var(--space-3); box-shadow: var(--shadow-sm); }
 .bagong-row.row-empty { opacity: 0.5; }
-.row-label { font-size: var(--font-size-sm); font-weight: 600; color: var(--color-accent-light); margin-bottom: var(--space-1); }
+.row-label { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-sm); font-weight: 600; color: var(--color-accent-light); margin-bottom: var(--space-1); }
+.row-clear-btn { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: 12px; cursor: pointer; line-height: 1; }
+.row-clear-btn:hover { border-color: var(--color-danger); color: var(--color-danger); }
 .row-header { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2); }
 .row-gua-name { font-size: var(--font-size-md); font-weight: bold; }
 .row-gua-name small { font-weight: normal; color: var(--color-text-muted); margin-left: 4px; }
