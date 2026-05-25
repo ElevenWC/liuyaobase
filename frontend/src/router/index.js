@@ -5,6 +5,7 @@ import ImportJson from '../views/ImportJson.vue'
 import TagManager from '../views/TagManager.vue'
 import BagongPage from '../views/BagongPage.vue'
 import HuguaPage from '../views/HuguaPage.vue'
+import GraphPage from '../views/GraphPage.vue'
 import NotFound from '../views/NotFound.vue'
 
 const routes = [
@@ -13,6 +14,7 @@ const routes = [
   { path: '/jiegua', redirect: '/jiegua/bagong' },
   { path: '/jiegua/bagong', name: 'bagong', component: BagongPage },
   { path: '/jiegua/hugua', name: 'hugua', component: HuguaPage },
+  { path: '/jiegua/graph', name: 'graph', component: GraphPage },
   { path: '/input', name: 'input', component: GualiInput },
   { path: '/import', name: 'import', component: ImportJson },
   { path: '/tags', name: 'tags', component: TagManager },
