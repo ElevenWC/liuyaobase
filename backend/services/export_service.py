@@ -42,16 +42,16 @@ def export_results(session: Session, request: SearchRequest, fmt: str = "csv") -
 
 
 def _write_csv(filepath: str, rows: list[dict]):
-    if not rows:
-        with open(filepath, "w", encoding="utf-8-sig") as f:
-            f.write("")
-        return
-
-    headers = list(rows[0].keys())
+    # 始终含表头——从后端模型确定列名
+    base_headers = ["id", "zhanwen_time", "zhanwen_shiyou", "zhanduan",
+                    "ben_code", "ben_name", "zhi_code", "zhi_name",
+                    "yao_bian_code", "dyaolist", "last_import_time"]
+    headers = list(rows[0].keys()) if rows else base_headers
     with open(filepath, "w", encoding="utf-8-sig", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=headers)
+        writer = csv.DictWriter(f, fieldnames=headers, extrasaction="ignore")
         writer.writeheader()
-        writer.writerows(rows)
+        if rows:
+            writer.writerows(rows)
 
 
 def _write_json(filepath: str, rows: list[dict]):
