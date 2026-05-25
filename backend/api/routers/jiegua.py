@@ -23,13 +23,16 @@ _graph_cache: dict[str, dict] = {}
 
 
 def _build_graph(graph_type: str, session: Session) -> dict:
-    """构建网络图谱节点+边数据"""
+    """构建网络图谱节点+边数据
+
+    每个节点对自身累积应用 calc_bagong_bian → 7 条出边（一世→归魂），
+    指向该节点在八宫变化中可到达的 7 个邻居。
+    """
     if graph_type in _graph_cache:
         return _graph_cache[graph_type]
 
     target_upper = "1" if graph_type == "yang" else "0"
 
-    # 筛选上爻匹配的卦作为节点
     all_gua = get_all(session)
     matched = [g for g in all_gua if g.code[5] == target_upper]
     code_set = {g.code for g in matched}
@@ -39,18 +42,18 @@ def _build_graph(graph_type: str, session: Session) -> dict:
         for g in matched
     ]
 
-    # 对每个节点计算八宫变化 → 生成有向边 → 去重
-    edge_set: set[tuple[str, str, str]] = set()
+    # 每个节点以自身为起点累积计算七变，每个步骤一条出边
+    edge_map: dict[tuple[str, str], str] = {}
     for g in matched:
         steps = calc_bagong_bian(g.code)
-        current = g.code
         for step in steps:
             if step["code"] in code_set:
-                edge_set.add((current, step["code"], step["type"]))
-            current = step["code"]
+                key = (g.code, step["code"])
+                if key not in edge_map:
+                    edge_map[key] = step["type"]
 
     edges = [
-        {"source": s, "target": t, "type": tp} for s, t, tp in edge_set
+        {"source": s, "target": t, "type": tp} for (s, t), tp in edge_map.items()
     ]
 
     result = {"nodes": nodes, "edges": edges}

@@ -85,6 +85,20 @@ export function fetchImportStatus() {
   return api.get('/import/status')
 }
 
+// ── 解卦 ──────────────────────────────────────
+
+export function fetchBagong(guaCode) {
+  return api.get(`/jiegua/bagong/${guaCode}`)
+}
+
+export function fetchHugua(guaCode, zhiCode) {
+  return api.get(`/jiegua/hugua/${guaCode}`, { params: zhiCode ? { zhi_code: zhiCode } : {} })
+}
+
+export function fetchGraphData(graphType) {
+  return api.get(`/jiegua/graph/${graphType}`)
+}
+
 // ── 卦爻辞 ────────────────────────────────────
 
 export function fetchGuaci(code) {
