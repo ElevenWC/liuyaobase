@@ -282,7 +282,7 @@ function yaoType(code, pos) { return code[5 - pos] === '1' ? '阳' : '阴' }
           :nodes="graphData.nodes" :edges="graphData.edges"
           :canvas-width="540" :canvas-height="480"
           :show-controls="false" :show-legend="true"
-          :initial-scale="0.7"
+          :initial-scale="1.0"
           @select-node="onGraphSelect" @dblclick-node="onGraphDblClick"
         />
         <div v-else class="graph-empty">加载图谱中...</div>
