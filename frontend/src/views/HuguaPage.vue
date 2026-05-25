@@ -140,9 +140,10 @@ watch(() => route.query.guali_id, (val) => {
             <div class="yao-display">
               <div v-for="pos in 6" :key="pos"
                 class="yao-line" :class="[yaoType(benResult.code, pos - 1), yaoHighlightClass(pos - 1)]">
-                <span v-if="yaoType(benResult.code, pos - 1) === '阴'" class="seg"></span>
-                <span v-if="yaoType(benResult.code, pos - 1) === '阴'" class="gap"></span>
-                <span v-if="yaoType(benResult.code, pos - 1) === '阴'" class="seg"></span>
+                <span v-if="yaoType(benResult.code, pos - 1) === '阳'" class="yang-bar"></span>
+                <template v-else>
+                  <span class="seg"></span><span class="seg-gap"></span><span class="seg"></span>
+                </template>
               </div>
             </div>
           </div>
@@ -156,9 +157,10 @@ watch(() => route.query.guali_id, (val) => {
             <div class="yao-display">
               <div v-for="pos in 6" :key="pos"
                 class="yao-line" :class="yaoType(benResult.hugua.code, pos - 1)">
-                <span v-if="yaoType(benResult.hugua.code, pos - 1) === '阴'" class="seg"></span>
-                <span v-if="yaoType(benResult.hugua.code, pos - 1) === '阴'" class="gap"></span>
-                <span v-if="yaoType(benResult.hugua.code, pos - 1) === '阴'" class="seg"></span>
+                <span v-if="yaoType(benResult.hugua.code, pos - 1) === '阳'" class="yang-bar"></span>
+                <template v-else>
+                  <span class="seg"></span><span class="seg-gap"></span><span class="seg"></span>
+                </template>
               </div>
             </div>
           </div>
@@ -178,9 +180,10 @@ watch(() => route.query.guali_id, (val) => {
             <div class="yao-display">
               <div v-for="pos in 6" :key="pos"
                 class="yao-line" :class="[yaoType(zhiResult.code, pos - 1), yaoHighlightClass(pos - 1)]">
-                <span v-if="yaoType(zhiResult.code, pos - 1) === '阴'" class="seg"></span>
-                <span v-if="yaoType(zhiResult.code, pos - 1) === '阴'" class="gap"></span>
-                <span v-if="yaoType(zhiResult.code, pos - 1) === '阴'" class="seg"></span>
+                <span v-if="yaoType(zhiResult.code, pos - 1) === '阳'" class="yang-bar"></span>
+                <template v-else>
+                  <span class="seg"></span><span class="seg-gap"></span><span class="seg"></span>
+                </template>
               </div>
             </div>
           </div>
@@ -193,9 +196,10 @@ watch(() => route.query.guali_id, (val) => {
             <div class="yao-display">
               <div v-for="pos in 6" :key="pos"
                 class="yao-line" :class="yaoType(zhiResult.hugua.code, pos - 1)">
-                <span v-if="yaoType(zhiResult.hugua.code, pos - 1) === '阴'" class="seg"></span>
-                <span v-if="yaoType(zhiResult.hugua.code, pos - 1) === '阴'" class="gap"></span>
-                <span v-if="yaoType(zhiResult.hugua.code, pos - 1) === '阴'" class="seg"></span>
+                <span v-if="yaoType(zhiResult.hugua.code, pos - 1) === '阳'" class="yang-bar"></span>
+                <template v-else>
+                  <span class="seg"></span><span class="seg-gap"></span><span class="seg"></span>
+                </template>
               </div>
             </div>
           </div>
@@ -228,9 +232,9 @@ watch(() => route.query.guali_id, (val) => {
 </template>
 
 <style scoped>
-.hugua-page { padding: var(--space-4); color: var(--color-text-primary); background: var(--color-bg-primary); min-height: 100%; }
+.hugua-page { display: flex; flex-direction: column; align-items: center; padding: var(--space-4); color: var(--color-text-primary); background: var(--color-bg-primary); min-height: 100%; }
 
-.top-input-bar { display: flex; gap: var(--space-5); margin-bottom: var(--space-4); padding: var(--space-3); background: var(--color-bg-secondary); border-radius: var(--radius-lg); }
+.top-input-bar { display: flex; gap: var(--space-5); margin-bottom: var(--space-4); padding: var(--space-3); background: var(--color-bg-secondary); border-radius: var(--radius-lg); align-self: stretch; }
 .input-group { display: flex; align-items: center; gap: var(--space-2); }
 .input-group label { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
 .input-group input { padding: 3px 8px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); width: 100px; font-size: var(--font-size-sm); -moz-appearance: textfield; }
@@ -263,19 +267,16 @@ watch(() => route.query.guali_id, (val) => {
 .hint-text { font-size: 10px; color: var(--color-text-muted); text-align: center; line-height: 1.4; }
 
 /* ── 卦象爻线（复用 GualiDetail 渲染方式） ── */
-.yao-display { display: flex; flex-direction: column; gap: 1px; }
+.yao-display { display: flex; flex-direction: column; gap: 2px; }
 .yao-line {
   display: inline-flex; align-items: center; justify-content: center;
   width: 64px; height: 14px; border-radius: var(--radius-sm);
   transition: background var(--transition-fast);
 }
-.yao-line.yang::before {
-  content: ''; display: block; width: 100%; height: 4px;
-  background: var(--color-text-primary); border-radius: 2px;
-}
-.yao-line.yin { gap: 6px; }
-.yao-line .seg { width: 28px; height: 4px; background: var(--color-text-primary); border-radius: 2px; }
-.yao-line .gap { width: 0; }
+.yang-bar { width: 100%; height: 4px; background: var(--color-text-primary); border-radius: 2px; }
+.yao-line.yin { gap: 0; }
+.seg { width: 26px; height: 4px; background: var(--color-text-primary); border-radius: 2px; }
+.seg-gap { width: 8px; }
 
 /* 互卦来源爻位高亮 */
 .yao-line.hl-inner { background: rgba(99, 102, 241, 0.15); }
