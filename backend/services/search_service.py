@@ -100,7 +100,7 @@ def _build_condition_clause(cond: Condition, params: dict, idx: int) -> str:
     # scope 过滤：按来源范围限定
     if cond.scope:
         scope_clause = _scope_filter(cond.scope, field_info)
-        if scope_clause:
+        if scope_clause.strip():
             clauses.append(scope_clause)
 
     # 运算符映射
@@ -157,13 +157,13 @@ def _build_condition_clause(cond: Condition, params: dict, idx: int) -> str:
 def _scope_filter(scope: str, field_info: dict) -> str:
     """根据 scope 限定爻的来源范围"""
     if scope == "ben_gua":
-        return "1=1"  # 本卦爻默认无额外过滤
+        return ""  # 本卦爻默认无额外过滤
     elif scope == "bian_yao":
         return "y.is_dong = TRUE"
     elif scope == "zhi_gua":
         return "y.is_dong = FALSE"
     elif scope == "yimao":
-        return "TRUE"  # yimao 字段自带来源
+        return ""  # yimao 字段自带来源，无需额外条件
     elif scope == "zengshan":
         return "y.zengshan_exists = TRUE"
     return ""
@@ -225,8 +225,9 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int) -> st
             params[suffix] = obj_value
             return f":{suffix}"
         elif obj_type == "condition_group_ref":
-            params[suffix] = obj_value
-            return f"(SELECT y_ref.ben_dizhi FROM guali_yao y_ref WHERE y_ref.guali_id = guali.id AND y_ref.id IN (SELECT id FROM guali_yao WHERE {obj_value}))"
+            raise NotImplementedError(
+                f"条件组引用（condition_group_ref）尚未实现。引用目标: {obj_value}"
+            )
         params[suffix] = obj_value
         return f":{suffix}"
 
@@ -312,7 +313,6 @@ def execute_search(session: Session, request: SearchRequest) -> SearchResponse:
 
     # 构建 WHERE 子句
     params: dict = {}
-    where_parts: list[str] = []
     cond_clauses: dict[str, str] = {}  # id → SQL clause
 
     for i, cond in enumerate(conditions):
