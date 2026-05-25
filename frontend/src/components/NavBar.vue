@@ -11,6 +11,7 @@
         <div class="dropdown-menu">
           <router-link to="/jiegua/bagong">八宫变化</router-link>
           <router-link to="/jiegua/hugua">互卦</router-link>
+          <router-link to="/jiegua/graph">网络图谱</router-link>
         </div>
       </div>
       <router-link to="/input">手动导入</router-link>

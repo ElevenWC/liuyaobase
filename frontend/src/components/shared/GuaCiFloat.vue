@@ -49,7 +49,23 @@ function onMouseUp() {
 }
 function yaociLines() {
   if (!data.value?.yao_ci) return []
-  return Object.entries(data.value.yao_ci).map(([k, v]) => `${k}: ${v}`)
+  const yao = data.value.yao_ci
+  if (typeof yao === 'string') {
+    try { return Object.entries(JSON.parse(yao)) } catch { return [] }
+  }
+  return Object.entries(yao).map(([k, v]) => ({
+    key: k,
+    yaoCi: typeof v === 'object' ? (v.yaoCi || '') : String(v),
+    xiangZhuan: typeof v === 'object' ? (v.xiangZhuan || '') : '',
+  }))
+}
+function yongData() {
+  if (!data.value?.yong) return null
+  const y = data.value.yong
+  if (typeof y === 'string') {
+    try { const p = JSON.parse(y); return { position: p.position || '', yaoCi: p.yaoCi || '', xiangZhuan: p.xiangZhuan || '' } } catch { return null }
+  }
+  return { position: y.position || '', yaoCi: y.yaoCi || '', xiangZhuan: y.xiangZhuan || '' }
 }
 function wenyanParagraphs() {
   if (!data.value?.wenyan) return []
@@ -69,15 +85,21 @@ function wenyanParagraphs() {
         <p><b>卦辞：</b>{{ data.gua_ci }}</p>
         <p><b>彖传：</b>{{ data.tuan_zhuan }}</p>
         <p><b>象传：</b>{{ data.xiang_zhuan }}</p>
-        <p v-if="yaociLines().length">
+        <div v-if="yaociLines().length">
           <b>爻辞：</b>
-          <span v-for="(line, i) in yaociLines()" :key="i">{{ line }}<br /></span>
-        </p>
+          <div v-for="(item, i) in yaociLines()" :key="i" class="yaoci-item">
+            <p>{{ item.key }}：{{ item.yaoCi }}</p>
+            <p v-if="item.xiangZhuan" class="xiangzhuan">《象》曰：{{ item.xiangZhuan }}</p>
+          </div>
+        </div>
+        <div v-if="yongData()" class="yaoci-item">
+          <p>{{ yongData().position }}：{{ yongData().yaoCi }}</p>
+          <p v-if="yongData().xiangZhuan" class="xiangzhuan">《象》曰：{{ yongData().xiangZhuan }}</p>
+        </div>
         <div v-if="wenyanParagraphs().length">
           <b>文言：</b>
           <p v-for="(p, i) in wenyanParagraphs()" :key="i">{{ p }}</p>
         </div>
-        <p v-if="data.yong"><b>{{ data.yong }}</b></p>
       </template>
     </div>
   </div>
@@ -110,6 +132,9 @@ function wenyanParagraphs() {
   color: var(--color-text-primary);
 }
 .float-body b { color: var(--color-accent); }
+.yaoci-item { margin-bottom: var(--space-2); }
+.yaoci-item p { margin: 0; }
+.xiangzhuan { color: var(--color-text-muted); font-size: var(--font-size-sm); padding-left: var(--space-3); }
 .float-body::-webkit-scrollbar { width: 5px; }
 .float-body::-webkit-scrollbar-thumb { background: var(--color-border-primary); border-radius: 3px; }
 </style>

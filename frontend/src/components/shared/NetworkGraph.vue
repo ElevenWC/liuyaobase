@@ -31,6 +31,10 @@ const simNodes = ref([])
 const selectedNode = ref(null)
 const alwaysShowLabels = ref(false)
 const scale = ref(props.initialScale)
+const panX = ref(0)
+const panY = ref(0)
+const panning = ref(false)
+const panStart = ref({ x: 0, y: 0 })
 let animationFrameId = null
 let stableFrames = 0
 
@@ -69,7 +73,25 @@ function getNodeSize(node) {
 
 function zoomIn() { scale.value = Math.min(3, scale.value + 0.2) }
 function zoomOut() { scale.value = Math.max(0.3, scale.value - 0.2) }
-function resetZoom() { scale.value = props.initialScale }
+function resetZoom() { scale.value = props.initialScale; panX.value = 0; panY.value = 0 }
+
+function onPanStart(e) {
+  if (e.target.tagName === 'circle' || e.target.tagName === 'text') return
+  panning.value = true
+  panStart.value = { x: e.clientX - panX.value, y: e.clientY - panY.value }
+  document.addEventListener('mousemove', onPanMove)
+  document.addEventListener('mouseup', onPanEnd)
+}
+function onPanMove(e) {
+  if (!panning.value) return
+  panX.value = e.clientX - panStart.value.x
+  panY.value = e.clientY - panStart.value.y
+}
+function onPanEnd() {
+  panning.value = false
+  document.removeEventListener('mousemove', onPanMove)
+  document.removeEventListener('mouseup', onPanEnd)
+}
 
 const svgContainerRef = ref(null)
 function handleWheel(event) {
@@ -201,8 +223,10 @@ onUnmounted(() => {
     <div class="svg-wrapper">
       <svg
         :width="canvasWidth" :height="canvasHeight"
-        ref="svgContainerRef" class="graph-svg" :style="{ transform: `scale(${scale})` }"
+        ref="svgContainerRef" class="graph-svg"
+        :style="{ transform: `translate(${panX}px,${panY}px) scale(${scale})` }"
         @click="selectedNode = null"
+        @mousedown="onPanStart"
       >
         <!-- 边 -->
         <line
@@ -223,21 +247,21 @@ onUnmounted(() => {
           :r="getNodeSize(node)"
           :fill="getNodeColor(node)"
           class="graph-node"
-          @click.stop="selectedNode = node.id; emit('select-node', node.id)"
+          @click.stop="selectedNode = selectedNode === node.id ? null : node.id; emit('select-node', node.id)"
           @dblclick.stop="emit('dblclick-node', node.id)"
         >
           <title>{{ node.name }}（{{ node.element }}）</title>
         </circle>
 
-        <!-- 标签：常驻模式 -->
+        <!-- 标签：常驻模式（始终可叠加选中高亮） -->
         <template v-if="alwaysShowLabels">
           <text v-for="node in simNodes" :key="'lbl-'+node.id"
             :x="node.x" :y="node.y - 12" text-anchor="middle"
             class="graph-label graph-label--small">{{ node.name }}</text>
         </template>
 
-        <!-- 标签：选中模式 -->
-        <template v-else-if="selectedNode">
+        <!-- 标签：选中模式（与常驻共存） -->
+        <template v-if="selectedNode">
           <text
             :x="nodePositionMap.get(selectedNode).x"
             :y="nodePositionMap.get(selectedNode).y - 15"
