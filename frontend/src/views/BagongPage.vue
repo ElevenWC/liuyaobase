@@ -329,21 +329,20 @@ function yaoType(code, pos) { return code[5 - pos] === '1' ? '阳' : '阴' }
 .graph-expand:hover { transform: scale(1.2); }
 .graph-empty { text-align: center; padding: var(--space-5); color: var(--color-text-muted); font-size: var(--font-size-sm); }
 
-/* ── 卦象爻线（复用 GualiDetail 的渲染方式） ── */
+/* ── 卦象爻线 ── */
 .yao-line {
   display: inline-flex; align-items: center; justify-content: center;
   width: 40px; height: 10px;
 }
-.yao-line.yang {
-  width: 40px; height: 0;
-  border-top: 3px solid var(--color-text-primary);
-  border-radius: 2px;
+.yao-line.yang::before {
+  content: ''; display: block;
+  width: 100%; height: 3px;
+  background: var(--color-text-primary); border-radius: 2px;
 }
 .yao-line.yin { gap: 4px; }
 .yao-line .seg {
-  width: 18px; height: 0;
-  border-top: 3px solid var(--color-text-primary);
-  border-radius: 2px;
+  width: 18px; height: 3px;
+  background: var(--color-text-primary); border-radius: 2px;
 }
 .yao-line .gap { width: 0; }
 </style>

@@ -474,16 +474,15 @@ function fanYinText() {
   display: inline-flex; align-items: center; justify-content: center;
   width: 64px; height: 14px;
 }
-.yao-line.yang {
-  width: 64px; height: 0;
-  border-top: 4px solid var(--color-text-primary);
-  border-radius: 2px;
+.yao-line.yang::before {
+  content: ''; display: block;
+  width: 100%; height: 4px;
+  background: var(--color-text-primary); border-radius: 2px;
 }
 .yao-line.yin { gap: 6px; }
 .yao-line .seg {
-  width: 28px; height: 0;
-  border-top: 4px solid var(--color-text-primary);
-  border-radius: 2px;
+  width: 28px; height: 4px;
+  background: var(--color-text-primary); border-radius: 2px;
 }
 .yao-line .gap { width: 0; }
 
