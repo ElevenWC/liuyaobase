@@ -82,9 +82,15 @@ def _build_condition_clause(cond: Condition, params: dict, idx: int) -> str:
     # 神煞字段：委托给 _build_shensha_clause
     shensha_key = cond.field.replace("is_", "").replace("dai_", "")
     if shensha_key in SHENSHA_MAP:
-        # mode 从 value 中解析或从 field 前缀推断
-        mode = cond.value if isinstance(cond.value, str) and cond.value in ("是", "带", "是或带") else "是"
-        obj_value = cond.value if mode == "是" else ""
+        # mode 从 field 前缀推断：is_xxx→是，dai_xxx→带，裸名→是或带
+        if cond.field.startswith("is_"):
+            mode = "是"
+        elif cond.field.startswith("dai_"):
+            mode = "带"
+        else:
+            mode = "是或带"
+        # obj_value 始终是用户在 value 字段中指定的对象（如"妻财爻"）
+        obj_value = cond.value if isinstance(cond.value, str) else ""
         return _build_shensha_clause(cond.field, mode, cond.scope or "", obj_value, params, idx)
 
     field_info = FIELD_MAP.get(cond.field)
@@ -261,6 +267,9 @@ def _collect_joins(conditions: list) -> set[str]:
     for cond in conditions:
         if isinstance(cond, RelationCondition):
             joins.add("y")
+            # 关系条件引用了时间对象 → 需要 guali_time
+            if cond.left_type == "time_object" or cond.right_type == "time_object":
+                joins.add("t")
             continue
         info = FIELD_MAP.get(cond.field)
         if info:
