@@ -71,6 +71,16 @@ function zoomIn() { scale.value = Math.min(3, scale.value + 0.2) }
 function zoomOut() { scale.value = Math.max(0.3, scale.value - 0.2) }
 function resetZoom() { scale.value = props.initialScale }
 
+const svgContainerRef = ref(null)
+function handleWheel(event) {
+  if (!svgContainerRef.value) return
+  const target = event.target
+  if (!svgContainerRef.value.contains(target)) return
+  event.preventDefault()
+  const delta = event.deltaY > 0 ? -0.1 : 0.1
+  scale.value = Math.min(3, Math.max(0.3, scale.value + delta))
+}
+
 // ── 力导向模拟 ──
 // 参考基准：1200×900 画布，力参数按当前画布等比缩放
 const REF_BASE = 900
@@ -163,8 +173,13 @@ function simulate() {
 
 watch(() => props.nodes, () => { initSimulation() }, { immediate: true })
 
+onMounted(() => {
+  window.addEventListener('wheel', handleWheel, { passive: false })
+})
+
 onUnmounted(() => {
   if (animationFrameId) cancelAnimationFrame(animationFrameId)
+  window.removeEventListener('wheel', handleWheel)
 })
 </script>
 
@@ -186,7 +201,7 @@ onUnmounted(() => {
     <div class="svg-wrapper">
       <svg
         :width="canvasWidth" :height="canvasHeight"
-        class="graph-svg" :style="{ transform: `scale(${scale})` }"
+        ref="svgContainerRef" class="graph-svg" :style="{ transform: `scale(${scale})` }"
         @click="selectedNode = null"
       >
         <!-- 边 -->
