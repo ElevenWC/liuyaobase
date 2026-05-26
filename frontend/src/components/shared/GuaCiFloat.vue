@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { fetchGuaci } from '../../api/index.js'
+import { nextZIndex } from '../../shared/zCounter.js'
 
 const props = defineProps({
   guaCode: { type: String, required: true },
@@ -18,8 +19,6 @@ const dragging = ref(false)
 const dragStart = ref({ x: 0, y: 0 })
 const zIndex = ref(0)
 
-let zCounter = 100
-
 watch(() => props.guaCode, fetchData, { immediate: true })
 
 async function fetchData() {
@@ -33,7 +32,7 @@ async function fetchData() {
 function onMouseDown(e) {
   dragging.value = true
   dragStart.value = { x: e.clientX - posX.value, y: e.clientY - posY.value }
-  zIndex.value = ++zCounter
+  zIndex.value = nextZIndex()
   document.addEventListener('mousemove', onMouseMove)
   document.addEventListener('mouseup', onMouseUp)
 }
