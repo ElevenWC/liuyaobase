@@ -304,7 +304,7 @@ function remove(id) { store.removeCondition(id) }
 
         <!-- 非三合布局：relation▼ (于) right -->
         <template v-else>
-          <select v-model="cond.relation" @change="if($event.target.value==='三合'){cond.middle_type=cond.middle_type||'yao_object'}" class="cb-sel">
+          <select v-model="cond.relation" @change="(e)=>{if(e.target.value==='三合'&&!cond.middle_type)cond.middle_type='yao_object'}" class="cb-sel">
             <optgroup label="生克合冲">
               <option value="生">生</option>
               <option value="克">克</option>
