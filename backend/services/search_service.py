@@ -264,7 +264,13 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int,
     dz1 = resolve_dz(rel.left_type, rel.left_value, f"l{idx}")
     dz2 = resolve_dz(rel.right_type, rel.right_value, f"r{idx}")
 
-    if relation in ("生", "克"):
+    if relation == "三合":
+        # 三合需要 3 个地支对象
+        dz_mid = resolve_dz(rel.middle_type, rel.middle_value, f"m{idx}")
+        if bureau:
+            return f"check_sanhe({dz1}, {dz_mid}, {dz2}) = '{bureau}'"
+        return f"check_sanhe({dz1}, {dz_mid}, {dz2}) != '无'"
+    elif relation in ("生", "克"):
         func = "check_sheng" if relation == "生" else "check_ke"
         return f"{func}({dz1}, {dz2}) = TRUE"
     elif relation == "合":
@@ -273,9 +279,6 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int,
         return f"check_chong({dz1}, {dz2}) = TRUE"
     elif relation == "半合":
         return f"check_banhe({dz1}, {dz2}) = TRUE"
-    elif relation == "三合":
-        b = f"'{bureau}'" if bureau else "'不限'"
-        return f"check_sanhe({dz1}, {dz2}, {b}) = TRUE"
     elif relation == "=":
         return f"{dz1} = {dz2}"
     elif relation in ("长生", "帝旺", "墓", "绝"):
@@ -291,7 +294,7 @@ def _collect_joins(conditions: list) -> set[str]:
         if isinstance(cond, RelationCondition):
             joins.add("y")
             # 关系条件引用了时间对象 → 需要 guali_time
-            if cond.left_type == "time_object" or cond.right_type == "time_object":
+            if cond.left_type == "time_object" or cond.right_type == "time_object" or (getattr(cond, 'middle_type', None) == "time_object"):
                 joins.add("t")
             continue
         info = FIELD_MAP.get(cond.field)

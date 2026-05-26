@@ -27,9 +27,11 @@ class Condition(BaseModel):
 
 
 class RelationCondition(Condition):
-    """关系条件——两个对象之间的关系判断"""
+    """关系条件——两个/三个对象之间的关系判断"""
     left_type: str        # yao_object / time_object / condition_group_ref
     left_value: str       # 左对象值
+    middle_type: Optional[str] = None  # 三合专用：中间对象类型
+    middle_value: Optional[str] = None  # 三合专用：中间对象值
     relation: str         # 生/克/合/冲/半合/三合/=/长生/帝旺/墓/绝
     right_type: str       # yao_object / time_object / condition_group_ref
     right_value: str      # 右对象值

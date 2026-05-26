@@ -105,8 +105,11 @@ function fieldValueOptions(field) {
   if (field === 'ben_shi_ying' || field === 'zhi_shi_ying') return SHIYING_VALS
   if (field === 'ben_yao_type' || field === 'zhi_yao_type') return YAOTYPE_VALS
   if (field === 'ben_dizhi' || field === 'zhi_dizhi' || field === 'yimao_dizhi' || field === 'zengshan_dizhi') return DIZHI_VALS
-  if (field === 'is_dong' || field === 'is_an_dong' || field === 'zengshan_exists') return ['true', 'false']
+  if (field === 'is_dong' || field === 'zengshan_exists') return ['true', 'false']
+  if (field === 'is_an_dong') return [{v:'true', l:'存在'}, {v:'false', l:'不存在'}]
   if (field === 'liushen') return LIUSHEN_VALS
+  if (field === 'ben_tiangan') return TIAN_GAN_VALS
+  if (field === 'yao_position') return ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻']
   // 卦类
   if (field === 'ben_palace' || field === 'zhi_palace') return GUA_PALACE_VALS
   if (field === 'ben_palace_type' || field === 'zhi_palace_type') return PALACE_TYPE_VALS
@@ -155,7 +158,7 @@ function remove(id) { store.removeCondition(id) }
 
       <!-- 爻属性条件 -->
       <template v-if="!cond.relation && !isShensha(cond.field)">
-        <select v-if="cond.scope !== null && cond.field && !GUA_FIELDS.find(f=>f.v===cond.field) && !TIME_FIELDS.find(f=>f.v===cond.field)" v-model="cond.scope" @change="()=>{}" class="cb-sel">
+        <select v-if="cond.scope !== null && cond.field && cond.field !== 'yao_position' && !GUA_FIELDS.find(f=>f.v===cond.field) && !TIME_FIELDS.find(f=>f.v===cond.field)" v-model="cond.scope" @change="()=>{}" class="cb-sel">
           <option v-for="s in SCOPE_OPTIONS" :key="s.v" :value="s.v">{{ s.label }}</option>
         </select>
         <select v-if="!GUA_FIELDS.find(f=>f.v===cond.field) && !TIME_FIELDS.find(f=>f.v===cond.field)" v-model="cond.field" @change="(e)=>{cond.value=''; if(e.target.value==='is_dong'||e.target.value==='is_an_dong'){cond.value='true';cond.operator='equals'}}" class="cb-sel">
@@ -173,7 +176,7 @@ function remove(id) { store.removeCondition(id) }
         </select>
         <select v-if="fieldValueOptions(cond.field).length" v-model="cond.value" class="cb-sel">
           <option value="">--值--</option>
-          <option v-for="v in fieldValueOptions(cond.field)" :key="v" :value="v">{{ v }}</option>
+          <option v-for="v in fieldValueOptions(cond.field)" :key="v.v||v" :value="v.v||v">{{ v.l||v }}</option>
         </select>
         <input v-else v-model="cond.value" class="cb-input" placeholder="输入值" />
       </template>
@@ -241,6 +244,29 @@ function remove(id) { store.removeCondition(id) }
           </optgroup>
         </select>
         <span v-if="SHENGWANG_RELATIONS.includes(cond.relation)" class="cb-yu">于</span>
+        <!-- 三合中间对象 -->
+        <template v-if="cond.relation==='三合'">
+          <select v-model="cond.middle_type" class="cb-sel">
+            <option value="yao_object">爻对象</option>
+            <option value="time_object">时间对象</option>
+          </select>
+          <select v-if="cond.middle_type==='yao_object'" v-model="cond.middle_value" class="cb-sel">
+            <option value="">--对象--</option>
+            <option value="世爻">世爻</option>
+            <option value="应爻">应爻</option>
+            <option value="妻财爻">妻财爻</option>
+            <option value="官鬼爻">官鬼爻</option>
+            <option value="父母爻">父母爻</option>
+            <option value="兄弟爻">兄弟爻</option>
+            <option value="子孙爻">子孙爻</option>
+          </select>
+          <select v-else v-model="cond.middle_value" class="cb-sel">
+            <option value="">--时间--</option>
+            <option value="年支">年支</option>
+            <option value="月支">月支</option>
+            <option value="日支">日支</option>
+          </select>
+        </template>
         <select v-model="cond.right_type" class="cb-sel">
           <option value="yao_object">爻对象</option>
           <option value="time_object">时间对象</option>

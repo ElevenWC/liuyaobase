@@ -71,7 +71,12 @@ function onFieldSelect({ cat, field, type, label }) {
     } else if (type === 'shensha') {
       store.updateCondition(id, { field, value: '妻财爻' })
     } else {
-      store.updateCondition(id, { field })
+      // 根据字段前缀自动设 scope
+      let scope = 'ben_gua'
+      if (field.startsWith('zhi_')) scope = 'bian_yao'
+      else if (field.startsWith('yimao_')) scope = 'yimao'
+      else if (field.startsWith('zengshan_')) scope = 'zengshan'
+      store.updateCondition(id, { field, scope })
     }
   }
 }
@@ -198,7 +203,7 @@ function onPageChange(page) {
   width: 16px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
   background: var(--color-bg-secondary); border-radius: var(--radius-sm);
-  cursor: pointer; color: var(--color-text-muted); font-size: 13px;
+  cursor: pointer; color: var(--color-text-muted); font-size: 25px;
   transition: all var(--transition-fast); user-select: none;
 }
 .fl-toggle:hover { background: var(--color-bg-tertiary); color: var(--color-accent-light); }
