@@ -10,6 +10,10 @@ const YONGSHEN_OPTS = ['妻财', '官鬼', '父母', '兄弟', '子孙']
 const desc = computed(() => {
   return `含义：返回本卦中与${props.group.feishenType}(${props.group.yongshen})同爻位的爻（飞神）`
 })
+
+function toggleFeishenType(type) {
+  if (props.group.feishenType !== type) props.group.feishenType = type
+}
 </script>
 
 <template>
@@ -21,8 +25,8 @@ const desc = computed(() => {
     <div class="cg-body">
       <div class="cg-row">
         <span class="cg-lbl">飞神类型：</span>
-        <label class="cg-radio"><input type="radio" v-model="group.feishenType" value="增删飞神" />增删飞神</label>
-        <label class="cg-radio"><input type="radio" v-model="group.feishenType" value="易冒飞神" />易冒飞神</label>
+        <label class="cg-chk"><input type="checkbox" :checked="group.feishenType==='增删飞神'" @change="toggleFeishenType('增删飞神')" />增删飞神</label>
+        <label class="cg-chk"><input type="checkbox" :checked="group.feishenType==='易冒飞神'" @change="toggleFeishenType('易冒飞神')" />易冒飞神</label>
       </div>
       <div class="cg-row">
         <span class="cg-lbl">用神：</span>
@@ -54,6 +58,6 @@ const desc = computed(() => {
 .cg-body { display: flex; flex-direction: column; gap: var(--space-1); }
 .cg-row { display: flex; align-items: center; gap: var(--space-2); }
 .cg-lbl { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
-.cg-radio { font-size: var(--font-size-xs); color: var(--color-text-secondary); display: flex; align-items: center; gap: 2px; cursor: pointer; accent-color: var(--color-accent); }
+.cg-chk { font-size: var(--font-size-xs); color: var(--color-text-secondary); display: flex; align-items: center; gap: 2px; cursor: pointer; accent-color: var(--color-accent); }
 .cg-note { font-size: var(--font-size-xs); color: var(--color-text-muted); margin: 0; }
 </style>

@@ -30,8 +30,8 @@ function valOptions(field) {
   if (field === 'yao_type') return YAOTYPE_VALS
   if (field === 'dizhi') return DIZHI_VALS
   if (field === 'tiangan') return TIAN_GAN_VALS
-  if (field === 'is_dong' || field === 'is_an_dong') return [{ v: 'true', l: '存在' }, { v: 'false', l: '不存在' }]
-  if (field === 'zengshan_exists') return ['true', 'false']
+  if (field === 'is_dong' || field === 'is_an_dong') return [{ v: 'true', l: '是' }, { v: 'false', l: '否' }]
+  if (field === 'zengshan_exists') return [{ v: 'true', l: '有' }, { v: 'false', l: '无' }]
   if (field === 'liushen') return LIUSHEN_VALS
   return []
 }
@@ -56,7 +56,7 @@ function removeSub(si, ci) { store.removeSubCondition(props.group.id, ci, si) }
       <button class="cg-del" @click="store.removeConditionGroup(group.id)" title="删除">×</button>
     </div>
     <div class="cg-pos-bar">
-      <span class="cg-lbl">爻位：第</span>
+      <span class="cg-lbl">爻位：</span>
       <select v-model="group.position" class="cb-sel">
         <option v-for="(lbl, i) in POS_LABELS" :key="i" :value="i+1">{{ lbl }}</option>
       </select>

@@ -29,8 +29,8 @@ function valOptions(field) {
   if (field === 'yao_type') return YAOTYPE_VALS
   if (field === 'dizhi') return DIZHI_VALS
   if (field === 'tiangan') return TIAN_GAN_VALS
-  if (field === 'is_dong' || field === 'is_an_dong') return [{ v: 'true', l: '存在' }, { v: 'false', l: '不存在' }]
-  if (field === 'zengshan_exists') return ['true', 'false']
+  if (field === 'is_dong' || field === 'is_an_dong') return [{ v: 'true', l: '是' }, { v: 'false', l: '否' }]
+  if (field === 'zengshan_exists') return [{ v: 'true', l: '有' }, { v: 'false', l: '无' }]
   if (field === 'liushen') return LIUSHEN_VALS
   if (field === 'yao_position') return [{ v: '1', l: '初爻' }, { v: '2', l: '二爻' }, { v: '3', l: '三爻' }, { v: '4', l: '四爻' }, { v: '5', l: '五爻' }, { v: '6', l: '上爻' }]
   return []
