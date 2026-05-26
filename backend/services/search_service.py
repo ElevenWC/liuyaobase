@@ -122,10 +122,17 @@ SOURCE_TO_SCOPE = {
 }
 
 
+def _norm_bool(val):
+    """MySQL TINYINT 列无法匹配字符串 'true'/'false'，统一转为 1/0"""
+    if isinstance(val, str) and val.lower() in ('true', 'false'):
+        return 1 if val.lower() == 'true' else 0
+    return val
+
+
 def _build_sub_condition_clause(sub_cond, sql_col: str, params: dict, key: str) -> str:
     """单个子条件 → SQL 片段（通用字段已解析为 sql_col）"""
     op = sub_cond.operator if hasattr(sub_cond, 'operator') else sub_cond.get("operator", "equals")
-    val = sub_cond.value if hasattr(sub_cond, 'value') else sub_cond.get("value", "")
+    val = _norm_bool(sub_cond.value if hasattr(sub_cond, 'value') else sub_cond.get("value", ""))
 
     if op == "equals":
         params[key] = val
@@ -140,7 +147,7 @@ def _build_sub_condition_clause(sub_cond, sql_col: str, params: dict, key: str) 
         for vi, vv in enumerate(val):
             pk = f"{key}_{vi}"
             placeholders.append(f":{pk}")
-            params[pk] = vv
+            params[pk] = _norm_bool(vv)
         return f"{sql_col} IN ({','.join(placeholders)})"
     elif op == "not_in":
         if not isinstance(val, list):
@@ -149,7 +156,7 @@ def _build_sub_condition_clause(sub_cond, sql_col: str, params: dict, key: str) 
         for vi, vv in enumerate(val):
             pk = f"{key}_{vi}"
             placeholders.append(f":{pk}")
-            params[pk] = vv
+            params[pk] = _norm_bool(vv)
         return f"({sql_col} NOT IN ({','.join(placeholders)}) OR {sql_col} IS NULL)"
     elif op == "gt":
         params[key] = val
@@ -281,7 +288,7 @@ def _build_condition_clause(cond: Condition, params: dict, idx: int) -> str:
     sql_col = field_info["sql"]
     op = cond.operator
     key = f"v{idx}"
-    val = cond.value
+    val = _norm_bool(cond.value)
 
     clauses = []
     # scope 过滤：按来源范围限定
@@ -304,7 +311,7 @@ def _build_condition_clause(cond: Condition, params: dict, idx: int) -> str:
         for vi, vv in enumerate(val):
             pk = f"{key}_{vi}"
             placeholders.append(f":{pk}")
-            params[pk] = vv
+            params[pk] = _norm_bool(vv)
         clauses.append(f"{sql_col} IN ({','.join(placeholders)})")
     elif op == "not_in":
         if not isinstance(val, list):
@@ -313,7 +320,7 @@ def _build_condition_clause(cond: Condition, params: dict, idx: int) -> str:
         for vi, vv in enumerate(val):
             pk = f"{key}_{vi}"
             placeholders.append(f":{pk}")
-            params[pk] = vv
+            params[pk] = _norm_bool(vv)
         clauses.append(f"({sql_col} NOT IN ({','.join(placeholders)}) OR {sql_col} IS NULL)")
     elif op == "gt":
         clauses.append(f"{sql_col} > :{key}")
