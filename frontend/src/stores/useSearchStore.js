@@ -112,14 +112,17 @@ export const useSearchStore = defineStore('search', () => {
     if (idx >= 0) Object.assign(conditions.value[idx], patch)
   }
 
-  function addSubCondition(groupId) {
+  function addSubCondition(groupId, srcIdx) {
     const g = conditions.value.find(c => c.id === groupId)
     if (!g?.groupType) return
     if (g.groupType === 'same_yao') {
       g.conditions.push({ field: '', operator: 'equals', value: '' })
     } else if (g.groupType === 'same_position') {
-      // 添加到第一个已勾选的来源，或不做操作
-      if (g.sources.length) g.sources[0].conditions.push({ field: '', operator: 'equals', value: '' })
+      if (srcIdx !== undefined && g.sources[srcIdx]) {
+        g.sources[srcIdx].conditions.push({ field: '', operator: 'equals', value: '' })
+      } else if (g.sources.length) {
+        g.sources[0].conditions.push({ field: '', operator: 'equals', value: '' })
+      }
     }
   }
 

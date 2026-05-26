@@ -45,7 +45,7 @@ function toggleSrc(source) {
   else props.group.sources.push({ source, conditions: [] })
 }
 
-function addSub(srcIdx) { store.addSubCondition(props.group.id, 0, srcIdx) }
+function addSub(srcIdx) { store.addSubCondition(props.group.id, srcIdx) }
 function removeSub(srcIdx, subIdx) { store.removeSubCondition(props.group.id, subIdx, srcIdx) }
 </script>
 
