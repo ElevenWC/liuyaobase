@@ -1,4 +1,5 @@
 <script setup>
+import { ref, computed } from 'vue'
 import { useSearchStore } from '../../stores/useSearchStore.js'
 
 const store = useSearchStore()
@@ -12,25 +13,30 @@ const SCOPE_OPTIONS = [
 ]
 
 const FIELD_OPTIONS = [
-  { v: 'ben_liuqin', label: '六亲' },
-  { v: 'ben_dizhi', label: '地支' },
-  { v: 'ben_shi_ying', label: '世应' },
-  { v: 'ben_yao_type', label: '爻类型' },
-  { v: 'ben_tiangan', label: '天干' },
-  { v: 'is_dong', label: '动爻' },
-  { v: 'is_an_dong', label: '暗动' },
-  { v: 'zengshan_exists', label: '有伏神' },
-  { v: 'liushen', label: '六神' },
-  { v: 'yao_position', label: '爻位' },
-  { v: 'zhi_liuqin', label: '之卦六亲' },
-  { v: 'zhi_dizhi', label: '之卦地支' },
-  { v: 'zhi_shi_ying', label: '之卦世应' },
-  { v: 'zhi_yao_type', label: '之卦爻类型' },
-  { v: 'yimao_liuqin', label: '易冒六亲' },
-  { v: 'yimao_dizhi', label: '易冒地支' },
-  { v: 'zengshan_liuqin', label: '增删六亲' },
-  { v: 'zengshan_dizhi', label: '增删地支' },
+  { v: 'ben_liuqin', label: '六亲', scopes: ['ben_gua'] },
+  { v: 'ben_dizhi', label: '地支', scopes: ['ben_gua'] },
+  { v: 'ben_shi_ying', label: '世应', scopes: ['ben_gua'] },
+  { v: 'ben_yao_type', label: '爻类型', scopes: ['ben_gua'] },
+  { v: 'ben_tiangan', label: '天干', scopes: ['ben_gua'] },
+  { v: 'is_dong', label: '动爻', scopes: ['ben_gua'] },
+  { v: 'is_an_dong', label: '暗动', scopes: ['ben_gua'] },
+  { v: 'zengshan_exists', label: '有伏神', scopes: ['zengshan'] },
+  { v: 'liushen', label: '六神', scopes: ['ben_gua', 'bian_yao', 'zhi_gua', 'yimao', 'zengshan'] },
+  { v: 'yao_position', label: '爻位', scopes: ['ben_gua', 'bian_yao', 'zhi_gua', 'yimao', 'zengshan'] },
+  { v: 'zhi_liuqin', label: '之卦六亲', scopes: ['bian_yao', 'zhi_gua'] },
+  { v: 'zhi_dizhi', label: '之卦地支', scopes: ['bian_yao', 'zhi_gua'] },
+  { v: 'zhi_shi_ying', label: '之卦世应', scopes: ['bian_yao', 'zhi_gua'] },
+  { v: 'zhi_yao_type', label: '之卦爻类型', scopes: ['bian_yao', 'zhi_gua'] },
+  { v: 'yimao_liuqin', label: '易冒六亲', scopes: ['yimao'] },
+  { v: 'yimao_dizhi', label: '易冒地支', scopes: ['yimao'] },
+  { v: 'zengshan_liuqin', label: '增删六亲', scopes: ['zengshan'] },
+  { v: 'zengshan_dizhi', label: '增删地支', scopes: ['zengshan'] },
 ]
+
+function availableFields(scope) {
+  if (!scope) return FIELD_OPTIONS
+  return FIELD_OPTIONS.filter(f => f.scopes.includes(scope))
+}
 
 const GUA_FIELDS = [
   { v: 'ben_palace', label: '本卦卦宫' },
@@ -62,6 +68,24 @@ const GUA_PALACE_VALS = ['乾宫', '坤宫', '震宫', '巽宫', '坎宫', '离�
 const DIZHI_VALS = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
 const LIUSHEN_VALS = ['青龙', '朱雀', '勾陈', '螣蛇', '白虎', '玄武']
 
+const SHENSHA_FIELDS = ['is_ganlu', 'dai_ganlu', 'is_yima', 'dai_yima', 'is_yangren', 'dai_yangren', 'is_taohua', 'dai_taohua', 'ganlu', 'yima', 'yangren', 'taohua']
+const SHENSHA_TYPES = [
+  { v: 'is_ganlu', label: '是干禄', mode: '是', shensha: '干禄' },
+  { v: 'dai_ganlu', label: '带干禄', mode: '带', shensha: '干禄' },
+  { v: 'is_yima', label: '是驿马', mode: '是', shensha: '驿马' },
+  { v: 'dai_yima', label: '带驿马', mode: '带', shensha: '驿马' },
+  { v: 'is_yangren', label: '是羊刃', mode: '是', shensha: '羊刃' },
+  { v: 'dai_yangren', label: '带羊刃', mode: '带', shensha: '羊刃' },
+  { v: 'is_taohua', label: '是桃花', mode: '是', shensha: '桃花' },
+  { v: 'dai_taohua', label: '带桃花', mode: '带', shensha: '桃花' },
+  { v: 'ganlu', label: '是或带干禄', mode: '是或带', shensha: '干禄' },
+  { v: 'yima', label: '是或带驿马', mode: '是或带', shensha: '驿马' },
+  { v: 'yangren', label: '是或带羊刃', mode: '是或带', shensha: '羊刃' },
+  { v: 'taohua', label: '是或带桃花', mode: '是或带', shensha: '桃花' },
+]
+
+function isShensha(field) { return SHENSHA_FIELDS.includes(field) }
+
 function fieldValueOptions(field) {
   if (field === 'ben_liuqin' || field === 'zhi_liuqin' || field === 'yimao_liuqin' || field === 'zengshan_liuqin') return LIUQIN_VALS
   if (field === 'ben_shi_ying' || field === 'zhi_shi_ying') return SHIYING_VALS
@@ -77,6 +101,11 @@ function fieldValueOptions(field) {
 
 function addYaoCondition() { store.addCondition('normal') }
 function addRelationCondition() { store.addCondition('relation') }
+function addShenshaCondition() {
+  store.addCondition('normal')
+  const c = store.conditions[store.conditions.length - 1]
+  if (c) store.updateCondition(c.id, { field: 'is_ganlu', value: '妻财爻', operator: 'equals' })
+}
 function addGuaCondition() {
   store.addCondition('normal')
   const c = store.conditions[store.conditions.length - 1]
@@ -104,13 +133,13 @@ function remove(id) { store.removeCondition(id) }
       <button class="cond-remove" @click="remove(cond.id)" title="删除此条件">×</button>
 
       <!-- 爻属性条件 -->
-      <template v-if="!cond.relation">
+      <template v-if="!cond.relation && !isShensha(cond.field)">
         <select v-if="cond.scope !== null && cond.field && !GUA_FIELDS.find(f=>f.v===cond.field) && !TIME_FIELDS.find(f=>f.v===cond.field)" v-model="cond.scope" @change="()=>{}" class="cb-sel">
           <option v-for="s in SCOPE_OPTIONS" :key="s.v" :value="s.v">{{ s.label }}</option>
         </select>
         <select v-if="!GUA_FIELDS.find(f=>f.v===cond.field) && !TIME_FIELDS.find(f=>f.v===cond.field)" v-model="cond.field" @change="(e)=>{cond.value=''; if(e.target.value==='is_dong'||e.target.value==='is_an_dong'){cond.value='true';cond.operator='equals'}}" class="cb-sel">
           <option value="">--字段--</option>
-          <option v-for="f in FIELD_OPTIONS" :key="f.v" :value="f.v">{{ f.label }}</option>
+          <option v-for="f in availableFields(cond.scope)" :key="f.v" :value="f.v">{{ f.label }}</option>
         </select>
         <select v-else-if="GUA_FIELDS.find(f=>f.v===cond.field) || (!cond.field)" class="cb-sel" @change="(e)=>{cond.field=e.target.value;cond.scope=null; if(e.target.value){store.updateCondition(cond.id,{field:e.target.value,scope:null})}}" :value="cond.field">
           <option value="">--卦类字段--</option>
@@ -126,6 +155,27 @@ function remove(id) { store.removeCondition(id) }
           <option v-for="v in fieldValueOptions(cond.field)" :key="v" :value="v">{{ v }}</option>
         </select>
         <input v-else v-model="cond.value" class="cb-input" placeholder="输入值" />
+      </template>
+
+      <!-- 神煞条件 -->
+      <template v-else-if="isShensha(cond.field)">
+        <select v-model="cond.scope" class="cb-sel">
+          <option v-for="s in SCOPE_OPTIONS" :key="s.v" :value="s.v">{{ s.label }}</option>
+        </select>
+        <select v-model="cond.value" class="cb-sel">
+          <option value="">--对象--</option>
+          <option value="世爻">世爻</option>
+          <option value="应爻">应爻</option>
+          <option value="妻财爻">妻财爻</option>
+          <option value="官鬼爻">官鬼爻</option>
+          <option value="父母爻">父母爻</option>
+          <option value="兄弟爻">兄弟爻</option>
+          <option value="子孙爻">子孙爻</option>
+        </select>
+        <select v-model="cond.field" class="cb-sel" @change="(e)=>{ if(e.target.value==='is_dong'||e.target.value==='is_an_dong'){cond.value='true';cond.operator='equals'} }">
+          <option value="">--神煞--</option>
+          <option v-for="s in SHENSHA_TYPES" :key="s.v" :value="s.v">{{ s.label }}</option>
+        </select>
       </template>
 
       <!-- 关系条件 -->
@@ -203,6 +253,7 @@ function remove(id) { store.removeCondition(id) }
       <button @click="addRelationCondition" class="cb-btn">+ 关系</button>
       <button @click="addGuaCondition" class="cb-btn">+ 卦类</button>
       <button @click="addTimeCondition" class="cb-btn">+ 时间</button>
+      <button @click="addShenshaCondition" class="cb-btn">+ 神煞</button>
     </div>
   </div>
 </template>

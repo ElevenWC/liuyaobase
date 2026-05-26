@@ -249,8 +249,13 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int,
             ref_clause = cond_clauses.get(obj_value, "")
             ref_sql = ref_clause.replace("y.", f"{alias}.")
 
+            # 如果被引用条件含神煞字段(s.)，子查询需 JOIN guali_shensha
+            extra_join = ""
+            if "s." in ref_sql:
+                extra_join = f" LEFT JOIN guali_shensha s ON s.guali_id = {alias}.guali_id"
+
             return (
-                f"(SELECT {alias}.ben_dizhi FROM guali_yao {alias}"
+                f"(SELECT {alias}.ben_dizhi FROM guali_yao {alias}{extra_join}"
                 f" WHERE {alias}.guali_id = guali.id AND ({ref_sql}) LIMIT 1)"
             )
         params[suffix] = obj_value
@@ -381,8 +386,10 @@ def _assemble_logic(logic: list[LogicItem], cond_clauses: dict[str, str]) -> str
     if not logic:
         return " AND ".join(cond_clauses.values())
 
+    MAX_BRACKET_DEPTH = 5
+    depth = 0
     parts: list[str] = []
-    for item in logic:
+    for i, item in enumerate(logic):
         if item.type == "condition":
             clause = cond_clauses.get(item.id or "", "TRUE")
             parts.append(f"({clause})")
@@ -390,10 +397,24 @@ def _assemble_logic(logic: list[LogicItem], cond_clauses: dict[str, str]) -> str
             if parts:
                 parts.append(f" {item.type.upper()} ")
         elif item.type == "not":
+            # NOT 后面必须跟 condition 或 "("
+            next_valid = (i + 1 < len(logic) and
+                          logic[i + 1].type in ("condition", "(", "not"))
+            if not next_valid:
+                raise ValueError(f"NOT 运算符后缺少操作数（位置 {i}）")
             parts.append("NOT ")
         elif item.type == "(":
+            depth += 1
+            if depth > MAX_BRACKET_DEPTH:
+                raise ValueError(f"括号嵌套深度超过上限（最多 {MAX_BRACKET_DEPTH} 层）")
             parts.append("(")
         elif item.type == ")":
+            depth -= 1
+            if depth < 0:
+                raise ValueError("括号不匹配：多余的右括号")
             parts.append(")")
+
+    if depth != 0:
+        raise ValueError(f"括号不匹配：缺少 {depth} 个右括号")
 
     return "".join(parts)
