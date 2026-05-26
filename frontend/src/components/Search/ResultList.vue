@@ -31,6 +31,8 @@ function toggleSelect(id) {
 }
 
 const totalPages = computed(() => Math.ceil(props.total / props.pageSize) || 1)
+
+defineExpose({ selected })
 </script>
 
 <template>

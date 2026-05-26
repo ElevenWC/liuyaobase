@@ -11,12 +11,48 @@ export const useSearchStore = defineStore('search', () => {
   const pagination = ref({ page: 1, pageSize: 50, total: 0 })
   const loading = ref(false)
 
+  // 字段名 → 中文标签
+  const FIELD_LABELS = {
+    ben_liuqin: '六亲', ben_dizhi: '地支', ben_shi_ying: '世应', ben_yao_type: '爻类型',
+    ben_tiangan: '天干', is_dong: '动爻', is_an_dong: '暗动', liushen: '六神',
+    yao_position: '爻位', zengshan_exists: '有伏神',
+    zhi_liuqin: '之卦六亲', zhi_dizhi: '之卦地支', zhi_shi_ying: '之卦世应', zhi_yao_type: '之卦爻类型',
+    yimao_liuqin: '易冒六亲', yimao_dizhi: '易冒地支',
+    zengshan_liuqin: '增删六亲', zengshan_dizhi: '增删地支',
+    ben_palace: '本卦卦宫', ben_palace_type: '本卦宫位', ben_special_type: '本卦特殊类型',
+    zhi_palace: '之卦卦宫', zhi_palace_type: '之卦宫位', zhi_special_type: '之卦特殊类型',
+    fan_yin_yimao: '易冒反吟', fan_yin_yaobian: '爻变反吟', fu_yin: '伏吟',
+    year_pillar: '年柱', year_gan: '年干', year_zhi: '年支',
+    month_pillar: '月柱', month_gan: '月干', month_zhi: '月支',
+    day_pillar: '日柱', day_gan: '日干', day_zhi: '日支', xun_kong: '旬空',
+    is_ganlu: '是干禄', dai_ganlu: '带干禄', ganlu: '是或带干禄',
+    is_yima: '是驿马', dai_yima: '带驿马', yima: '是或带驿马',
+    is_yangren: '是羊刃', dai_yangren: '带羊刃', yangren: '是或带羊刃',
+    is_taohua: '是桃花', dai_taohua: '带桃花', taohua: '是或带桃花',
+  }
+  const OP_LABELS = { equals: '=', not_equals: '≠', in: '∈', not_in: '∉', gt: '>', lt: '<', gte: '≥', lte: '≤', range: '∈' }
+  const SCOPE_MAP = { ben_gua: '本卦', zhi_gua: '之卦', bian_yao: '变爻', yimao: '易冒', zengshan: '增删' }
+
   // 自然语言表达式预览
   const expressionPreview = computed(() => {
     if (!conditions.value.length) return '未设置条件（将返回全部卦例）'
     const parts = conditions.value.map(c => {
-      const scopeText = c.scope ? { ben_gua: '本卦', zhi_gua: '之卦', bian_yao: '变爻', yimao: '易冒', zengshan: '增删' }[c.scope] || c.scope : ''
-      return scopeText ? `${scopeText}${c.field}${c.operator}${c.value}` : `${c.field} ${c.operator} ${c.value}`
+      // 关系条件
+      if (c.relation) {
+        const yu = ['长生', '帝旺', '墓', '绝'].includes(c.relation) ? '于 ' : ''
+        return `${c.left_value || '?'} ${c.relation} ${yu}${c.right_value || '?'}`
+      }
+      // 神煞条件
+      const shenshaLabel = FIELD_LABELS[c.field]
+      if (shenshaLabel && (c.field.startsWith('is_') || c.field.startsWith('dai_') || ['ganlu','yima','yangren','taohua'].includes(c.field))) {
+        const scopeText = c.scope ? (SCOPE_MAP[c.scope] || c.scope) + ' ' : ''
+        return `${scopeText}${c.value || '?'} ${shenshaLabel}`
+      }
+      // 普通条件
+      const label = FIELD_LABELS[c.field] || c.field
+      const op = OP_LABELS[c.operator] || c.operator
+      const scopeText = c.scope ? (SCOPE_MAP[c.scope] || c.scope) + ' ' : ''
+      return `${scopeText}${label} ${op} ${c.value || '(空)'}`
     })
     return parts.join(' AND ') + ` （第${pagination.value.page}页）`
   })
