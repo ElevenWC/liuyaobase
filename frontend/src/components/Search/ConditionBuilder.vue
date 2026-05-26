@@ -1,8 +1,12 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useSearchStore } from '../../stores/useSearchStore.js'
+import SameYaoGroup from './SameYaoGroup.vue'
+import SamePositionGroup from './SamePositionGroup.vue'
+import FeishenGroup from './FeishenGroup.vue'
 
 const store = useSearchStore()
+function isGroup(c) { return !!c.groupType }
 
 const SCOPE_OPTIONS = [
   { v: 'ben_gua', label: '本卦' },
@@ -156,8 +160,13 @@ function remove(id) { store.removeCondition(id) }
     <div v-for="cond in store.conditions" :key="cond.id" class="cond-item">
       <button class="cond-remove" @click="remove(cond.id)" title="删除此条件">×</button>
 
+      <!-- 条件组 -->
+      <SameYaoGroup v-if="cond.groupType==='same_yao'" :group="cond" />
+      <SamePositionGroup v-else-if="cond.groupType==='same_position'" :group="cond" />
+      <FeishenGroup v-else-if="cond.groupType==='feishen'" :group="cond" />
+
       <!-- 爻属性条件 -->
-      <template v-if="!cond.relation && !isShensha(cond.field)">
+      <template v-else-if="!cond.relation && !isShensha(cond.field)">
         <select v-if="cond.scope !== null && cond.field && cond.field !== 'yao_position' && !GUA_FIELDS.find(f=>f.v===cond.field) && !TIME_FIELDS.find(f=>f.v===cond.field)" v-model="cond.scope" @change="()=>{}" class="cb-sel">
           <option v-for="s in SCOPE_OPTIONS" :key="s.v" :value="s.v">{{ s.label }}</option>
         </select>
@@ -275,7 +284,7 @@ function remove(id) { store.removeCondition(id) }
           </select>
           <select v-else v-model="cond.right_value" class="cb-sel">
             <option value="">--条件ID--</option>
-            <option v-for="c in store.conditions.filter(x=>x.id!==cond.id&&!x.relation)" :key="c.id" :value="c.id">{{ c.id }}</option>
+            <option v-for="c in store.conditions.filter(x=>x.id!==cond.id)" :key="c.id" :value="c.id">{{ c.id }}{{ c.groupType ? '(组)' : '' }}</option>
           </select>
           <select v-model="cond.relation" class="cb-sel">
             <optgroup label="生克合冲">
@@ -351,7 +360,7 @@ function remove(id) { store.removeCondition(id) }
           </select>
           <select v-else v-model="cond.right_value" class="cb-sel">
             <option value="">--条件ID--</option>
-            <option v-for="c in store.conditions.filter(x=>x.id!==cond.id&&!x.relation)" :key="c.id" :value="c.id">{{ c.id }}</option>
+            <option v-for="c in store.conditions.filter(x=>x.id!==cond.id)" :key="c.id" :value="c.id">{{ c.id }}{{ c.groupType ? '(组)' : '' }}</option>
           </select>
         </template>
       </template>
@@ -363,6 +372,10 @@ function remove(id) { store.removeCondition(id) }
       <button @click="addGuaCondition" class="cb-btn">+ 卦类</button>
       <button @click="addTimeCondition" class="cb-btn">+ 时间</button>
       <button @click="addShenshaCondition" class="cb-btn">+ 神煞</button>
+      <span class="cb-sep">|</span>
+      <button @click="store.addConditionGroup('same_yao')" class="cb-btn cg-btn">+ 同一爻</button>
+      <button @click="store.addConditionGroup('same_position')" class="cb-btn cg-btn">+ 同爻位</button>
+      <button @click="store.addConditionGroup('feishen')" class="cb-btn cg-btn">+ 飞神</button>
     </div>
   </div>
 </template>
@@ -389,4 +402,6 @@ function remove(id) { store.removeCondition(id) }
 .cb-actions { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
 .cb-btn { padding: 3px 10px; background: var(--color-bg-tertiary); color: var(--color-text-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); font-size: var(--font-size-xs); cursor: pointer; transition: all var(--transition-fast); }
 .cb-btn:hover { border-color: var(--color-accent); color: var(--color-accent-light); }
+.cb-sep { color: var(--color-border-primary); font-size: var(--font-size-xs); }
+.cg-btn { border-color: var(--color-accent); color: var(--color-accent-light); }
 </style>

@@ -1,6 +1,6 @@
 """C3 复杂检索核心——动态 SQL 生成 + 执行"""
 from sqlmodel import Session, text
-from backend.schemas.search import SearchRequest, Condition, RelationCondition, LogicItem, SearchResponse
+from backend.schemas.search import SearchRequest, Condition, RelationCondition, LogicItem, SearchResponse, SameYaoGroup, SamePositionGroup, FeishenGroup, SubCondition
 
 # ── 字段映射白名单 ──
 # field_name → (table_alias, column_expression, needs_yao_join, needs_shensha_join, needs_gua_join, needs_time_join)
@@ -63,6 +63,187 @@ SHENSHA_MAP = {
 
 # yao_object 六爻对象 → 查找方式
 YAO_OBJECTS = {"世爻", "应爻", "妻财爻", "官鬼爻", "父母爻", "兄弟爻", "子孙爻"}
+
+# ── 条件组：通用字段名 × 来源 → SQL 列名 ──
+GENERIC_YAO_FIELDS: dict[str, dict[str, str | None]] = {
+    "liuqin": {
+        "本卦": "y.ben_liuqin", "变爻": "y.zhi_liuqin",
+        "之卦(静爻)": "y.zhi_liuqin", "易冒伏神": "y.yimao_liuqin",
+        "增删伏神": "y.zengshan_liuqin",
+    },
+    "dizhi": {
+        "本卦": "y.ben_dizhi", "变爻": "y.zhi_dizhi",
+        "之卦(静爻)": "y.zhi_dizhi", "易冒伏神": "y.yimao_dizhi",
+        "增删伏神": "y.zengshan_dizhi",
+    },
+    "shi_ying": {
+        "本卦": "y.ben_shi_ying", "变爻": "y.zhi_shi_ying",
+        "之卦(静爻)": "y.zhi_shi_ying", "易冒伏神": None,
+        "增删伏神": None,
+    },
+    "yao_type": {
+        "本卦": "y.ben_yao_type", "变爻": "y.zhi_yao_type",
+        "之卦(静爻)": "y.zhi_yao_type", "易冒伏神": None,
+        "增删伏神": None,
+    },
+    "tiangan": {
+        "本卦": "y.ben_tiangan", "变爻": "y.zhi_tiangan",
+        "之卦(静爻)": "y.zhi_tiangan", "易冒伏神": None,
+        "增删伏神": None,
+    },
+    "yao_position": {
+        "本卦": "y.yao_position", "变爻": "y.yao_position",
+        "之卦(静爻)": "y.yao_position", "易冒伏神": "y.yao_position",
+        "增删伏神": "y.yao_position",
+    },
+    "is_dong": {
+        "本卦": "y.is_dong", "变爻": None, "之卦(静爻)": None,
+        "易冒伏神": None, "增删伏神": None,
+    },
+    "is_an_dong": {
+        "本卦": "y.is_an_dong", "变爻": None, "之卦(静爻)": None,
+        "易冒伏神": None, "增删伏神": None,
+    },
+    "liushen": {
+        "本卦": "y.liushen", "变爻": "y.liushen",
+        "之卦(静爻)": "y.liushen", "易冒伏神": "y.liushen",
+        "增删伏神": "y.liushen",
+    },
+    "zengshan_exists": {
+        "本卦": None, "变爻": None, "之卦(静爻)": None,
+        "易冒伏神": None, "增删伏神": "y.zengshan_exists",
+    },
+}
+
+# 来源中文名 → scope 常量
+SOURCE_TO_SCOPE = {
+    "本卦": "ben_gua", "变爻": "bian_yao", "之卦(静爻)": "zhi_gua",
+    "易冒伏神": "yimao", "增删伏神": "zengshan",
+}
+
+
+def _build_sub_condition_clause(sub_cond, sql_col: str, params: dict, key: str) -> str:
+    """单个子条件 → SQL 片段（通用字段已解析为 sql_col）"""
+    op = sub_cond.operator if hasattr(sub_cond, 'operator') else sub_cond.get("operator", "equals")
+    val = sub_cond.value if hasattr(sub_cond, 'value') else sub_cond.get("value", "")
+
+    if op == "equals":
+        params[key] = val
+        return f"{sql_col} = :{key}"
+    elif op == "not_equals":
+        params[key] = val
+        return f"({sql_col} != :{key} OR {sql_col} IS NULL)"
+    elif op == "in":
+        if not isinstance(val, list):
+            val = [val]
+        placeholders = []
+        for vi, vv in enumerate(val):
+            pk = f"{key}_{vi}"
+            placeholders.append(f":{pk}")
+            params[pk] = vv
+        return f"{sql_col} IN ({','.join(placeholders)})"
+    elif op == "not_in":
+        if not isinstance(val, list):
+            val = [val]
+        placeholders = []
+        for vi, vv in enumerate(val):
+            pk = f"{key}_{vi}"
+            placeholders.append(f":{pk}")
+            params[pk] = vv
+        return f"({sql_col} NOT IN ({','.join(placeholders)}) OR {sql_col} IS NULL)"
+    elif op == "gt":
+        params[key] = val
+        return f"{sql_col} > :{key}"
+    elif op == "lt":
+        params[key] = val
+        return f"{sql_col} < :{key}"
+    elif op == "gte":
+        params[key] = val
+        return f"{sql_col} >= :{key}"
+    elif op == "lte":
+        params[key] = val
+        return f"{sql_col} <= :{key}"
+    elif op == "range":
+        if isinstance(val, list) and len(val) == 2:
+            params[f"{key}_lo"] = val[0]
+            params[f"{key}_hi"] = val[1]
+            return f"({sql_col} >= :{key}_lo AND {sql_col} <= :{key}_hi)"
+        raise ValueError(f"range 需要 2 个值: {val}")
+    raise ValueError(f"不支持的运算符: {op}")
+
+
+def _build_same_yao_group_sql(group, params: dict, idx: int) -> str:
+    """同一爻条件组：来源间 OR，来源内 AND"""
+    sources = group.sources if hasattr(group, 'sources') else group.get("sources", [])
+    sub_conds = group.conditions if hasattr(group, 'conditions') else group.get("conditions", [])
+
+    source_clauses = []
+    for si, source in enumerate(sources):
+        scope = SOURCE_TO_SCOPE.get(source, "")
+        source_filter = _scope_filter(scope, {}) if scope else ""
+
+        cond_parts = []
+        for ci, sub in enumerate(sub_conds):
+            field = sub.field if hasattr(sub, 'field') else sub.get("field", "")
+            sql_col = GENERIC_YAO_FIELDS.get(field, {}).get(source)
+            if sql_col is None:
+                continue
+            key_prefix = f"g{idx}_s{si}_c{ci}"
+            clause = _build_sub_condition_clause(sub, sql_col, params, key_prefix)
+            cond_parts.append(clause)
+
+        if not cond_parts:
+            continue
+
+        source_sql = " AND ".join(cond_parts)
+        if source_filter:
+            source_sql = f"({source_filter} AND {source_sql})"
+        source_clauses.append(f"({source_sql})")
+
+    if not source_clauses:
+        return "FALSE"
+    return f"({' OR '.join(source_clauses)})"
+
+
+def _build_same_position_group_sql(group, params: dict, idx: int) -> str:
+    """同爻位条件组：同爻位 AND 逻辑"""
+    position = group.position if hasattr(group, 'position') else group.get("position", 1)
+    sources_cfg = group.sources if hasattr(group, 'sources') else group.get("sources", [])
+
+    clauses = [f"y.yao_position = {int(position)}"]
+
+    for si, src_cfg in enumerate(sources_cfg):
+        source = src_cfg.source if hasattr(src_cfg, 'source') else src_cfg.get("source", "")
+        sub_conds = src_cfg.conditions if hasattr(src_cfg, 'conditions') else src_cfg.get("conditions", [])
+
+        scope = SOURCE_TO_SCOPE.get(source, "")
+        source_filter = _scope_filter(scope, {}) if scope else ""
+        if source_filter:
+            clauses.append(source_filter)
+
+        for ci, sub in enumerate(sub_conds):
+            field = sub.field if hasattr(sub, 'field') else sub.get("field", "")
+            sql_col = GENERIC_YAO_FIELDS.get(field, {}).get(source)
+            if sql_col is None:
+                continue
+            key_prefix = f"gp{idx}_s{si}_c{ci}"
+            clause = _build_sub_condition_clause(sub, sql_col, params, key_prefix)
+            clauses.append(clause)
+
+    return " AND ".join(clauses)
+
+
+def _build_feishen_group_sql(group, params: dict, idx: int) -> str:
+    """飞神条件组"""
+    feishen_type = group.feishenType if hasattr(group, 'feishenType') else group.get("feishenType", "增删飞神")
+    yongshen = group.yongshen if hasattr(group, 'yongshen') else group.get("yongshen", "妻财")
+    key = f"fs{idx}"
+    params[key] = yongshen
+
+    if feishen_type == "增删飞神":
+        return f"(y.zengshan_exists = TRUE AND y.zengshan_liuqin = :{key})"
+    else:
+        return f"(y.yimao_liuqin = :{key})"
 
 
 def _parse_yao_object(value: str) -> tuple[str, str]:
@@ -291,6 +472,9 @@ def _collect_joins(conditions: list) -> set[str]:
     """收集所需 JOIN"""
     joins: set[str] = set()
     for cond in conditions:
+        if isinstance(cond, (SameYaoGroup, SamePositionGroup, FeishenGroup)):
+            joins.add("y")
+            continue
         if isinstance(cond, RelationCondition):
             joins.add("y")
             # 关系条件引用了时间对象 → 需要 guali_time
@@ -352,7 +536,14 @@ def execute_search(session: Session, request: SearchRequest) -> SearchResponse:
 
     # 第一遍：先生成所有条件的 SQL 子句（关系条件稍后处理）
     for i, cond in enumerate(conditions):
-        if not isinstance(cond, RelationCondition):
+        if isinstance(cond, (SameYaoGroup, SamePositionGroup, FeishenGroup)):
+            if isinstance(cond, SameYaoGroup):
+                cond_clauses[cond.id] = _build_same_yao_group_sql(cond, params, i)
+            elif isinstance(cond, SamePositionGroup):
+                cond_clauses[cond.id] = _build_same_position_group_sql(cond, params, i)
+            elif isinstance(cond, FeishenGroup):
+                cond_clauses[cond.id] = _build_feishen_group_sql(cond, params, i)
+        elif not isinstance(cond, RelationCondition):
             cond_clauses[cond.id] = _build_condition_clause(cond, params, i)
 
     # 第二遍：处理关系条件（此时 cond_clauses 已完整，可供 condition_group_ref 引用）
@@ -393,7 +584,7 @@ def _assemble_logic(logic: list[LogicItem], cond_clauses: dict[str, str]) -> str
     depth = 0
     parts: list[str] = []
     for i, item in enumerate(logic):
-        if item.type == "condition":
+        if item.type in ("condition", "condition_group"):
             clause = cond_clauses.get(item.id or "", "TRUE")
             parts.append(f"({clause})")
         elif item.type in ("and", "or"):
