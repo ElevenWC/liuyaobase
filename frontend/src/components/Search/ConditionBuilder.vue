@@ -13,13 +13,13 @@ const SCOPE_OPTIONS = [
 ]
 
 const FIELD_OPTIONS = [
-  { v: 'ben_liuqin', label: '六亲', scopes: ['ben_gua'] },
-  { v: 'ben_dizhi', label: '地支', scopes: ['ben_gua'] },
-  { v: 'ben_shi_ying', label: '世应', scopes: ['ben_gua'] },
-  { v: 'ben_yao_type', label: '爻类型', scopes: ['ben_gua'] },
-  { v: 'ben_tiangan', label: '天干', scopes: ['ben_gua'] },
-  { v: 'is_dong', label: '动爻', scopes: ['ben_gua'] },
-  { v: 'is_an_dong', label: '暗动', scopes: ['ben_gua'] },
+  { v: 'ben_liuqin', label: '本卦六亲', scopes: ['ben_gua'] },
+  { v: 'ben_dizhi', label: '本卦地支', scopes: ['ben_gua'] },
+  { v: 'ben_shi_ying', label: '本卦世应', scopes: ['ben_gua'] },
+  { v: 'ben_yao_type', label: '本卦爻类型', scopes: ['ben_gua'] },
+  { v: 'ben_tiangan', label: '本卦天干', scopes: ['ben_gua'] },
+  { v: 'is_dong', label: '本卦动爻', scopes: ['ben_gua'] },
+  { v: 'is_an_dong', label: '本卦暗动', scopes: ['ben_gua'] },
   { v: 'zengshan_exists', label: '有伏神', scopes: ['zengshan'] },
   { v: 'liushen', label: '六神', scopes: ['ben_gua', 'bian_yao', 'zhi_gua', 'yimao', 'zengshan'] },
   { v: 'yao_position', label: '爻位', scopes: ['ben_gua', 'bian_yao', 'zhi_gua', 'yimao', 'zengshan'] },
@@ -98,6 +98,7 @@ const SHENSHA_TYPES = [
 ]
 
 function isShensha(field) { return SHENSHA_FIELDS.includes(field) }
+const SHENGWANG_RELATIONS = ['长生', '帝旺', '墓', '绝']
 
 function fieldValueOptions(field) {
   if (field === 'ben_liuqin' || field === 'zhi_liuqin' || field === 'yimao_liuqin' || field === 'zengshan_liuqin') return LIUQIN_VALS
@@ -221,18 +222,25 @@ function remove(id) { store.removeCondition(id) }
           <option value="日支">日支</option>
         </select>
         <select v-model="cond.relation" class="cb-sel">
-          <option value="生">生</option>
-          <option value="克">克</option>
-          <option value="合">合</option>
-          <option value="冲">冲</option>
-          <option value="半合">半合</option>
-          <option value="三合">三合</option>
-          <option value="=">=</option>
-          <option value="长生">长生</option>
-          <option value="帝旺">帝旺</option>
-          <option value="墓">墓</option>
-          <option value="绝">绝</option>
+          <optgroup label="生克合冲">
+            <option value="生">生</option>
+            <option value="克">克</option>
+            <option value="合">合</option>
+            <option value="冲">冲</option>
+            <option value="半合">半合</option>
+            <option value="=">=</option>
+          </optgroup>
+          <optgroup label="三合">
+            <option value="三合">三合</option>
+          </optgroup>
+          <optgroup label="生旺墓绝">
+            <option value="长生">长生</option>
+            <option value="帝旺">帝旺</option>
+            <option value="墓">墓</option>
+            <option value="绝">绝</option>
+          </optgroup>
         </select>
+        <span v-if="SHENGWANG_RELATIONS.includes(cond.relation)" class="cb-yu">于</span>
         <select v-model="cond.right_type" class="cb-sel">
           <option value="yao_object">爻对象</option>
           <option value="time_object">时间对象</option>
@@ -294,6 +302,7 @@ function remove(id) { store.removeCondition(id) }
 .cb-input { padding: 2px 6px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); font-size: var(--font-size-sm); width: 80px; }
 .cb-input:focus { outline: none; border-color: var(--color-accent); }
 .cb-op { width: 70px; }
+.cb-yu { font-size: var(--font-size-sm); color: var(--color-text-secondary); flex-shrink: 0; }
 
 .cb-actions { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
 .cb-btn { padding: 3px 10px; background: var(--color-bg-tertiary); color: var(--color-text-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); font-size: var(--font-size-xs); cursor: pointer; transition: all var(--transition-fast); }

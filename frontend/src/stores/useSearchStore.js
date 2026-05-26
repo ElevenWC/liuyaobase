@@ -13,8 +13,8 @@ export const useSearchStore = defineStore('search', () => {
 
   // 字段名 → 中文标签
   const FIELD_LABELS = {
-    ben_liuqin: '六亲', ben_dizhi: '地支', ben_shi_ying: '世应', ben_yao_type: '爻类型',
-    ben_tiangan: '天干', is_dong: '动爻', is_an_dong: '暗动', liushen: '六神',
+    ben_liuqin: '本卦六亲', ben_dizhi: '本卦地支', ben_shi_ying: '本卦世应', ben_yao_type: '本卦爻类型',
+    ben_tiangan: '本卦天干', is_dong: '本卦动爻', is_an_dong: '本卦暗动', liushen: '六神',
     yao_position: '爻位', zengshan_exists: '有伏神',
     zhi_liuqin: '之卦六亲', zhi_dizhi: '之卦地支', zhi_shi_ying: '之卦世应', zhi_yao_type: '之卦爻类型',
     yimao_liuqin: '易冒六亲', yimao_dizhi: '易冒地支',
