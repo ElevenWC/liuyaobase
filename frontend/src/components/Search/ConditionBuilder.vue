@@ -105,8 +105,8 @@ function fieldValueOptions(field) {
   if (field === 'ben_shi_ying' || field === 'zhi_shi_ying') return SHIYING_VALS
   if (field === 'ben_yao_type' || field === 'zhi_yao_type') return YAOTYPE_VALS
   if (field === 'ben_dizhi' || field === 'zhi_dizhi' || field === 'yimao_dizhi' || field === 'zengshan_dizhi') return DIZHI_VALS
-  if (field === 'is_dong' || field === 'zengshan_exists') return ['true', 'false']
-  if (field === 'is_an_dong') return [{v:'true', l:'存在'}, {v:'false', l:'不存在'}]
+  if (field === 'zengshan_exists') return ['true', 'false']
+  if (field === 'is_dong' || field === 'is_an_dong') return [{v:'true', l:'存在'}, {v:'false', l:'不存在'}]
   if (field === 'liushen') return LIUSHEN_VALS
   if (field === 'ben_tiangan') return TIAN_GAN_VALS
   if (field === 'yao_position') return [{v:'1',l:'初爻'},{v:'2',l:'二爻'},{v:'3',l:'三爻'},{v:'4',l:'四爻'},{v:'5',l:'五爻'},{v:'6',l:'上爻'}]
@@ -204,6 +204,7 @@ function remove(id) { store.removeCondition(id) }
 
       <!-- 关系条件 -->
       <template v-else>
+        <!-- 左对象（共用） -->
         <select v-model="cond.left_type" class="cb-sel">
           <option value="yao_object">爻对象</option>
           <option value="time_object">时间对象</option>
@@ -224,29 +225,11 @@ function remove(id) { store.removeCondition(id) }
           <option value="月支">月支</option>
           <option value="日支">日支</option>
         </select>
-        <select v-model="cond.relation" class="cb-sel">
-          <optgroup label="生克合冲">
-            <option value="生">生</option>
-            <option value="克">克</option>
-            <option value="合">合</option>
-            <option value="冲">冲</option>
-            <option value="半合">半合</option>
-            <option value="=">=</option>
-          </optgroup>
-          <optgroup label="三合">
-            <option value="三合">三合</option>
-          </optgroup>
-          <optgroup label="生旺墓绝">
-            <option value="长生">长生</option>
-            <option value="帝旺">帝旺</option>
-            <option value="墓">墓</option>
-            <option value="绝">绝</option>
-          </optgroup>
-        </select>
-        <span v-if="SHENGWANG_RELATIONS.includes(cond.relation)" class="cb-yu">于</span>
-        <!-- 三合中间对象 -->
+
+        <!-- 三合布局：x y z 三合▼ 局▼ -->
         <template v-if="cond.relation==='三合'">
           <select v-model="cond.middle_type" class="cb-sel">
+            <option value="">--类型--</option>
             <option value="yao_object">爻对象</option>
             <option value="time_object">时间对象</option>
           </select>
@@ -266,39 +249,107 @@ function remove(id) { store.removeCondition(id) }
             <option value="月支">月支</option>
             <option value="日支">日支</option>
           </select>
+          <select v-model="cond.right_type" class="cb-sel">
+            <option value="yao_object">爻对象</option>
+            <option value="time_object">时间对象</option>
+            <option value="condition_group_ref">条件组引用</option>
+          </select>
+          <select v-if="cond.right_type==='yao_object'" v-model="cond.right_value" class="cb-sel">
+            <option value="">--对象--</option>
+            <option value="世爻">世爻</option>
+            <option value="应爻">应爻</option>
+            <option value="妻财爻">妻财爻</option>
+            <option value="官鬼爻">官鬼爻</option>
+            <option value="父母爻">父母爻</option>
+            <option value="兄弟爻">兄弟爻</option>
+            <option value="子孙爻">子孙爻</option>
+          </select>
+          <select v-else-if="cond.right_type==='time_object'" v-model="cond.right_value" class="cb-sel">
+            <option value="">--时间--</option>
+            <option value="年支">年支</option>
+            <option value="月支">月支</option>
+            <option value="日支">日支</option>
+          </select>
+          <select v-else v-model="cond.right_value" class="cb-sel">
+            <option value="">--条件ID--</option>
+            <option v-for="c in store.conditions.filter(x=>x.id!==cond.id&&!x.relation)" :key="c.id" :value="c.id">{{ c.id }}</option>
+          </select>
+          <select v-model="cond.relation" class="cb-sel">
+            <optgroup label="生克合冲">
+              <option value="生">生</option>
+              <option value="克">克</option>
+              <option value="合">合</option>
+              <option value="冲">冲</option>
+              <option value="半合">半合</option>
+              <option value="=">=</option>
+            </optgroup>
+            <optgroup label="三合">
+              <option value="三合">三合</option>
+            </optgroup>
+            <optgroup label="生旺墓绝">
+              <option value="长生">长生</option>
+              <option value="帝旺">帝旺</option>
+              <option value="墓">墓</option>
+              <option value="绝">绝</option>
+            </optgroup>
+          </select>
+          <select v-model="cond.bureau" class="cb-sel">
+            <option value="">--局--</option>
+            <option value="水">水局</option>
+            <option value="木">木局</option>
+            <option value="火">火局</option>
+            <option value="金">金局</option>
+          </select>
         </template>
-        <select v-model="cond.right_type" class="cb-sel">
-          <option value="yao_object">爻对象</option>
-          <option value="time_object">时间对象</option>
-          <option value="condition_group_ref">条件组引用</option>
-        </select>
-        <select v-if="cond.right_type==='yao_object'" v-model="cond.right_value" class="cb-sel">
-          <option value="">--对象--</option>
-          <option value="世爻">世爻</option>
-          <option value="应爻">应爻</option>
-          <option value="妻财爻">妻财爻</option>
-          <option value="官鬼爻">官鬼爻</option>
-          <option value="父母爻">父母爻</option>
-          <option value="兄弟爻">兄弟爻</option>
-          <option value="子孙爻">子孙爻</option>
-        </select>
-        <select v-else-if="cond.right_type==='time_object'" v-model="cond.right_value" class="cb-sel">
-          <option value="">--时间--</option>
-          <option value="年支">年支</option>
-          <option value="月支">月支</option>
-          <option value="日支">日支</option>
-        </select>
-        <select v-else v-model="cond.right_value" class="cb-sel">
-          <option value="">--条件ID--</option>
-          <option v-for="c in store.conditions.filter(x=>x.id!==cond.id&&!x.relation)" :key="c.id" :value="c.id">{{ c.id }}</option>
-        </select>
-        <select v-if="cond.relation==='三合'" v-model="cond.bureau" class="cb-sel">
-          <option value="">--局--</option>
-          <option value="水">水</option>
-          <option value="木">木</option>
-          <option value="火">火</option>
-          <option value="金">金</option>
-        </select>
+
+        <!-- 非三合布局：relation▼ (于) right -->
+        <template v-else>
+          <select v-model="cond.relation" @change="if($event.target.value==='三合'){cond.middle_type=cond.middle_type||'yao_object'}" class="cb-sel">
+            <optgroup label="生克合冲">
+              <option value="生">生</option>
+              <option value="克">克</option>
+              <option value="合">合</option>
+              <option value="冲">冲</option>
+              <option value="半合">半合</option>
+              <option value="=">=</option>
+            </optgroup>
+            <optgroup label="三合">
+              <option value="三合">三合</option>
+            </optgroup>
+            <optgroup label="生旺墓绝">
+              <option value="长生">长生</option>
+              <option value="帝旺">帝旺</option>
+              <option value="墓">墓</option>
+              <option value="绝">绝</option>
+            </optgroup>
+          </select>
+          <span v-if="SHENGWANG_RELATIONS.includes(cond.relation)" class="cb-yu">于</span>
+          <select v-model="cond.right_type" class="cb-sel">
+            <option value="yao_object">爻对象</option>
+            <option value="time_object">时间对象</option>
+            <option value="condition_group_ref">条件组引用</option>
+          </select>
+          <select v-if="cond.right_type==='yao_object'" v-model="cond.right_value" class="cb-sel">
+            <option value="">--对象--</option>
+            <option value="世爻">世爻</option>
+            <option value="应爻">应爻</option>
+            <option value="妻财爻">妻财爻</option>
+            <option value="官鬼爻">官鬼爻</option>
+            <option value="父母爻">父母爻</option>
+            <option value="兄弟爻">兄弟爻</option>
+            <option value="子孙爻">子孙爻</option>
+          </select>
+          <select v-else-if="cond.right_type==='time_object'" v-model="cond.right_value" class="cb-sel">
+            <option value="">--时间--</option>
+            <option value="年支">年支</option>
+            <option value="月支">月支</option>
+            <option value="日支">日支</option>
+          </select>
+          <select v-else v-model="cond.right_value" class="cb-sel">
+            <option value="">--条件ID--</option>
+            <option v-for="c in store.conditions.filter(x=>x.id!==cond.id&&!x.relation)" :key="c.id" :value="c.id">{{ c.id }}</option>
+          </select>
+        </template>
       </template>
     </div>
 
