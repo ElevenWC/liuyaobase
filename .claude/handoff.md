@@ -10,17 +10,24 @@
 - **技术栈**：Python FastAPI + SQLModel + MySQL + Vue 3 + Vite + Pinia + lunar-python
 - **仓库**：`ElevenWC/liuyaobase`，分支 `main`
 - **数据库**：MySQL，localhost:3306，root/020508，库名 liuyao
-- **当前进度**：v0.0 ~ v0.3 全部完成（48 个 Issue），v0.4 / v0.5 待开始
+- **当前进度**：v0.0 ~ v0.3 全部完成（48 Issue），v0.5 全部完成（5 Issue），v0.4 进行中（8/11 Issue 完成）
+
+---
 
 ## 工作流程
 
 ```
 用户选 Issue → AI 读 .specs/ 规划文档 + .AIDiscuss/ 设计文档
-  → 先切分支 feat/issue-N → 写代码 → 自审两遍（对照 §7 陷阱）
+  → 先切分支 feat/issue-N → 写代码
+  → 【必须】自审两遍再提交：
+      第一遍：对照规划文档 §7 陷阱 + §9 审查清单
+      第二遍：逐行模拟运行时路径，检查边界/空值/参数绑定/安全
   → 跑测试命令 → commit + push（不创建 PR！）
   → 用户跑测试验收 → AI 创建 PR → squash merge → 删除本地+远程分支
   → merge 后必查：Issue 是否关闭 / 分支是否删除 / git status 干净
 ```
+
+---
 
 ## 里程碑完成情况
 
@@ -30,69 +37,122 @@
 | v0.1 核心算法层 | 15 | ✅ |
 | v0.2 数据导入+预计算 | 8 | ✅ |
 | v0.3 C1 卦例显示 | 16 | ✅ |
-| v0.4 C3 复杂检索 | — | 🔜 |
-| v0.5 C2 解卦模块 | — | 🔜 |
+| v0.4 C3 复杂检索 | 11 | 🔄 8/11 完成（#96–#103） |
+| v0.5 C2 解卦模块 | 5 | ✅ |
 | v0.6 C4 股票关联 | — | 🔜 |
+
+---
+
+## v0.4 当前状态（接手后继续 #107）
+
+### 已完成（#96–#103）
+
+| Issue | 内容 | 分支 |
+|:--:|------|------|
+| #96 | backend/schemas/search.py | 已合并 |
+| #97 | backend/services/search_service.py（动态 SQL 引擎） | 已合并 |
+| #98 | backend/services/export_service.py（导出）+ condition_group_ref 实现 | 已合并 |
+| #99 | backend/api/routers/search.py（检索 API） | 已合并 |
+| #100 | frontend/stores/useSearchStore.js（Pinia 检索状态 + localStorage 方案） | 已合并 |
+| #101 | frontend/components/Search/ConditionBuilder.vue（条件构建器） | 已合并 |
+| #102 | frontend/components/Search/FieldLibrary.vue（字段库面板） | 已合并 |
+| #103 | frontend/components/Search/ResultList.vue（结果列表） | 已合并 |
+
+### 待完成
+
+| Issue | 内容 | 优先级 |
+|:--:|------|:--:|
+| #107 | frontend/views/Search.vue（检索主页面——组合所有组件） | P0 |
+| #104 | CompareMode.vue（对比模式） | P2 |
+| #105 | RecommendedSchemes.vue（推荐方案） | P2 |
+
+### v0.4 后续迭代待办（首版简化的功能）
+
+1. 逻辑链可视化 AND/OR/NOT 编辑
+2. scope=null 全部来源
+3. 字段库拖拽交互
+4. 条件组折叠/展开
+5. _assemble_logic 静默错误改为抛异常
+
+---
 
 ## 当前代码结构
 
 ```
 backend/
 ├── main.py, config.py, requirements.txt
-├── core/          # 14 个算法文件（六爻纯函数）
-├── crud/          # 10 个 CRUD 文件
-├── services/      # 4 个服务文件（precalculate/import/guali/tag）
+├── core/          # 14 个算法文件
+├── crud/          # 11 个 CRUD 文件
+├── services/      # 6 个服务文件（新增 search_service / export_service）
 ├── models/        # 18 个 SQLModel 表定义
-├── schemas/       # guali.py + tag.py
-├── api/routers/   # guali / tags / import_data / guaci（临时）
-├── db/            # connection / init_db / create_tables.sql / stored_functions/
-└── tests/         # 12 个测试文件，69 个测试
+├── schemas/       # guali.py + tag.py + search.py（新增）
+├── api/routers/   # guali / tags / import_data / jiegua / bagong / search（新增）
+├── db/            # connection / init_db / stored_functions/
+├── exports/       # 检索导出临时文件
+└── tests/         # 12 个测试文件
 frontend/src/
-├── api/index.js        # axios 封装（17 个 API 函数）
-├── stores/index.js     # Pinia 全局状态
-├── router/index.js     # 路由（/guali /input /import /tags）
-├── style.css           # CSS 变量系统（颜色/圆角/阴影/间距）
+├── api/index.js        # axios 封装（24 个 API 函数）
+├── stores/
+│   ├── index.js        # Pinia 全局状态（C1）
+│   └── useSearchStore.js  # Pinia 检索状态（C3，新增）
+├── router/index.js     # 路由（/guali /jiegua/bagong /jiegua/hugua /jiegua/graph /input /import /tags /search）
+├── style.css           # CSS 变量系统
 ├── views/
-│   ├── Home.vue        # 左右分栏主布局
-│   ├── GualiList.vue   # 左侧列表（搜索/分页/两级标签筛选/批量删除）
-│   ├── GualiDetail.vue # 右侧详情（卦象卡片/编辑/标签/浮窗）
-│   ├── GualiInput.vue  # 手动导入（二级卦选择器）
+│   ├── Home.vue        # C1 左右分栏主布局
+│   ├── GualiList.vue   # 左侧列表
+│   ├── GualiDetail.vue # 右侧详情（含解卦双按钮：八宫/互卦）
+│   ├── GualiInput.vue  # 手动导入
 │   ├── ImportJson.vue  # JSON 批量导入
-│   └── TagManager.vue  # 标签管理
+│   ├── TagManager.vue  # 标签管理
+│   ├── BagongPage.vue  # C2 八宫变化页面（4行布局+图谱小窗）
+│   ├── HuguaPage.vue   # C2 互卦页面（双列+爻位高亮）
+│   └── GraphPage.vue   # C2 网络图谱全屏
 └── components/
-    ├── NavBar.vue           # 导航栏（毛玻璃+链接）
-    └── shared/GuaCiFloat.vue # 卦爻辞浮窗（可拖动/多开）
+    ├── NavBar.vue           # 导航栏（解卦下拉：八宫/互卦/图谱）
+    ├── shared/
+    │   ├── GuaCiFloat.vue    # 卦爻辞浮窗（共享，爻辞结构化渲染）
+    │   └── NetworkGraph.vue  # SVG 力导向图谱（共享，供 C2/C4 复用）
+    └── Search/               # C3 检索组件（新增）
+        ├── ConditionBuilder.vue
+        ├── FieldLibrary.vue
+        └── ResultList.vue
 ```
+
+---
 
 ## 关键技术决策
 
 - **CSS 变量系统**：全部颜色/圆角/阴影/间距定义在 `style.css` 的 `:root {}`，组件禁止裸色值
 - **深色主题**：`#0F172A` 底 + `#1E293B` 卡片 + `#6366F1` 靛蓝品牌色
-- **标签颜色**：8 色卡（柔和系），按一级标签 ID 取模，刷新稳定
+- **标签颜色**：8 色卡，按一级标签 ID 取模，刷新稳定
 - **标签两级筛选**：一级选父标签→自动包含子标签卦例；打二级标签自动去一级关联
 - **之卦六亲**：用本卦卦宫五行计算（不是之卦卦宫）
 - **天干双值**：28 个乾坤相关卦，夏至/冬至两套天干
 - **去重逻辑**：去掉 zhanwen_time 唯一约束（同日多卦例），增量用 last_import_time
-- **卦象绘制**：flexbox 固定宽度 + CSS 4px 粗爻线，阴爻两段等长
+- **卦象绘制**：flexbox + background 渲染爻线，阳爻/阴爻统一占位高度
+- **GuaCiFloat 爻辞**：后端 `_parse_json_field` 处理双编码，前端结构化渲染爻辞+小象传
+- **网络图谱**：纯 SVG + 自建力导向物理引擎（斥力/弹簧力/向心力/阻尼），参数按画布等比缩放
+- **检索 SQL**：全部参数化查询，字段名白名单校验，禁止字符串拼接
+- **解卦入口**：NavBar 下拉菜单（八宫变化/互卦/网络图谱），GualiDetail 双按钮
+
+---
 
 ## 重要约定
 
 1. **使用中文交流**
-2. **先切分支再写代码**
-3. **Markdown 表格前加空行**
-4. **编辑优先于新建**
-5. **commit 格式**：`feat/fix/chore: <中文简述>`，分支 `feat/issue-N`
-6. **审查强度**：★★ 逐条审查 / ★ 重点审查 / 无标记 正常
-7. **squash merge 后检查**：Issue 关闭 / 本地分支 / 远程分支（git fetch --prune）/ 工作区
-8. **遗留占位追踪**：代码中用 `raise NotImplementedError()` 替代空函数，Issue 中写明前置依赖，里程碑收尾时 grep 汇总写入下一里程碑
-9. **占位追踪 grep 命令**：
-   ```
-   grep -rn "NotImplementedError|TODO|FIXME|placeholder|暂|留空|v0." backend/ --include="*.py"
-   ```
+2. **先切分支再写代码**：`feat/issue-N`
+3. **每次只做一个 Issue**，不要跨 Issue 编码
+4. **提交前自审两遍**：第一遍对照规划文档，第二遍逐行跟踪
+5. **前端复用优先**：写前端代码前先找已有组件/CSS/交互能否复用，禁止为同样效果重复造轮子
+6. **编辑优先于新建**
+7. **Markdown 表格前加空行**
+8. **commit 格式**：`feat/fix/chore: <中文简述>`
+9. **squash merge 后检查**：Issue 关闭 / 本地分支 / 远程分支（git fetch --prune）/ 工作区
+10. **审查强度**：★★ 逐条审查 / ★ 重点审查 / 无标记 正常
+11. **遗留占位追踪**：代码中用 `raise NotImplementedError()` 替代空函数
+12. **占位追踪 grep**：`grep -rn "NotImplementedError|TODO|FIXME" backend/ --include="*.py"`
 
-## 测试数据库
-
-数据库中有 7 条真实卦例（用户从 App 导出），可通过 `GET /api/guali/53` 等查看。
+---
 
 ## 启动命令
 
@@ -103,16 +163,24 @@ python -m uvicorn backend.main:app --host 127.0.0.1 --port 8001
 cd frontend && npm run dev
 # 一键
 run.bat
+# Swagger
+http://localhost:8001/docs
 ```
+
+---
 
 ## 关键文件索引
 
-| 类型 | 路径 |
-|------|------|
-| 设计文档 | `.AIDiscuss/`（.A1 .A2 .B .C1~.C4 .Z 共 13 个） |
-| 规划文档 | `.specs/`（63 个，7 里程碑） |
-| 开发架构总览 | `.specs/READMEsp.md` |
+| 想看什么 | 文件 |
+|---------|------|
 | AI 协作规范 | `CLAUDE.md` |
-| 工作流程详解 | `.user/AI协作工作流程指南(项目开发阶段).md` |
-| 六爻基本规则 | `.user/六爻基本规则.md` |
+| 设计文档 | `.AIDiscuss/`（.A1 .A2 .B .C1~.C4 .C31 .C32 .C33 .C33-1 .Z） |
+| 规划文档 | `.specs/`（7 个里程碑） |
+| 开发架构总览 | `.specs/READMEsp.md` |
+| v0.4 规划 | `.specs/v0.4C3复杂检索/`（12 个文件） |
+| v0.5 规划 | `.specs/v0.5C2解卦模块/`（6 个文件） |
+| v0.4 设计 | `.AIDiscuss/.C31*.md` `.AIDiscuss/.C32*.md` `.AIDiscuss/.C33*.md` |
+| search_service 审查 | `.user/search_service代码审查文档.md` |
 | 测试数据 | `.user/测试数据.json` |
+| 六爻规则 | `.user/六爻基本规则.md` |
+| GitHub 里程碑 | `v0.4 C3 复杂检索`（#5）、`v0.5 C2 解卦模块`（#6，已关闭） |
