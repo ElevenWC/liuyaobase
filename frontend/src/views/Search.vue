@@ -195,10 +195,10 @@ function onPageChange(page) {
   flex-shrink: 0;
 }
 .fl-toggle {
-  width: 14px; flex-shrink: 0;
+  width: 16px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
   background: var(--color-bg-secondary); border-radius: var(--radius-sm);
-  cursor: pointer; color: var(--color-text-muted); font-size: 11px;
+  cursor: pointer; color: var(--color-text-muted); font-size: 13px;
   transition: all var(--transition-fast); user-select: none;
 }
 .fl-toggle:hover { background: var(--color-bg-tertiary); color: var(--color-accent-light); }
