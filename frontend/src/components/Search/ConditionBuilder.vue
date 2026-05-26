@@ -20,10 +20,13 @@ const FIELD_OPTIONS = [
   { v: 'ben_tiangan', label: '天干' },
   { v: 'is_dong', label: '动爻' },
   { v: 'is_an_dong', label: '暗动' },
+  { v: 'zengshan_exists', label: '有伏神' },
   { v: 'liushen', label: '六神' },
   { v: 'yao_position', label: '爻位' },
   { v: 'zhi_liuqin', label: '之卦六亲' },
   { v: 'zhi_dizhi', label: '之卦地支' },
+  { v: 'zhi_shi_ying', label: '之卦世应' },
+  { v: 'zhi_yao_type', label: '之卦爻类型' },
   { v: 'yimao_liuqin', label: '易冒六亲' },
   { v: 'yimao_dizhi', label: '易冒地支' },
   { v: 'zengshan_liuqin', label: '增删六亲' },
@@ -33,9 +36,12 @@ const FIELD_OPTIONS = [
 const GUA_FIELDS = [
   { v: 'ben_palace', label: '本卦卦宫' },
   { v: 'ben_palace_type', label: '本卦宫位' },
-  { v: 'ben_special_type', label: '特殊类型' },
+  { v: 'ben_special_type', label: '本卦特殊类型' },
   { v: 'zhi_palace', label: '之卦卦宫' },
-  { v: 'fan_yin_yimao', label: '反吟' },
+  { v: 'zhi_palace_type', label: '之卦宫位' },
+  { v: 'zhi_special_type', label: '之卦特殊类型' },
+  { v: 'fan_yin_yimao', label: '易冒反吟' },
+  { v: 'fan_yin_yaobian', label: '爻变反吟' },
   { v: 'fu_yin', label: '伏吟' },
 ]
 
@@ -59,13 +65,14 @@ const LIUSHEN_VALS = ['青龙', '朱雀', '勾陈', '螣蛇', '白虎', '玄武'
 
 function fieldValueOptions(field) {
   if (field === 'ben_liuqin' || field === 'zhi_liuqin' || field === 'yimao_liuqin' || field === 'zengshan_liuqin') return LIUQIN_VALS
-  if (field === 'ben_shi_ying') return SHIYING_VALS
+  if (field === 'ben_shi_ying' || field === 'zhi_shi_ying') return SHIYING_VALS
   if (field === 'ben_yao_type' || field === 'zhi_yao_type') return YAOTYPE_VALS
   if (field === 'ben_dizhi' || field === 'zhi_dizhi' || field === 'yimao_dizhi' || field === 'zengshan_dizhi') return DIZHI_VALS
+  if (field === 'is_dong' || field === 'is_an_dong' || field === 'zengshan_exists') return ['true', 'false']
   if (field === 'liushen') return LIUSHEN_VALS
   if (field === 'ben_palace' || field === 'zhi_palace') return GUA_PALACE_VALS
   if (field === 'xun_kong') return ['子丑', '寅卯', '辰巳', '午未', '申酉', '戌亥']
-  if (field === 'day_zhi' || field === 'month_zhi' || field === 'year_zhi') return DIZHI_VALS
+  if (field === 'day_zhi' || field === 'month_zhi' || field === 'year_zhi' || field === 'year_gan' || field === 'month_gan' || field === 'day_gan') return DIZHI_VALS
   return []
 }
 
