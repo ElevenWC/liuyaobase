@@ -127,7 +127,7 @@ function onSelect(cat, field) {
 </template>
 
 <style scoped>
-.field-library { width: 180px; flex-shrink: 0; background: var(--color-bg-secondary); border-radius: var(--radius-lg); padding: var(--space-3); box-shadow: var(--shadow-sm); }
+.field-library { width: 220px; flex-shrink: 0; background: var(--color-bg-secondary); border-radius: var(--radius-lg); padding: var(--space-3); box-shadow: var(--shadow-sm); }
 .fl-header { font-size: var(--font-size-sm); font-weight: 600; color: var(--color-text-primary); margin-bottom: var(--space-2); }
 .fl-search { width: 100%; padding: 3px 8px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); font-size: var(--font-size-sm); margin-bottom: var(--space-2); box-sizing: border-box; }
 .fl-search:focus { outline: none; border-color: var(--color-accent); }

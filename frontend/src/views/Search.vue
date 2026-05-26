@@ -101,30 +101,30 @@ function onPageChange(page) {
       </div>
     </div>
 
-    <!-- 中部：字段库 + 条件构建 -->
+    <!-- 中部：左字段库 + 右（条件构建+结果列表） -->
     <div class="sp-main">
-      <div v-if="fieldLibCollapsed" class="fl-toggle collapsed" @click="fieldLibCollapsed = false" title="展开字段库">
-        <span>◀</span>
+      <div v-if="fieldLibCollapsed" class="fl-toggle" @click="fieldLibCollapsed = false" title="展开字段库">
+        <span>▸</span>
       </div>
-      <template v-else>
+      <div v-else class="fl-sidebar">
         <FieldLibrary @select-field="onFieldSelect" />
         <div class="fl-toggle" @click="fieldLibCollapsed = true" title="收起字段库">
-          <span>▶</span>
+          <span>◂</span>
         </div>
-      </template>
-      <ConditionBuilder />
-    </div>
-
-    <!-- 底部：结果列表 -->
-    <div class="sp-results">
-      <ResultList ref="resultListRef"
-        :results="store.results"
-        :total="store.pagination.total"
-        :page="store.pagination.page"
-        :page-size="store.pagination.pageSize"
-        :loading="store.loading"
-        @page-change="onPageChange"
-      />
+      </div>
+      <div class="sp-right">
+        <ConditionBuilder />
+        <div class="sp-results">
+          <ResultList ref="resultListRef"
+            :results="store.results"
+            :total="store.pagination.total"
+            :page="store.pagination.page"
+            :page-size="store.pagination.pageSize"
+            :loading="store.loading"
+            @page-change="onPageChange"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -189,20 +189,28 @@ function onPageChange(page) {
   flex: 1; min-height: 0;
 }
 
+/* 左侧：字段库 + 折叠按钮 */
+.fl-sidebar {
+  display: flex; gap: var(--space-2);
+  flex-shrink: 0;
+}
 .fl-toggle {
-  width: 18px; flex-shrink: 0;
+  width: 14px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  background: var(--color-bg-secondary); border-radius: var(--radius-md);
-  cursor: pointer; color: var(--color-text-muted); font-size: var(--font-size-xs);
+  background: var(--color-bg-secondary); border-radius: var(--radius-sm);
+  cursor: pointer; color: var(--color-text-muted); font-size: 11px;
   transition: all var(--transition-fast); user-select: none;
 }
-.fl-toggle:hover { background: var(--color-bg-tertiary); color: var(--color-text-secondary); }
-.fl-toggle.collapsed { width: 24px; }
-.fl-toggle.collapsed span { transform: rotate(180deg); }
+.fl-toggle:hover { background: var(--color-bg-tertiary); color: var(--color-accent-light); }
+
+/* 右侧：条件构建 + 结果列表 */
+.sp-right {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: var(--space-3);
+}
 
 .sp-results {
-  flex-shrink: 0;
-  max-height: 45%;
+  flex: 1; min-height: 0;
   overflow-y: auto;
 }
 </style>
