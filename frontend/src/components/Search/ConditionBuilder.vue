@@ -63,7 +63,8 @@ const TIME_FIELDS = [
 const LIUQIN_VALS = ['妻财', '官鬼', '父母', '兄弟', '子孙']
 const SHIYING_VALS = ['世', '应']
 const YAOTYPE_VALS = ['阳', '阴']
-const OPERATORS = ['equals', 'not_equals', 'in', 'gt', 'lt', 'gte', 'lte']
+const OPERATORS = ['equals', 'not_equals', 'in', 'not_in', 'gt', 'lt', 'gte', 'lte', 'range']
+const OP_DISPLAY = { equals: '= (等于)', not_equals: '≠ (不等于)', in: '∈ (属于)', not_in: '∉ (不属于)', gt: '> (大于)', lt: '< (小于)', gte: '≥ (≥)', lte: '≤ (≤)', range: '↔ (范围)' }
 const GUA_PALACE_VALS = ['乾宫', '坤宫', '震宫', '巽宫', '坎宫', '离宫', '艮宫', '兑宫']
 const DIZHI_VALS = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
 const LIUSHEN_VALS = ['青龙', '朱雀', '勾陈', '螣蛇', '白虎', '玄武']
@@ -95,7 +96,8 @@ function fieldValueOptions(field) {
   if (field === 'liushen') return LIUSHEN_VALS
   if (field === 'ben_palace' || field === 'zhi_palace') return GUA_PALACE_VALS
   if (field === 'xun_kong') return ['子丑', '寅卯', '辰巳', '午未', '申酉', '戌亥']
-  if (field === 'day_zhi' || field === 'month_zhi' || field === 'year_zhi' || field === 'year_gan' || field === 'month_gan' || field === 'day_gan') return DIZHI_VALS
+  if (field === 'day_zhi' || field === 'month_zhi' || field === 'year_zhi') return DIZHI_VALS
+  if (field === 'year_gan' || field === 'month_gan' || field === 'day_gan') return ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
   return []
 }
 
@@ -141,14 +143,14 @@ function remove(id) { store.removeCondition(id) }
           <option value="">--字段--</option>
           <option v-for="f in availableFields(cond.scope)" :key="f.v" :value="f.v">{{ f.label }}</option>
         </select>
-        <select v-else-if="GUA_FIELDS.find(f=>f.v===cond.field) || (!cond.field)" class="cb-sel" @change="(e)=>{cond.field=e.target.value;cond.scope=null; if(e.target.value){store.updateCondition(cond.id,{field:e.target.value,scope:null})}}" :value="cond.field">
-          <option value="">--卦类字段--</option>
+        <select v-else-if="GUA_FIELDS.find(f=>f.v===cond.field) || TIME_FIELDS.find(f=>f.v===cond.field) || (!cond.field)" class="cb-sel" @change="(e)=>{cond.field=e.target.value;cond.scope=null; if(e.target.value){store.updateCondition(cond.id,{field:e.target.value,scope:null})}}" :value="cond.field">
+          <option value="">--字段--</option>
           <option v-for="f in GUA_FIELDS" :key="f.v" :value="f.v">{{ f.label }}</option>
           <option disabled>──</option>
           <option v-for="f in TIME_FIELDS" :key="f.v" :value="f.v">{{ f.label }}</option>
         </select>
         <select v-model="cond.operator" class="cb-sel cb-op">
-          <option v-for="op in OPERATORS" :key="op" :value="op">{{ op }}</option>
+          <option v-for="op in OPERATORS" :key="op" :value="op">{{ OP_DISPLAY[op] || op }}</option>
         </select>
         <select v-if="fieldValueOptions(cond.field).length" v-model="cond.value" class="cb-sel">
           <option value="">--值--</option>
