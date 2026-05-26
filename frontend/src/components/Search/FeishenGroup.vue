@@ -37,6 +37,15 @@ const desc = computed(() => {
 </template>
 
 <style scoped>
+/* shared with ConditionBuilder */
+.cb-sel { padding: 2px 4px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); font-size: var(--font-size-sm); }
+.cb-sel:focus { outline: none; border-color: var(--color-accent); }
+.cb-input { padding: 2px 6px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); font-size: var(--font-size-sm); width: 80px; }
+.cb-input:focus { outline: none; border-color: var(--color-accent); }
+.cb-btn { padding: 3px 10px; background: var(--color-bg-tertiary); color: var(--color-text-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); font-size: var(--font-size-xs); cursor: pointer; transition: all var(--transition-fast); }
+.cb-btn:hover { border-color: var(--color-accent); color: var(--color-accent-light); }
+.cond-item { display: flex; align-items: center; gap: 4px; padding: 4px 6px; margin-bottom: 4px; background: var(--color-bg-tertiary); border-radius: var(--radius-md); flex-wrap: wrap; }
+/* group-specific */
 .cg-card { border: 1px solid var(--color-accent); border-radius: var(--radius-md); padding: var(--space-2); margin-bottom: var(--space-2); background: var(--color-bg-tertiary); }
 .cg-head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-1); }
 .cg-title { font-size: var(--font-size-sm); font-weight: 600; color: var(--color-accent-light); }
