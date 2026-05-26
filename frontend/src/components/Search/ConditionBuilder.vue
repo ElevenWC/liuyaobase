@@ -109,7 +109,7 @@ function fieldValueOptions(field) {
   if (field === 'is_an_dong') return [{v:'true', l:'存在'}, {v:'false', l:'不存在'}]
   if (field === 'liushen') return LIUSHEN_VALS
   if (field === 'ben_tiangan') return TIAN_GAN_VALS
-  if (field === 'yao_position') return ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻']
+  if (field === 'yao_position') return [{v:'1',l:'初爻'},{v:'2',l:'二爻'},{v:'3',l:'三爻'},{v:'4',l:'四爻'},{v:'5',l:'五爻'},{v:'6',l:'上爻'}]
   // 卦类
   if (field === 'ben_palace' || field === 'zhi_palace') return GUA_PALACE_VALS
   if (field === 'ben_palace_type' || field === 'zhi_palace_type') return PALACE_TYPE_VALS

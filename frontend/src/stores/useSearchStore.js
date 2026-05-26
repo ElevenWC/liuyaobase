@@ -40,6 +40,10 @@ export const useSearchStore = defineStore('search', () => {
       // 关系条件
       if (c.relation) {
         const yu = ['长生', '帝旺', '墓', '绝'].includes(c.relation) ? '于 ' : ''
+        if (c.relation === '三合') {
+          const b = c.bureau ? ` ${c.bureau}局` : ''
+          return `${c.left_value || '?'} ${c.middle_value || '?'} ${c.right_value || '?'} 三合${b}`
+        }
         return `${c.left_value || '?'} ${c.relation} ${yu}${c.right_value || '?'}`
       }
       // 神煞条件
