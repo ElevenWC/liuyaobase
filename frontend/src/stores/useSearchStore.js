@@ -67,7 +67,7 @@ export const useSearchStore = defineStore('search', () => {
     const id = _genId()
     const base = { id, field: '', operator: 'equals', value: '', scope: 'ben_gua' }
     if (type === 'relation') {
-      conditions.value.push({ ...base, field: '_rel', value: 'true', scope: null, left_type: 'yao_object', left_value: '', middle_type: null, middle_value: null, relation: '生', right_type: 'yao_object', right_value: '', bureau: null })
+      conditions.value.push({ ...base, field: '_rel', value: 'true', scope: null, left_type: 'yao_object', left_value: '', middle_type: null, middle_value: null, relation: '生', right_type: 'yao_object', right_value: '', bureau: '' })
     } else {
       conditions.value.push(base)
     }

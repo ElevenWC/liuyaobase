@@ -228,6 +228,7 @@ function remove(id) { store.removeCondition(id) }
 
         <!-- 三合布局：x y z 三合▼ 局▼ -->
         <template v-if="cond.relation==='三合'">
+          <span class="cb-gap"></span>
           <select v-model="cond.middle_type" class="cb-sel">
             <option value="">--类型--</option>
             <option value="yao_object">爻对象</option>
@@ -249,7 +250,9 @@ function remove(id) { store.removeCondition(id) }
             <option value="月支">月支</option>
             <option value="日支">日支</option>
           </select>
+          <span class="cb-gap"></span>
           <select v-model="cond.right_type" class="cb-sel">
+            <option value="">--类型--</option>
             <option value="yao_object">爻对象</option>
             <option value="time_object">时间对象</option>
             <option value="condition_group_ref">条件组引用</option>
@@ -293,6 +296,7 @@ function remove(id) { store.removeCondition(id) }
               <option value="绝">绝</option>
             </optgroup>
           </select>
+          <span class="cb-gap"></span>
           <select v-model="cond.bureau" class="cb-sel">
             <option value="">--局--</option>
             <option value="水">水局</option>
@@ -380,6 +384,7 @@ function remove(id) { store.removeCondition(id) }
 .cb-input:focus { outline: none; border-color: var(--color-accent); }
 .cb-op { width: 70px; }
 .cb-yu { font-size: var(--font-size-sm); color: var(--color-text-secondary); flex-shrink: 0; }
+.cb-gap { width: 6px; flex-shrink: 0; }
 
 .cb-actions { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
 .cb-btn { padding: 3px 10px; background: var(--color-bg-tertiary); color: var(--color-text-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); font-size: var(--font-size-xs); cursor: pointer; transition: all var(--transition-fast); }
