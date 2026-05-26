@@ -48,23 +48,24 @@ function removeSub(idx) { store.removeSubCondition(props.group.id, idx) }
 
 <template>
   <div class="cg-card">
-    <div class="cg-header">
-      <span>同一爻条件组（满足任一来源即可）</span>
-      <button class="cg-remove" @click="store.removeConditionGroup(group.id)" title="删除此条件组">×</button>
+    <div class="cg-head">
+      <span class="cg-title">同一爻条件组</span>
+      <span class="cg-desc">满足任一来源即可</span>
+      <button class="cg-del" @click="store.removeConditionGroup(group.id)" title="删除此条件组">×</button>
     </div>
-    <div class="cg-sources">
-      <span class="cg-label">来源：</span>
-      <label v-for="s in SOURCES" :key="s" class="cg-check">
+    <div class="cg-src-bar">
+      <span class="cg-lbl">来源：</span>
+      <label v-for="s in SOURCES" :key="s" class="cg-chk">
         <input type="checkbox" :checked="group.sources.includes(s)" @change="toggleSrc(s)" />{{ s }}
       </label>
     </div>
-    <div class="cg-conds">
-      <div v-for="(sc, i) in group.conditions" :key="i" class="cg-sub">
+    <div class="cg-body">
+      <div v-for="(sc, i) in group.conditions" :key="i" class="cond-item">
         <select v-model="sc.field" class="cb-sel" @change="sc.value=''">
           <option value="">--字段--</option>
           <option v-for="f in GEN_FIELD_OPTIONS" :key="f.v" :value="f.v">{{ f.label }}</option>
         </select>
-        <select v-model="sc.operator" class="cb-sel">
+        <select v-model="sc.operator" class="cb-sel" style="width:72px">
           <option v-for="op in OPERATORS" :key="op" :value="op">{{ OP_DISPLAY[op] || op }}</option>
         </select>
         <select v-if="valOptions(sc.field).length" v-model="sc.value" class="cb-sel">
@@ -72,24 +73,24 @@ function removeSub(idx) { store.removeSubCondition(props.group.id, idx) }
           <option v-for="v in valOptions(sc.field)" :key="v.v||v" :value="v.v||v">{{ v.l||v }}</option>
         </select>
         <input v-else v-model="sc.value" class="cb-input" placeholder="输入值" />
-        <button class="cg-sub-remove" @click="removeSub(i)" title="删除此条件">×</button>
+        <button class="cg-sub-del" @click="removeSub(i)" title="删除">×</button>
       </div>
     </div>
-    <button @click="addSub" class="cb-btn cg-add-btn">+ 条件</button>
+    <button @click="addSub" class="cb-btn">+ 条件</button>
   </div>
 </template>
 
 <style scoped>
 .cg-card { border: 1px solid var(--color-accent); border-radius: var(--radius-md); padding: var(--space-2); margin-bottom: var(--space-2); background: var(--color-bg-tertiary); }
-.cg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-1); font-size: var(--font-size-sm); font-weight: 600; color: var(--color-accent-light); }
-.cg-remove { width: 18px; height: 18px; padding: 0; background: none; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: 14px; cursor: pointer; }
-.cg-remove:hover { border-color: var(--color-danger); color: var(--color-danger); }
-.cg-sources { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-bottom: var(--space-1); }
-.cg-label { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
-.cg-check { font-size: var(--font-size-xs); color: var(--color-text-secondary); display: flex; align-items: center; gap: 2px; cursor: pointer; }
-.cg-conds { display: flex; flex-direction: column; gap: 4px; margin-bottom: var(--space-1); }
-.cg-sub { display: flex; align-items: center; gap: 4px; }
-.cg-sub-remove { width: 16px; height: 16px; padding: 0; background: none; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: 12px; cursor: pointer; flex-shrink: 0; }
-.cg-sub-remove:hover { border-color: var(--color-danger); color: var(--color-danger); }
-.cg-add-btn { margin-top: 2px; }
+.cg-head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-1); }
+.cg-title { font-size: var(--font-size-sm); font-weight: 600; color: var(--color-accent-light); }
+.cg-desc { font-size: var(--font-size-xs); color: var(--color-text-muted); }
+.cg-del { margin-left: auto; width: 18px; height: 18px; padding: 0; background: none; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cg-del:hover { border-color: var(--color-danger); color: var(--color-danger); }
+.cg-src-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); margin-bottom: var(--space-1); }
+.cg-lbl { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+.cg-chk { font-size: var(--font-size-xs); color: var(--color-text-secondary); display: flex; align-items: center; gap: 2px; cursor: pointer; accent-color: var(--color-accent); }
+.cg-body { display: flex; flex-direction: column; gap: 4px; margin-bottom: var(--space-1); }
+.cg-sub-del { width: 16px; height: 16px; padding: 0; background: none; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cg-sub-del:hover { border-color: var(--color-danger); color: var(--color-danger); }
 </style>
