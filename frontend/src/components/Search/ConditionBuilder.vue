@@ -1,5 +1,4 @@
 <script setup>
-import { ref } from 'vue'
 import { useSearchStore } from '../../stores/useSearchStore.js'
 
 const store = useSearchStore()
@@ -81,7 +80,7 @@ function addRelationCondition() { store.addCondition('relation') }
 function addGuaCondition() {
   store.addCondition('normal')
   const c = store.conditions[store.conditions.length - 1]
-  if (c) store.updateCondition(c.id, { field: 'ben_palace' })
+  if (c) store.updateCondition(c.id, { field: 'ben_palace', scope: null })
 }
 function addTimeCondition() {
   store.addCondition('normal')
