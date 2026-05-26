@@ -99,6 +99,16 @@ export function fetchGraphData(graphType) {
   return api.get(`/jiegua/graph/${graphType}`)
 }
 
+// ── 检索 ──────────────────────────────────────
+
+export function fetchSearchResults(body) {
+  return api.post('/search', body)
+}
+
+export function fetchExport(body, fmt = 'csv') {
+  return api.post('/search/export', body, { params: { fmt }, responseType: 'blob' })
+}
+
 // ── 卦爻辞 ────────────────────────────────────
 
 export function fetchGuaci(code) {
