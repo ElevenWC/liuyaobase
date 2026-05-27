@@ -279,9 +279,6 @@ function remove(id) { store.removeCondition(id) }
         </button>
       </div>
 
-      <!-- 开括号 -->
-      <span v-if="hasOpenBracket(cond.id)" class="bracket-mark bracket-open">(</span>
-
       <div class="cond-item" :class="{
         'bracket-first': isGroupStart(ci),
         'bracket-inner': inBracketGroup(ci) && !isGroupStart(ci) && !isGroupEnd(ci),
@@ -293,9 +290,9 @@ function remove(id) { store.removeCondition(id) }
           @click="store.toggleNot(cond.id)" title="取反">NOT</button>
         <!-- 括号 -->
         <button class="logic-br" :class="{ active: hasOpenBracket(cond.id) }"
-          @click="store.addOpenBracket(cond.id)" title="左括号">(</button>
+          @click="store.addOpenBracket(cond.id)" title="左括号">┌</button>
         <button class="logic-br" :class="{ active: hasCloseBracket(cond.id) }"
-          @click="store.addCloseBracket(cond.id)" title="右括号">)</button>
+          @click="store.addCloseBracket(cond.id)" title="右括号">└</button>
         <button class="cond-remove" @click="remove(cond.id)" title="删除此条件">×</button>
 
       <!-- 条件组 -->
@@ -539,8 +536,6 @@ function remove(id) { store.removeCondition(id) }
         </template>
       </template>
     </div>
-      <!-- 闭括号 -->
-      <span v-if="hasCloseBracket(cond.id)" class="bracket-mark bracket-close">)</span>
     </template>
 
     <div class="cb-actions">
@@ -588,10 +583,11 @@ function remove(id) { store.removeCondition(id) }
 .logic-br.active { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
 
 /* bracket group card */
-.bracket-first { border-bottom: none; border-radius: var(--radius-md) var(--radius-md) 0 0; margin-bottom: 0; }
-.bracket-inner { border-top: none; border-bottom: none; border-radius: 0; margin-bottom: 0; border-left: 2px solid var(--color-accent); border-right: 2px solid var(--color-accent); }
-.bracket-last { border-top: none; border-radius: 0 0 var(--radius-md) var(--radius-md); border-left: 2px solid var(--color-accent); border-right: 2px solid var(--color-accent); border-bottom: 2px solid var(--color-accent); }
-.bracket-single { border: 2px solid var(--color-accent); }
+.bracket-first { border: 2px solid var(--color-accent); border-bottom: none; border-radius: var(--radius-md) var(--radius-md) 0 0; margin-bottom: 0; padding-bottom: 4px; }
+.bracket-inner { border-left: 2px solid var(--color-accent); border-right: 2px solid var(--color-accent); border-top: none; border-bottom: none; border-radius: 0; margin-bottom: 0; margin-top: 0; }
+.bracket-last { border: 2px solid var(--color-accent); border-top: none; border-radius: 0 0 var(--radius-md) var(--radius-md); padding-top: 4px; }
+.bracket-single { border: 2px solid var(--color-accent); border-radius: var(--radius-md); }
+.bracket-mark { display: none; }
 
 .cb-sel { padding: 2px 4px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); font-size: var(--font-size-sm); }
 .cb-sel:focus { outline: none; border-color: var(--color-accent); }
