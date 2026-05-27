@@ -495,8 +495,10 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int,
         pfx = _PFX.get(scope, 'ben')
         if obj_type == "yao_object":
             col, val, dz_col = _parse_yao_object(obj_value)
+            # 伏神/飞神直接返回列名（列名自带来源前缀，不参与scope映射）
+            if val == "":
+                return f"y.{dz_col}"
             # 根据 scope 调整列前缀
-            # 对于 ben_dizhi/zhi_dizhi 这种，替换前缀
             def _scoped(col_name, pfx):
                 for old in ['ben_', 'zhi_', 'yimao_', 'zengshan_']:
                     if col_name.startswith(old):
@@ -504,9 +506,6 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int,
                 return f"{pfx}_{col_name}" if '_' not in col_name else col_name
 
             dz = _scoped(dz_col, pfx)
-            # 伏神/飞神直接返回列名
-            if val == "":
-                return f"y.{dz}"
             # 构建子查询
             col_scoped = _scoped(col, pfx)
             params[suffix] = val
