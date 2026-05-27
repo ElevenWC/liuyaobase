@@ -131,6 +131,23 @@ function getLogicOp(condIndex) {
   return 'and'
 }
 
+function hasOpenBracket(condId) {
+  const chain = store.logicChain
+  const idx = chain.findIndex(l => l.id === condId)
+  return idx > 0 && chain[idx - 1].type === '('
+}
+function hasCloseBracket(condId) {
+  const chain = store.logicChain
+  const idx = chain.findIndex(l => l.id === condId)
+  if (idx < 0) return false
+  // 向后找 )，跳过中间的 and/or/not
+  for (let j = idx + 1; j < chain.length; j++) {
+    if (chain[j].type === ')') return true
+    if (chain[j].type === 'condition' || chain[j].type === 'condition_group') break
+  }
+  return false
+}
+
 function toggleLogicAt(condIndex) {
   const chain = store.logicChain
   let seen = 0
@@ -245,12 +262,16 @@ function remove(id) { store.removeCondition(id) }
         </button>
       </div>
 
+      <!-- 开括号 -->
+      <span v-if="hasOpenBracket(cond.id)" class="bracket-mark bracket-open">(</span>
+
       <div class="cond-item">
         <!-- NOT 按钮 -->
         <button class="logic-not" :class="{ active: store.hasNot(cond.id) }"
           @click="store.toggleNot(cond.id)" title="取反">NOT</button>
         <!-- 括号 -->
-        <button class="logic-br" @click="store.toggleBracket(cond.id)" title="加/去括号">( )</button>
+        <button class="logic-br" :class="{ active: hasOpenBracket(cond.id) }"
+          @click="store.toggleBracket(cond.id)" title="加/去括号">( )</button>
         <button class="cond-remove" @click="remove(cond.id)" title="删除此条件">×</button>
 
       <!-- 条件组 -->
@@ -494,6 +515,8 @@ function remove(id) { store.removeCondition(id) }
         </template>
       </template>
     </div>
+      <!-- 闭括号 -->
+      <span v-if="hasCloseBracket(cond.id)" class="bracket-mark bracket-close">)</span>
     </template>
 
     <div class="cb-actions">
@@ -538,6 +561,10 @@ function remove(id) { store.removeCondition(id) }
 .logic-not.active { background: var(--color-danger); color: #fff; border-color: var(--color-danger); }
 .logic-br { width: 22px; padding: 0 2px; background: none; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: 10px; cursor: pointer; flex-shrink: 0; }
 .logic-br:hover { border-color: var(--color-accent); color: var(--color-accent-light); }
+.logic-br.active { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
+.bracket-mark { font-size: 18px; font-weight: bold; color: var(--color-accent); flex-shrink: 0; display: flex; align-items: center; }
+.bracket-open { margin-right: -4px; }
+.bracket-close { margin-left: -4px; }
 
 .cb-sel { padding: 2px 4px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); font-size: var(--font-size-sm); }
 .cb-sel:focus { outline: none; border-color: var(--color-accent); }
