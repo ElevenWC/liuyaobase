@@ -17,6 +17,8 @@ const showTagPicker = ref(false)
 const batchTagging = ref(false)
 
 onMounted(async () => {
+  // 已有条件但无逻辑链时自动重建
+  if (store.conditions.length && !store.logicChain.length) store.rebuildLogicChain()
   try {
     const res = await fetchTagTree()
     if (res.data.code === 200) tagTree.value = res.data.data || []
