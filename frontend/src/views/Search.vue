@@ -4,6 +4,7 @@ import { useSearchStore } from '../stores/useSearchStore.js'
 import { fetchTagTree, addGualiTag } from '../api/index.js'
 import FieldLibrary from '../components/Search/FieldLibrary.vue'
 import ConditionBuilder from '../components/Search/ConditionBuilder.vue'
+import RecommendedSchemes from '../components/Search/RecommendedSchemes.vue'
 import ResultList from '../components/Search/ResultList.vue'
 
 const store = useSearchStore()
@@ -113,6 +114,7 @@ function onPageChange(page) {
               class="tag-opt" @click="batchAddTag(t.id)">{{ t.indent }}{{ t.name }}</span>
           </div>
         </div>
+        <RecommendedSchemes />
         <div class="sp-results">
           <ResultList ref="resultListRef"
             :results="store.results"
