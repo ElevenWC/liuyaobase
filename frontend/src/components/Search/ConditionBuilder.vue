@@ -8,6 +8,13 @@ import FeishenGroup from './FeishenGroup.vue'
 const store = useSearchStore()
 function isGroup(c) { return !!c.groupType }
 
+function groupSummary(c) {
+  if (c.groupType === 'same_yao') return `${c.id} 同一爻[${c.sources.join('/')}]`
+  if (c.groupType === 'same_position') return `${c.id} 同爻位[第${c.position||1}爻]`
+  if (c.groupType === 'feishen') return `${c.id} 飞神[${c.feishenType}·${c.yongshen}]`
+  return c.id
+}
+
 const SCOPE_OPTIONS = [
   { v: 'ben_gua', label: '本卦' },
   { v: 'bian_yao', label: '变爻' },
@@ -198,9 +205,10 @@ function remove(id) { store.removeCondition(id) }
 
       <!-- 神煞条件 -->
       <template v-else-if="isShensha(cond.field)">
-        <select v-model="cond.scope" class="cb-sel">
+        <select v-if="!String(cond.value).startsWith('cg_')" v-model="cond.scope" class="cb-sel">
           <option v-for="s in SCOPE_OPTIONS" :key="s.v" :value="s.v">{{ s.label }}</option>
         </select>
+        <span v-else class="cb-hint" style="padding:2px 4px">(组)</span>
         <select v-model="cond.value" class="cb-sel">
           <option value="">--对象--</option>
           <option value="世爻">世爻</option>
@@ -211,9 +219,9 @@ function remove(id) { store.removeCondition(id) }
           <option value="兄弟爻">兄弟爻</option>
           <option value="子孙爻">子孙爻</option>
           <option disabled>──</option>
-          <option v-for="c in store.conditions.filter(x=>x.id!==cond.id)" :key="c.id" :value="c.id">{{ c.id }}{{ c.groupType ? '(组)' : '' }}</option>
+          <option v-for="c in store.conditions.filter(x=>x.id!==cond.id&&x.groupType)" :key="c.id" :value="c.id">{{ groupSummary(c) }}</option>
         </select>
-        <select v-model="cond.field" class="cb-sel" @change="(e)=>{ if(e.target.value==='is_dong'||e.target.value==='is_an_dong'){cond.value='true';cond.operator='equals'} }">
+        <select v-model="cond.field" class="cb-sel">
           <option value="">--神煞--</option>
           <option v-for="s in SHENSHA_TYPES" :key="s.v" :value="s.v">{{ s.label }}</option>
         </select>
@@ -245,7 +253,7 @@ function remove(id) { store.removeCondition(id) }
         </select>
         <select v-else v-model="cond.left_value" class="cb-sel">
           <option value="">--条件ID--</option>
-          <option v-for="c in store.conditions.filter(x=>x.id!==cond.id)" :key="c.id" :value="c.id">{{ c.id }}{{ c.groupType ? '(组)' : '' }}</option>
+          <option v-for="c in store.conditions.filter(x=>x.id!==cond.id&&x.groupType)" :key="c.id" :value="c.id">{{ groupSummary(c) }}</option>
         </select>
 
         <!-- 三合布局：x y z 三合▼ 局▼ -->
@@ -275,7 +283,7 @@ function remove(id) { store.removeCondition(id) }
           </select>
           <select v-else v-model="cond.middle_value" class="cb-sel">
             <option value="">--条件ID--</option>
-            <option v-for="c in store.conditions.filter(x=>x.id!==cond.id)" :key="c.id" :value="c.id">{{ c.id }}{{ c.groupType ? '(组)' : '' }}</option>
+            <option v-for="c in store.conditions.filter(x=>x.id!==cond.id&&x.groupType)" :key="c.id" :value="c.id">{{ groupSummary(c) }}</option>
           </select>
           <span class="cb-gap"></span>
           <select v-model="cond.right_type" class="cb-sel">
@@ -302,7 +310,7 @@ function remove(id) { store.removeCondition(id) }
           </select>
           <select v-else v-model="cond.right_value" class="cb-sel">
             <option value="">--条件ID--</option>
-            <option v-for="c in store.conditions.filter(x=>x.id!==cond.id)" :key="c.id" :value="c.id">{{ c.id }}{{ c.groupType ? '(组)' : '' }}</option>
+            <option v-for="c in store.conditions.filter(x=>x.id!==cond.id&&x.groupType)" :key="c.id" :value="c.id">{{ groupSummary(c) }}</option>
           </select>
           <select v-model="cond.relation" class="cb-sel">
             <optgroup label="生克合冲">
@@ -378,7 +386,7 @@ function remove(id) { store.removeCondition(id) }
           </select>
           <select v-else v-model="cond.right_value" class="cb-sel">
             <option value="">--条件ID--</option>
-            <option v-for="c in store.conditions.filter(x=>x.id!==cond.id)" :key="c.id" :value="c.id">{{ c.id }}{{ c.groupType ? '(组)' : '' }}</option>
+            <option v-for="c in store.conditions.filter(x=>x.id!==cond.id&&x.groupType)" :key="c.id" :value="c.id">{{ groupSummary(c) }}</option>
           </select>
         </template>
       </template>

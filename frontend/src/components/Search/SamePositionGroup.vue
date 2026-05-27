@@ -53,6 +53,7 @@ function removeSub(si, ci) { store.removeSubCondition(props.group.id, ci, si) }
     <div class="cg-head">
       <span class="cg-title">同爻位条件组</span>
       <span class="cg-desc">必须同一爻位</span>
+      <span class="cg-id">{{ group.id }}</span>
       <button class="cg-del" @click="store.removeConditionGroup(group.id)" title="删除">×</button>
     </div>
     <div class="cg-pos-bar">
@@ -103,6 +104,7 @@ function removeSub(si, ci) { store.removeSubCondition(props.group.id, ci, si) }
 .cg-head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-1); }
 .cg-title { font-size: var(--font-size-sm); font-weight: 600; color: var(--color-accent-light); }
 .cg-desc { font-size: var(--font-size-xs); color: var(--color-text-muted); }
+.cg-id { font-size: var(--font-size-xs); color: var(--color-text-muted); font-family: monospace; }
 .cg-del { margin-left: auto; width: 18px; height: 18px; padding: 0; background: none; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .cg-del:hover { border-color: var(--color-danger); color: var(--color-danger); }
 .cg-pos-bar { display: flex; align-items: center; gap: var(--space-1); margin-bottom: var(--space-1); }
