@@ -62,7 +62,9 @@ SHENSHA_MAP = {
 }
 
 # yao_object 六爻对象 → 查找方式
-YAO_OBJECTS = {"世爻", "应爻", "妻财爻", "官鬼爻", "父母爻", "兄弟爻", "子孙爻"}
+YAO_OBJECTS = {"世爻", "应爻", "妻财爻", "官鬼爻", "父母爻", "兄弟爻", "子孙爻",
+               "青龙爻", "朱雀爻", "勾陈爻", "螣蛇爻", "白虎爻", "玄武爻",
+               "动爻", "静爻", "暗动爻", "易冒伏神", "增删伏神", "易冒飞神", "增删飞神"}
 
 # ── 条件组：通用字段名 × 来源 → SQL 列名 ──
 GENERIC_YAO_FIELDS: dict[str, dict[str, str | None]] = {
@@ -470,7 +472,7 @@ def _build_shensha_clause(field: str, mode: str, scope: str, obj_value: str, par
 
     # 爻对象过滤（如"妻财爻" → 限制六亲 + 神煞）
     if obj_value and obj_value in YAO_OBJECTS:
-        obj_col, obj_val = _parse_yao_object(obj_value)
+        obj_col, obj_val, _ = _parse_yao_object(obj_value)
         params[f"s{idx}"] = obj_val
         return f"({sub}) AND y.{obj_col} = :s{idx}"
 
@@ -487,15 +489,33 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int,
     cg_counter = [0]
 
     # 获取地支值：yao_object → 子查询查爻表，time_object → 时间表字段
-    def resolve_dz(obj_type, obj_value, suffix):
+    def resolve_dz(obj_type, obj_value, suffix, scope='ben_gua'):
+        # scope → 列前缀映射
+        _PFX = {'ben_gua': 'ben', 'zhi_gua': 'zhi', 'bian_yao': 'zhi', 'yimao': 'yimao', 'zengshan': 'zengshan'}
+        pfx = _PFX.get(scope, 'ben')
         if obj_type == "yao_object":
             col, val, dz_col = _parse_yao_object(obj_value)
-            # 伏神/飞神直接返回列名，无需子查询过滤
+            # 根据 scope 调整列前缀
+            # 对于 ben_dizhi/zhi_dizhi 这种，替换前缀
+            def _scoped(col_name, pfx):
+                for old in ['ben_', 'zhi_', 'yimao_', 'zengshan_']:
+                    if col_name.startswith(old):
+                        return col_name.replace(old, pfx + '_', 1)
+                return f"{pfx}_{col_name}" if '_' not in col_name else col_name
+
+            dz = _scoped(dz_col, pfx)
+            # 伏神/飞神直接返回列名
             if val == "":
-                return f"y.{dz_col}"
-            # 布尔值传整数(MySQL TINYINT兼容)
+                return f"y.{dz}"
+            # 构建子查询
+            col_scoped = _scoped(col, pfx)
             params[suffix] = val
-            return f"(SELECT y_inner.{dz_col} FROM guali_yao y_inner WHERE y_inner.guali_id = guali.id AND y_inner.{col} = :{suffix} LIMIT 1)"
+            # 额外 scope 过滤
+            extra = ''
+            if scope == 'bian_yao': extra = ' AND y_inner.is_dong = TRUE'
+            elif scope == 'zhi_gua': extra = ' AND y_inner.is_dong = FALSE'
+            elif scope == 'zengshan': extra = ' AND y_inner.zengshan_exists = TRUE'
+            return f"(SELECT y_inner.{dz} FROM guali_yao y_inner WHERE y_inner.guali_id = guali.id AND y_inner.{col_scoped} = :{suffix}{extra} LIMIT 1)"
         elif obj_type == "time_object":
             tm_map = {"年支": "t.year_zhi", "月支": "t.month_zhi", "日支": "t.day_zhi"}
             dz_col = tm_map.get(obj_value)
@@ -532,12 +552,12 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int,
         params[suffix] = obj_value
         return f":{suffix}"
 
-    dz1 = resolve_dz(rel.left_type, rel.left_value, f"l{idx}")
-    dz2 = resolve_dz(rel.right_type, rel.right_value, f"r{idx}")
+    dz1 = resolve_dz(rel.left_type, rel.left_value, f"l{idx}", getattr(rel, 'left_scope', None) or 'ben_gua')
+    dz2 = resolve_dz(rel.right_type, rel.right_value, f"r{idx}", getattr(rel, 'right_scope', None) or 'ben_gua')
 
     if relation == "三合":
         # 三合需要 3 个地支对象
-        dz_mid = resolve_dz(rel.middle_type, rel.middle_value, f"m{idx}")
+        dz_mid = resolve_dz(rel.middle_type, rel.middle_value, f"m{idx}", getattr(rel, 'middle_scope', None) or 'ben_gua')
         if bureau:
             return f"check_sanhe({dz1}, {dz_mid}, {dz2}) = '{bureau}'"
         return f"check_sanhe({dz1}, {dz_mid}, {dz2}) != '无'"

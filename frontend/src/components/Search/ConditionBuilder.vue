@@ -396,6 +396,13 @@ function remove(id) { store.removeCondition(id) }
           <option value="time_object">时间对象</option>
           <option value="condition_group_ref">条件组引用</option>
         </select>
+        <select v-if="cond.left_type==='yao_object'" v-model="cond.left_scope" class="cb-sel">
+          <option value="ben_gua">本卦</option>
+          <option value="zhi_gua">之卦</option>
+          <option value="bian_yao">变爻</option>
+          <option value="yimao">易冒</option>
+          <option value="zengshan">增删</option>
+        </select>
         <select v-if="cond.left_type==='yao_object'" v-model="cond.left_value" class="cb-sel">
           <option value="">--对象--</option>
           <option value="世爻">世爻</option>
@@ -442,6 +449,13 @@ function remove(id) { store.removeCondition(id) }
             <option value="time_object">时间对象</option>
             <option value="condition_group_ref">条件组引用</option>
           </select>
+          <select v-if="cond.middle_type==='yao_object'" v-model="cond.middle_scope" class="cb-sel">
+            <option value="ben_gua">本卦</option>
+            <option value="zhi_gua">之卦</option>
+            <option value="bian_yao">变爻</option>
+            <option value="yimao">易冒</option>
+            <option value="zengshan">增删</option>
+          </select>
           <select v-if="cond.middle_type==='yao_object'" v-model="cond.middle_value" class="cb-sel">
             <option value="">--对象--</option>
             <option value="世爻">世爻</option>
@@ -484,6 +498,13 @@ function remove(id) { store.removeCondition(id) }
             <option value="yao_object">爻对象</option>
             <option value="time_object">时间对象</option>
             <option value="condition_group_ref">条件组引用</option>
+          </select>
+          <select v-if="cond.right_type==='yao_object'" v-model="cond.right_scope" class="cb-sel">
+            <option value="ben_gua">本卦</option>
+            <option value="zhi_gua">之卦</option>
+            <option value="bian_yao">变爻</option>
+            <option value="yimao">易冒</option>
+            <option value="zengshan">增删</option>
           </select>
           <select v-if="cond.right_type==='yao_object'" v-model="cond.right_value" class="cb-sel">
             <option value="">--对象--</option>
@@ -576,6 +597,13 @@ function remove(id) { store.removeCondition(id) }
             <option value="yao_object">爻对象</option>
             <option value="time_object">时间对象</option>
             <option value="condition_group_ref">条件组引用</option>
+          </select>
+          <select v-if="cond.right_type==='yao_object'" v-model="cond.right_scope" class="cb-sel">
+            <option value="ben_gua">本卦</option>
+            <option value="zhi_gua">之卦</option>
+            <option value="bian_yao">变爻</option>
+            <option value="yimao">易冒</option>
+            <option value="zengshan">增删</option>
           </select>
           <select v-if="cond.right_type==='yao_object'" v-model="cond.right_value" class="cb-sel">
             <option value="">--对象--</option>

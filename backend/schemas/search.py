@@ -35,11 +35,14 @@ class RelationCondition(Condition):
     """关系条件——两个/三个对象之间的关系判断"""
     left_type: str        # yao_object / time_object / condition_group_ref
     left_value: str       # 左对象值
+    left_scope: Optional[str] = None  # yao_object 来源：ben_gua/zhi_gua/bian_yao/yimao/zengshan
     middle_type: Optional[str] = None  # 三合专用：中间对象类型
     middle_value: Optional[str] = None  # 三合专用：中间对象值
+    middle_scope: Optional[str] = None
     relation: str         # 生/克/合/冲/半合/三合/=/长生/帝旺/墓/绝
     right_type: str       # yao_object / time_object / condition_group_ref
     right_value: str      # 右对象值
+    right_scope: Optional[str] = None
     bureau: Optional[str] = None  # 三合局类型（水/木/火/金），仅三合时有效
 
     @field_validator("relation")
