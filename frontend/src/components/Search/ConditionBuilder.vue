@@ -290,9 +290,9 @@ function remove(id) { store.removeCondition(id) }
           @click="store.toggleNot(cond.id)" title="取反">NOT</button>
         <!-- 括号 -->
         <button class="logic-br" :class="{ active: hasOpenBracket(cond.id) }"
-          @click="store.addOpenBracket(cond.id)" title="左括号">「</button>
+          @click="store.addOpenBracket(cond.id)" title="左括号">⌈</button>
         <button class="logic-br" :class="{ active: hasCloseBracket(cond.id) }"
-          @click="store.addCloseBracket(cond.id)" title="右括号">」</button>
+          @click="store.addCloseBracket(cond.id)" title="右括号">⌋</button>
         <button class="cond-remove" @click="remove(cond.id)" title="删除此条件">×</button>
 
       <!-- 条件组 -->
