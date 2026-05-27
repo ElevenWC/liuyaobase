@@ -270,10 +270,10 @@ function remove(id) { store.removeCondition(id) }
         </select>
         <input v-else v-model="cond.countValue" class="cb-input" placeholder="值" style="width:60px" />
         <span class="cb-yu">的数目</span>
-        <select v-model="cond.operator" class="cb-sel" style="width:60px">
+        <select v-model="cond.operator" class="cb-sel" style="width:90px">
           <option v-for="op in COUNT_OPS" :key="op" :value="op">{{ OP_DISPLAY[op] || op }}</option>
         </select>
-        <input v-model="cond.value" class="cb-input" placeholder="0" style="width:40px" />
+        <input v-model="cond.value" class="cb-input" placeholder="0" style="width:45px" />
       </template>
 
       <!-- 关系条件 -->
