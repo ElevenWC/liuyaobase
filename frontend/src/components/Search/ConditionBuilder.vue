@@ -405,6 +405,22 @@ function remove(id) { store.removeCondition(id) }
           <option value="父母爻">父母爻</option>
           <option value="兄弟爻">兄弟爻</option>
           <option value="子孙爻">子孙爻</option>
+          <option disabled>── 六神</option>
+          <option value="青龙爻">青龙爻</option>
+          <option value="朱雀爻">朱雀爻</option>
+          <option value="勾陈爻">勾陈爻</option>
+          <option value="螣蛇爻">螣蛇爻</option>
+          <option value="白虎爻">白虎爻</option>
+          <option value="玄武爻">玄武爻</option>
+          <option disabled>── 状态</option>
+          <option value="动爻">动爻</option>
+          <option value="静爻">静爻</option>
+          <option value="暗动爻">暗动爻</option>
+          <option disabled>── 伏神飞神</option>
+          <option value="易冒伏神">易冒伏神</option>
+          <option value="增删伏神">增删伏神</option>
+          <option value="易冒飞神">易冒飞神</option>
+          <option value="增删飞神">增删飞神</option>
         </select>
         <select v-else-if="cond.left_type==='time_object'" v-model="cond.left_value" class="cb-sel">
           <option value="">--时间--</option>
@@ -435,6 +451,22 @@ function remove(id) { store.removeCondition(id) }
             <option value="父母爻">父母爻</option>
             <option value="兄弟爻">兄弟爻</option>
             <option value="子孙爻">子孙爻</option>
+            <option disabled>── 六神</option>
+            <option value="青龙爻">青龙爻</option>
+            <option value="朱雀爻">朱雀爻</option>
+            <option value="勾陈爻">勾陈爻</option>
+            <option value="螣蛇爻">螣蛇爻</option>
+            <option value="白虎爻">白虎爻</option>
+            <option value="玄武爻">玄武爻</option>
+            <option disabled>── 状态</option>
+            <option value="动爻">动爻</option>
+            <option value="静爻">静爻</option>
+            <option value="暗动爻">暗动爻</option>
+            <option disabled>── 伏神飞神</option>
+            <option value="易冒伏神">易冒伏神</option>
+            <option value="增删伏神">增删伏神</option>
+            <option value="易冒飞神">易冒飞神</option>
+            <option value="增删飞神">增删飞神</option>
           </select>
           <select v-else-if="cond.middle_type==='time_object'" v-model="cond.middle_value" class="cb-sel">
             <option value="">--时间--</option>
@@ -462,6 +494,22 @@ function remove(id) { store.removeCondition(id) }
             <option value="父母爻">父母爻</option>
             <option value="兄弟爻">兄弟爻</option>
             <option value="子孙爻">子孙爻</option>
+            <option disabled>── 六神</option>
+            <option value="青龙爻">青龙爻</option>
+            <option value="朱雀爻">朱雀爻</option>
+            <option value="勾陈爻">勾陈爻</option>
+            <option value="螣蛇爻">螣蛇爻</option>
+            <option value="白虎爻">白虎爻</option>
+            <option value="玄武爻">玄武爻</option>
+            <option disabled>── 状态</option>
+            <option value="动爻">动爻</option>
+            <option value="静爻">静爻</option>
+            <option value="暗动爻">暗动爻</option>
+            <option disabled>── 伏神飞神</option>
+            <option value="易冒伏神">易冒伏神</option>
+            <option value="增删伏神">增删伏神</option>
+            <option value="易冒飞神">易冒飞神</option>
+            <option value="增删飞神">增删飞神</option>
           </select>
           <select v-else-if="cond.right_type==='time_object'" v-model="cond.right_value" class="cb-sel">
             <option value="">--时间--</option>
@@ -538,6 +586,22 @@ function remove(id) { store.removeCondition(id) }
             <option value="父母爻">父母爻</option>
             <option value="兄弟爻">兄弟爻</option>
             <option value="子孙爻">子孙爻</option>
+            <option disabled>── 六神</option>
+            <option value="青龙爻">青龙爻</option>
+            <option value="朱雀爻">朱雀爻</option>
+            <option value="勾陈爻">勾陈爻</option>
+            <option value="螣蛇爻">螣蛇爻</option>
+            <option value="白虎爻">白虎爻</option>
+            <option value="玄武爻">玄武爻</option>
+            <option disabled>── 状态</option>
+            <option value="动爻">动爻</option>
+            <option value="静爻">静爻</option>
+            <option value="暗动爻">暗动爻</option>
+            <option disabled>── 伏神飞神</option>
+            <option value="易冒伏神">易冒伏神</option>
+            <option value="增删伏神">增删伏神</option>
+            <option value="易冒飞神">易冒飞神</option>
+            <option value="增删飞神">增删飞神</option>
           </select>
           <select v-else-if="cond.right_type==='time_object'" v-model="cond.right_value" class="cb-sel">
             <option value="">--时间--</option>
