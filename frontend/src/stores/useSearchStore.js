@@ -195,30 +195,50 @@ export const useSearchStore = defineStore('search', () => {
     return idx > 0 && logicChain.value[idx - 1].type === 'not'
   }
 
-  // 括号：在一组条件前后加/去括号
-  function toggleBracket(condId) {
+  // 括号：左括号 ( 加在条件前，右括号 ) 加在条件后
+  function addOpenBracket(condId) {
     const idx = logicChain.value.findIndex(l => l.id === condId)
     if (idx < 0) return
-    // 检查前后是否已有括号
-    const hasOpen = idx > 0 && logicChain.value[idx - 1].type === '('
-    const closeIdx = logicChain.value.findIndex((l, i) => i > idx && l.type === ')')
-    if (hasOpen && closeIdx > idx) {
-      // 移除括号
-      logicChain.value.splice(closeIdx, 1)
-      logicChain.value.splice(idx - 1, 1)
+    if (idx > 0 && logicChain.value[idx - 1].type === '(') {
+      logicChain.value.splice(idx - 1, 1)  // 已有则移除
     } else {
-      // 添加括号：在该条件前加 (，在该条件后或下一个 and/or 后加 )
-      let end = idx + 1
-      while (end < logicChain.value.length && (logicChain.value[end].type === 'and' || logicChain.value[end].type === 'or' || logicChain.value[end].type === 'not')) {
-        end++
-      }
-      if (end < logicChain.value.length) end-- // 停在下一个 condition 之前
       logicChain.value.splice(idx, 0, { type: '(' })
-      logicChain.value.splice(end + 1, 0, { type: ')' })
     }
   }
 
+  function addCloseBracket(condId) {
+    const idx = logicChain.value.findIndex(l => l.id === condId)
+    if (idx < 0) return
+    // 向后找 )，跳过 and/or/not
+    for (let j = idx + 1; j < logicChain.value.length; j++) {
+      if (logicChain.value[j].type === ')') {
+        logicChain.value.splice(j, 1)
+        return
+      }
+      if (logicChain.value[j].type === 'condition' || logicChain.value[j].type === 'condition_group') break
+    }
+    // 找到下一个 condition 或末尾前插入 )
+    let ins = idx + 1
+    while (ins < logicChain.value.length && (logicChain.value[ins].type === 'and' || logicChain.value[ins].type === 'or' || logicChain.value[ins].type === 'not')) {
+      ins++
+    }
+    logicChain.value.splice(ins, 0, { type: ')' })
+  }
+
+  function checkBracketBalance() {
+    let depth = 0
+    for (const item of logicChain.value) {
+      if (item.type === '(') depth++
+      if (item.type === ')') depth--
+      if (depth < 0) return '括号不匹配：多余的右括号'
+    }
+    if (depth > 0) return `括号不匹配：缺少 ${depth} 个右括号`
+    return null
+  }
+
   async function executeSearch() {
+    const bracketErr = checkBracketBalance()
+    if (bracketErr) { alert(bracketErr); return }
     loading.value = true
     try {
       const body = {
@@ -270,7 +290,7 @@ export const useSearchStore = defineStore('search', () => {
     expressionPreview, addCondition, removeCondition, updateCondition,
     addConditionGroup, removeConditionGroup, updateConditionGroup,
     addSubCondition, removeSubCondition, updateSubCondition,
-    setLogic, rebuildLogicChain, toggleLogicOp, toggleNot, hasNot, toggleBracket,
+    setLogic, rebuildLogicChain, toggleLogicOp, toggleNot, hasNot, addOpenBracket, addCloseBracket, checkBracketBalance,
     executeSearch, setPage,
     loadSchemes, saveScheme, applyScheme, deleteScheme,
   }
