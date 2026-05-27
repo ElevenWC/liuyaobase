@@ -109,7 +109,28 @@ const SHENSHA_TYPES = [
 ]
 
 function isShensha(field) { return SHENSHA_FIELDS.includes(field) }
+function isCount(field) { return field === '_count' }
 const SHENGWANG_RELATIONS = ['长生', '帝旺', '墓', '绝']
+
+const COUNT_SCOPES = [
+  { v: 'ben_gua', label: '本卦' },
+  { v: 'zhi_gua', label: '之卦' },
+  { v: 'bian_yao', label: '变爻' },
+  { v: 'zengshan', label: '增删伏神' },
+]
+const COUNT_ATTRS = [
+  { v: 'liuqin', label: '六亲', vals: LIUQIN_VALS },
+  { v: 'dizhi', label: '地支', vals: DIZHI_VALS },
+  { v: 'yao_type', label: '爻类型', vals: YAOTYPE_VALS },
+  { v: 'is_dong', label: '动爻', vals: [{v:'true',l:'是'},{v:'false',l:'否'}] },
+  { v: 'is_an_dong', label: '暗动', vals: [{v:'true',l:'是'},{v:'false',l:'否'}] },
+  { v: 'zengshan_exists', label: '有伏神', vals: [{v:'true',l:'有'},{v:'false',l:'无'}] },
+]
+const COUNT_OPS = ['equals', 'not_equals', 'gt', 'lt', 'gte', 'lte']
+
+function currentCountAttr(cond) {
+  return COUNT_ATTRS.find(a => a.v === cond.countAttr)
+}
 
 function fieldValueOptions(field) {
   if (field === 'ben_liuqin' || field === 'zhi_liuqin' || field === 'yimao_liuqin' || field === 'zengshan_liuqin') return LIUQIN_VALS
@@ -140,6 +161,11 @@ function addShenshaCondition() {
   store.addCondition('normal')
   const c = store.conditions[store.conditions.length - 1]
   if (c) store.updateCondition(c.id, { field: 'is_ganlu', value: '妻财爻', operator: 'equals' })
+}
+function addCountCondition() {
+  store.addCondition('normal')
+  const c = store.conditions[store.conditions.length - 1]
+  if (c) store.updateCondition(c.id, { field: '_count', scope: 'ben_gua', countAttr: 'liuqin', countValue: '妻财', operator: 'equals', value: '0' })
 }
 function addGuaCondition() {
   store.addCondition('normal')
@@ -179,7 +205,7 @@ function remove(id) { store.removeCondition(id) }
       <FeishenGroup v-else-if="cond.groupType==='feishen'" :group="cond" />
 
       <!-- 爻属性条件 -->
-      <template v-else-if="!cond.relation && !isShensha(cond.field)">
+      <template v-else-if="!cond.relation && !isShensha(cond.field) && !isCount(cond.field)">
         <select v-if="cond.scope !== null && cond.field && cond.field !== 'yao_position' && !GUA_FIELDS.find(f=>f.v===cond.field) && !TIME_FIELDS.find(f=>f.v===cond.field)" v-model="cond.scope" @change="()=>{}" class="cb-sel">
           <option v-for="s in SCOPE_OPTIONS" :key="s.v" :value="s.v">{{ s.label }}</option>
         </select>
@@ -225,6 +251,29 @@ function remove(id) { store.removeCondition(id) }
           <option value="">--神煞--</option>
           <option v-for="s in SHENSHA_TYPES" :key="s.v" :value="s.v">{{ s.label }}</option>
         </select>
+      </template>
+
+      <!-- 数目判断 -->
+      <template v-else-if="isCount(cond.field)">
+        <select v-model="cond.scope" class="cb-sel">
+          <option v-for="s in COUNT_SCOPES" :key="s.v" :value="s.v">{{ s.label }}</option>
+        </select>
+        <span class="cb-yu">中</span>
+        <select v-model="cond.countAttr" class="cb-sel" @change="cond.countValue='';cond.value='0'">
+          <option value="">--属性--</option>
+          <option v-for="a in COUNT_ATTRS" :key="a.v" :value="a.v">{{ a.label }}</option>
+        </select>
+        <span class="cb-yu">=</span>
+        <select v-if="currentCountAttr(cond)?.vals.length" v-model="cond.countValue" class="cb-sel">
+          <option value="">--值--</option>
+          <option v-for="v in currentCountAttr(cond).vals" :key="v.v||v" :value="v.v||v">{{ v.l||v }}</option>
+        </select>
+        <input v-else v-model="cond.countValue" class="cb-input" placeholder="值" style="width:60px" />
+        <span class="cb-yu">的数目</span>
+        <select v-model="cond.operator" class="cb-sel" style="width:60px">
+          <option v-for="op in COUNT_OPS" :key="op" :value="op">{{ OP_DISPLAY[op] || op }}</option>
+        </select>
+        <input v-model="cond.value" class="cb-input" placeholder="0" style="width:40px" />
       </template>
 
       <!-- 关系条件 -->
@@ -398,6 +447,7 @@ function remove(id) { store.removeCondition(id) }
       <button @click="addYaoCondition" class="cb-btn">+ 爻属性</button>
       <button @click="addRelationCondition" class="cb-btn">+ 关系</button>
       <button @click="addShenshaCondition" class="cb-btn">+ 神煞</button>
+      <button @click="addCountCondition" class="cb-btn">+ 数目</button>
       <span class="cb-sep">|</span>
       <button @click="store.addConditionGroup('same_yao')" class="cb-btn cg-btn">+ 同一爻</button>
       <button @click="store.addConditionGroup('same_position')" class="cb-btn cg-btn">+ 同爻位</button>

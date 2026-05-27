@@ -20,6 +20,8 @@ class Condition(BaseModel):
     operator: str
     value: Union[str, list[str]]
     scope: Optional[str] = None  # ben_gua / zhi_gua / bian_yao / yimao / zengshan
+    countAttr: Optional[str] = None   # 数目判断专用：统计属性
+    countValue: Optional[str] = None  # 数目判断专用：属性值
 
     @field_validator("operator")
     @classmethod

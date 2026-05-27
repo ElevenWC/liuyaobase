@@ -60,7 +60,9 @@ async function batchAddTag(tagId) {
 
 function onFieldSelect({ cat, field, type, label }) {
   if (type === 'count') {
-    alert('数目判断功能开发中，敬请期待')
+    store.addCondition('normal')
+    const c = store.conditions[store.conditions.length - 1]
+    if (c) store.updateCondition(c.id, { field: '_count', scope: 'ben_gua', countAttr: 'liuqin', countValue: '妻财', operator: 'equals', value: '0' })
     return
   }
   if (type === 'relation') {

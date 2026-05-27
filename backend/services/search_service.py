@@ -265,8 +265,64 @@ def _parse_yao_object(value: str) -> tuple[str, str]:
     return "ben_liuqin", value
 
 
+def _build_number_judgment_clause(cond, params: dict, idx: int) -> str:
+    """数目判断 → COUNT 子查询嵌入 WHERE"""
+    scope = cond.scope or "ben_gua"
+    count_attr = getattr(cond, 'countAttr', None) or cond.get('countAttr', '')
+    count_val = getattr(cond, 'countValue', None) or cond.get('countValue', '')
+    op = cond.operator
+    target = cond.value
+
+    # scope → SQL col 映射
+    attr_map = {
+        'yao_type': {'ben_gua': 'y.ben_yao_type', 'zhi_gua': 'y.zhi_yao_type'},
+        'is_dong': {'ben_gua': 'y.is_dong'},
+        'is_an_dong': {'ben_gua': 'y.is_an_dong'},
+        'liuqin': {'ben_gua': 'y.ben_liuqin', 'bian_yao': 'y.zhi_liuqin', 'zengshan': 'y.zengshan_liuqin'},
+        'dizhi': {'ben_gua': 'y.ben_dizhi', 'zhi_gua': 'y.zhi_dizhi', 'yimao': 'y.yimao_dizhi', 'zengshan': 'y.zengshan_dizhi'},
+        'zengshan_exists': {'zengshan': 'y.zengshan_exists'},
+    }
+    col = attr_map.get(count_attr, {}).get(scope)
+    if not col:
+        return "FALSE"
+
+    # 构建子查询 WHERE 条件
+    if count_attr in ('is_dong', 'is_an_dong'):
+        inner = f"{col} = TRUE"
+    elif count_attr == 'zengshan_exists':
+        inner = f"{col} = TRUE"
+    elif count_attr in ('liuqin', 'dizhi', 'yao_type'):
+        pk = f"nj{idx}"
+        params[pk] = count_val
+        inner = f"{col} = :{pk}"
+    else:
+        return "FALSE"
+
+    # scope 额外过滤
+    extra = ''
+    if scope == 'bian_yao':
+        extra = ' AND y.is_dong = TRUE'
+    elif scope == 'zhi_gua':
+        extra = ' AND y.is_dong = FALSE'
+    elif scope == 'zengshan':
+        extra = ' AND y.zengshan_exists = TRUE'
+
+    sub = f"SELECT COUNT(*) FROM guali_yao y WHERE y.guali_id = guali.id AND ({inner}){extra}"
+
+    # 运算符映射
+    pk = f"nj{idx}_v"
+    params[pk] = int(target) if target else 0
+    op_map = {'equals': '=', 'not_equals': '!=', 'gt': '>', 'lt': '<', 'gte': '>=', 'lte': '<='}
+    sql_op = op_map.get(op, '=')
+    return f"({sub}) {sql_op} :{pk}"
+
+
 def _build_condition_clause(cond: Condition, params: dict, idx: int, cond_clauses: dict = {}) -> str:
     """单个条件 → WHERE 子句片段，返回 SQL 文本"""
+    # 数目判断
+    if cond.field == '_count' or getattr(cond, 'countAttr', None):
+        return _build_number_judgment_clause(cond, params, idx)
+
     # 神煞字段：委托给 _build_shensha_clause
     shensha_key = cond.field.replace("is_", "").replace("dai_", "")
     if shensha_key in SHENSHA_MAP:
@@ -493,6 +549,10 @@ def _collect_joins(conditions: list) -> set[str]:
             # 关系条件引用了时间对象 → 需要 guali_time
             if cond.left_type == "time_object" or cond.right_type == "time_object" or (getattr(cond, 'middle_type', None) == "time_object"):
                 joins.add("t")
+            continue
+        # 数目判断需要 y 表
+        if cond.field == '_count' or getattr(cond, 'countAttr', None):
+            joins.add("y")
             continue
         info = FIELD_MAP.get(cond.field)
         if info:
