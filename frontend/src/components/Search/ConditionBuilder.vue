@@ -85,7 +85,7 @@ const YAOTYPE_VALS = ['阳', '阴']
 const OPERATORS = ['equals', 'not_equals', 'in', 'not_in', 'gt', 'lt', 'gte', 'lte', 'range']
 const OP_DISPLAY = { equals: '= (等于)', not_equals: '≠ (不等于)', in: '∈ (属于)', not_in: '∉ (不属于)', gt: '> (大于)', lt: '< (小于)', gte: '≥ (≥)', lte: '≤ (≤)', range: '↔ (范围)' }
 const GUA_PALACE_VALS = ['乾宫', '坤宫', '震宫', '巽宫', '坎宫', '离宫', '艮宫', '兑宫']
-const PALACE_TYPE_VALS = ['本宫', '一世', '二世', '三世', '四世', '五世', '游魂', '归魂']
+const PALACE_TYPE_VALS = ['本宫卦', '一世卦', '二世卦', '三世卦', '四世卦', '五世卦', '游魂卦', '归魂卦']
 const SPECIAL_TYPE_VALS = ['六合', '六冲', '普通']
 const FANYIN_VALS = ['无', '内卦', '外卦']
 const DIZHI_VALS = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
