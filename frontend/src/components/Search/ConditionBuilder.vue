@@ -8,6 +8,23 @@ import FeishenGroup from './FeishenGroup.vue'
 const store = useSearchStore()
 function isGroup(c) { return !!c.groupType }
 
+// 括号组范围：从 logicChain 中提取 [start, end] 条件索引
+const bracketGroups = computed(() => {
+  const chain = store.logicChain
+  const groups = []
+  let depth = 0, start = -1, ci = 0
+  for (const item of chain) {
+    if (item.type === '(') { if (depth === 0) start = ci; depth++ }
+    else if (item.type === ')') { depth--; if (depth === 0 && start >= 0) { groups.push({ start, end: ci - 1 }); start = -1 } }
+    else if (item.type === 'condition' || item.type === 'condition_group') ci++
+  }
+  return groups
+})
+
+function isGroupStart(condIdx) { return bracketGroups.value.some(g => g.start === condIdx) }
+function isGroupEnd(condIdx) { return bracketGroups.value.some(g => g.end === condIdx) }
+function inBracketGroup(condIdx) { return bracketGroups.value.some(g => condIdx >= g.start && condIdx <= g.end) }
+
 function groupSummary(c) {
   if (c.groupType === 'same_yao') return `${c.id} 同一爻[${c.sources.join('/')}]`
   if (c.groupType === 'same_position') return `${c.id} 同爻位[第${c.position||1}爻]`
@@ -265,7 +282,12 @@ function remove(id) { store.removeCondition(id) }
       <!-- 开括号 -->
       <span v-if="hasOpenBracket(cond.id)" class="bracket-mark bracket-open">(</span>
 
-      <div class="cond-item">
+      <div class="cond-item" :class="{
+        'bracket-first': isGroupStart(ci),
+        'bracket-inner': inBracketGroup(ci) && !isGroupStart(ci) && !isGroupEnd(ci),
+        'bracket-last': isGroupEnd(ci),
+        'bracket-single': isGroupStart(ci) && isGroupEnd(ci)
+      }">
         <!-- NOT 按钮 -->
         <button class="logic-not" :class="{ active: store.hasNot(cond.id) }"
           @click="store.toggleNot(cond.id)" title="取反">NOT</button>
@@ -553,20 +575,23 @@ function remove(id) { store.removeCondition(id) }
 .cond-remove:hover { border-color: var(--color-danger); color: var(--color-danger); }
 
 /* logic controls */
-.logic-bar { display: flex; justify-content: center; padding: 1px 0; }
-.logic-btn { padding: 0 8px; background: var(--color-bg-tertiary); color: var(--color-accent-light); border: 1px solid var(--color-accent); border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; cursor: pointer; }
+.logic-bar { display: flex; justify-content: center; padding: 2px 0; }
+.logic-btn { height: 18px; padding: 0 8px; background: var(--color-bg-tertiary); color: var(--color-accent-light); border: 1px solid var(--color-accent); border-radius: var(--radius-sm); font-size: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; }
 .logic-btn:hover { background: var(--color-accent); color: #fff; }
 .logic-or { color: #e67e22; border-color: #e67e22; }
 .logic-or:hover { background: #e67e22; color: #fff; }
-.logic-not { width: 22px; padding: 0 2px; background: none; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: 10px; cursor: pointer; flex-shrink: 0; }
+.logic-not { height: 18px; min-width: 28px; padding: 0 4px; background: none; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: 10px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 .logic-not:hover { border-color: var(--color-danger); color: var(--color-danger); }
 .logic-not.active { background: var(--color-danger); color: #fff; border-color: var(--color-danger); }
-.logic-br { width: 22px; padding: 0 2px; background: none; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: 10px; cursor: pointer; flex-shrink: 0; }
+.logic-br { height: 18px; width: 16px; padding: 0; background: none; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: 10px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 .logic-br:hover { border-color: var(--color-accent); color: var(--color-accent-light); }
 .logic-br.active { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
-.bracket-mark { font-size: 18px; font-weight: bold; color: var(--color-accent); flex-shrink: 0; display: flex; align-items: center; }
-.bracket-open { margin-right: -4px; }
-.bracket-close { margin-left: -4px; }
+
+/* bracket group card */
+.bracket-first { border-bottom: none; border-radius: var(--radius-md) var(--radius-md) 0 0; margin-bottom: 0; }
+.bracket-inner { border-top: none; border-bottom: none; border-radius: 0; margin-bottom: 0; border-left: 2px solid var(--color-accent); border-right: 2px solid var(--color-accent); }
+.bracket-last { border-top: none; border-radius: 0 0 var(--radius-md) var(--radius-md); border-left: 2px solid var(--color-accent); border-right: 2px solid var(--color-accent); border-bottom: 2px solid var(--color-accent); }
+.bracket-single { border: 2px solid var(--color-accent); }
 
 .cb-sel { padding: 2px 4px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); font-size: var(--font-size-sm); }
 .cb-sel:focus { outline: none; border-color: var(--color-accent); }
