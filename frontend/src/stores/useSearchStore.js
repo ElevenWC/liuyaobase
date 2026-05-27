@@ -85,6 +85,7 @@ export const useSearchStore = defineStore('search', () => {
     } else {
       conditions.value.push(base)
     }
+    rebuildLogicChain()
     return id
   }
 
@@ -99,12 +100,13 @@ export const useSearchStore = defineStore('search', () => {
     } else if (groupType === 'feishen') {
       conditions.value.push({ id, groupType: 'feishen', feishenType: '增删飞神', yongshen: '妻财' })
     }
+    rebuildLogicChain()
     return id
   }
 
   function removeConditionGroup(id) {
     conditions.value = conditions.value.filter(c => c.id !== id)
-    logicChain.value = logicChain.value.filter(l => l.id !== id)
+    rebuildLogicChain()
   }
 
   function updateConditionGroup(id, patch) {
@@ -150,7 +152,7 @@ export const useSearchStore = defineStore('search', () => {
 
   function removeCondition(id) {
     conditions.value = conditions.value.filter(c => c.id !== id)
-    logicChain.value = logicChain.value.filter(l => l.id !== id)
+    rebuildLogicChain()
   }
 
   function updateCondition(id, patch) {
@@ -159,6 +161,62 @@ export const useSearchStore = defineStore('search', () => {
   }
 
   function setLogic(chain) { logicChain.value = chain }
+
+  // 自动构建默认 AND 逻辑链
+  function rebuildLogicChain() {
+    const chain = []
+    const items = conditions.value.filter(c => c.id)
+    for (let i = 0; i < items.length; i++) {
+      if (i > 0) chain.push({ type: 'and' })
+      chain.push({ type: items[i].groupType ? 'condition_group' : 'condition', id: items[i].id })
+    }
+    logicChain.value = chain
+  }
+
+  function toggleLogicOp(logicIdx) {
+    const item = logicChain.value[logicIdx]
+    if (!item || (item.type !== 'and' && item.type !== 'or')) return
+    item.type = item.type === 'and' ? 'or' : 'and'
+  }
+
+  function toggleNot(condId) {
+    // 在 condition 前插入或移除 NOT
+    const idx = logicChain.value.findIndex(l => l.id === condId)
+    if (idx < 0) return
+    if (idx > 0 && logicChain.value[idx - 1].type === 'not') {
+      logicChain.value.splice(idx - 1, 1)
+    } else {
+      logicChain.value.splice(idx, 0, { type: 'not' })
+    }
+  }
+
+  function hasNot(condId) {
+    const idx = logicChain.value.findIndex(l => l.id === condId)
+    return idx > 0 && logicChain.value[idx - 1].type === 'not'
+  }
+
+  // 括号：在一组条件前后加/去括号
+  function toggleBracket(condId) {
+    const idx = logicChain.value.findIndex(l => l.id === condId)
+    if (idx < 0) return
+    // 检查前后是否已有括号
+    const hasOpen = idx > 0 && logicChain.value[idx - 1].type === '('
+    const closeIdx = logicChain.value.findIndex((l, i) => i > idx && l.type === ')')
+    if (hasOpen && closeIdx > idx) {
+      // 移除括号
+      logicChain.value.splice(closeIdx, 1)
+      logicChain.value.splice(idx - 1, 1)
+    } else {
+      // 添加括号：在该条件前加 (，在该条件后或下一个 and/or 后加 )
+      let end = idx + 1
+      while (end < logicChain.value.length && (logicChain.value[end].type === 'and' || logicChain.value[end].type === 'or' || logicChain.value[end].type === 'not')) {
+        end++
+      }
+      if (end < logicChain.value.length) end-- // 停在下一个 condition 之前
+      logicChain.value.splice(idx, 0, { type: '(' })
+      logicChain.value.splice(end + 1, 0, { type: ')' })
+    }
+  }
 
   async function executeSearch() {
     loading.value = true
@@ -212,7 +270,8 @@ export const useSearchStore = defineStore('search', () => {
     expressionPreview, addCondition, removeCondition, updateCondition,
     addConditionGroup, removeConditionGroup, updateConditionGroup,
     addSubCondition, removeSubCondition, updateSubCondition,
-    setLogic, executeSearch, setPage,
+    setLogic, rebuildLogicChain, toggleLogicOp, toggleNot, hasNot, toggleBracket,
+    executeSearch, setPage,
     loadSchemes, saveScheme, applyScheme, deleteScheme,
   }
 })
