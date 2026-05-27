@@ -62,9 +62,9 @@
 
 | Issue | 内容 | 优先级 |
 |:--:|------|:--:|
-| #107 | frontend/views/Search.vue（检索主页面——组合所有组件） | P0 |
-| #104 | CompareMode.vue（对比模式） | P2 |
-| #105 | RecommendedSchemes.vue（推荐方案） | P2 |
+| ~~#107~~ | ~~frontend/views/Search.vue（检索主页面）~~ | ✅ 已完成 |
+| ~~#104~~ | ~~CompareMode.vue（对比模式）~~ | ❌ 已取消 |
+| #105 | RecommendedSchemes.vue（自定义方案管理——仅 localStorage） | P2 |
 
 ### v0.4 后续迭代待办（首版简化的功能）
 
