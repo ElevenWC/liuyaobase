@@ -265,7 +265,7 @@ def _parse_yao_object(value: str) -> tuple[str, str]:
     return "ben_liuqin", value
 
 
-def _build_condition_clause(cond: Condition, params: dict, idx: int) -> str:
+def _build_condition_clause(cond: Condition, params: dict, idx: int, cond_clauses: dict = {}) -> str:
     """单个条件 → WHERE 子句片段，返回 SQL 文本"""
     # 神煞字段：委托给 _build_shensha_clause
     shensha_key = cond.field.replace("is_", "").replace("dai_", "")
@@ -279,7 +279,7 @@ def _build_condition_clause(cond: Condition, params: dict, idx: int) -> str:
             mode = "是或带"
         # obj_value 始终是用户在 value 字段中指定的对象（如"妻财爻"）
         obj_value = cond.value if isinstance(cond.value, str) else ""
-        return _build_shensha_clause(cond.field, mode, cond.scope or "", obj_value, params, idx)
+        return _build_shensha_clause(cond.field, mode, cond.scope or "", obj_value, params, idx, cond_clauses)
 
     field_info = FIELD_MAP.get(cond.field)
     if not field_info:
@@ -363,7 +363,8 @@ def _scope_filter(scope: str, field_info: dict) -> str:
     return ""
 
 
-def _build_shensha_clause(field: str, mode: str, scope: str, obj_value: str, params: dict, idx: int) -> str:
+def _build_shensha_clause(field: str, mode: str, scope: str, obj_value: str, params: dict, idx: int,
+                           cond_clauses: dict = {}) -> str:
     """神煞条件：FIND_IN_SET 方式
     field: 如 is_ganlu / dai_yima / ganlu
     mode: "是"→查 is 字段 / "带"→查 dai 字段 / "是或带"→两者 OR
@@ -389,7 +390,12 @@ def _build_shensha_clause(field: str, mode: str, scope: str, obj_value: str, par
 
     sub = " OR ".join(clauses) if clauses else "FALSE"
 
-    # 同时需要匹配爻对象（如"妻财爻" → 限制六亲 + 神煞）
+    # 条件组引用：用条件组的 SQL 替换 yao object 过滤
+    if obj_value and obj_value not in YAO_OBJECTS and cond_clauses.get(obj_value):
+        ref_clause = cond_clauses[obj_value]
+        return f"({sub}) AND ({ref_clause})"
+
+    # 爻对象过滤（如"妻财爻" → 限制六亲 + 神煞）
     if obj_value and obj_value in YAO_OBJECTS:
         obj_col, obj_val = _parse_yao_object(obj_value)
         params[f"s{idx}"] = obj_val
@@ -551,7 +557,7 @@ def execute_search(session: Session, request: SearchRequest) -> SearchResponse:
             elif isinstance(cond, FeishenGroup):
                 cond_clauses[cond.id] = _build_feishen_group_sql(cond, params, i)
         elif not isinstance(cond, RelationCondition):
-            cond_clauses[cond.id] = _build_condition_clause(cond, params, i)
+            cond_clauses[cond.id] = _build_condition_clause(cond, params, i, cond_clauses)
 
     # 第二遍：处理关系条件（此时 cond_clauses 已完整，可供 condition_group_ref 引用）
     for i, cond in enumerate(conditions):

@@ -59,7 +59,7 @@ async function batchAddTag(tagId) {
 
 function onFieldSelect({ cat, field, type, label }) {
   if (type === 'count') {
-    // 数目判断后端联调尚未完成
+    alert('数目判断功能开发中，敬请期待')
     return
   }
   if (type === 'relation') {
@@ -91,25 +91,7 @@ function onPageChange(page) {
 
 <template>
   <div class="search-page">
-    <!-- 顶部：表达式预览 + 操作 -->
-    <div class="sp-toolbar">
-      <div class="sp-expression">{{ store.expressionPreview }}</div>
-      <div class="sp-actions">
-        <button v-if="selectedCount()" class="sp-btn sp-btn-tag" @click="showTagPicker = !showTagPicker">
-          {{ batchTagging ? '打标中...' : `打标签(${selectedCount()})` }}
-        </button>
-        <div v-if="showTagPicker" class="tag-picker">
-          <span v-for="t in flatTags(tagTree)" :key="t.id"
-            class="tag-opt" @click="batchAddTag(t.id)">{{ t.indent }}{{ t.name }}</span>
-        </div>
-        <button class="sp-btn sp-btn-search" :disabled="store.loading" @click="store.executeSearch()">
-          {{ store.loading ? '检索中...' : '搜索' }}
-        </button>
-        <button class="sp-btn sp-btn-clear" @click="store.conditions = []; store.logicChain = []; store.results = []">清空</button>
-      </div>
-    </div>
-
-    <!-- 中部：左字段库 + 右（条件构建+结果列表） -->
+    <!-- 左字段库 + 右（条件构建+结果列表） -->
     <div class="sp-main">
       <div v-if="fieldLibCollapsed" class="fl-toggle" @click="fieldLibCollapsed = false" title="展开字段库">
         <span>▸</span>
@@ -122,6 +104,15 @@ function onPageChange(page) {
       </div>
       <div class="sp-right">
         <ConditionBuilder />
+        <div v-if="selectedCount()" class="sp-batch-bar">
+          <button class="sp-btn sp-btn-tag" @click="showTagPicker = !showTagPicker">
+            {{ batchTagging ? '打标中...' : `批量打标签（已选 ${selectedCount()} 条）` }}
+          </button>
+          <div v-if="showTagPicker" class="tag-picker">
+            <span v-for="t in flatTags(tagTree)" :key="t.id"
+              class="tag-opt" @click="batchAddTag(t.id)">{{ t.indent }}{{ t.name }}</span>
+          </div>
+        </div>
         <div class="sp-results">
           <ResultList ref="resultListRef"
             :results="store.results"
@@ -147,41 +138,15 @@ function onPageChange(page) {
   box-sizing: border-box;
 }
 
-.sp-toolbar {
-  display: flex; align-items: center; gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-bg-secondary);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  flex-shrink: 0;
-}
-.sp-expression {
-  flex: 1;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  min-height: 1.5em;
-}
-.sp-actions { display: flex; gap: var(--space-2); flex-shrink: 0; position: relative; }
-.sp-btn {
-  padding: 4px 16px; border-radius: var(--radius-md); font-size: var(--font-size-sm);
-  cursor: pointer; border: 1px solid var(--color-border-primary); transition: all var(--transition-fast);
-}
-.sp-btn-search {
-  background: var(--color-accent); color: #fff; border-color: var(--color-accent);
-}
-.sp-btn-search:hover { filter: brightness(1.1); }
-.sp-btn-search:disabled { opacity: 0.5; cursor: not-allowed; }
-.sp-btn-clear {
-  background: var(--color-bg-tertiary); color: var(--color-text-secondary);
-}
-.sp-btn-clear:hover { border-color: var(--color-danger); color: var(--color-danger); }
+.sp-batch-bar { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); position: relative; }
 .sp-btn-tag {
-  background: var(--color-bg-tertiary); color: var(--color-accent-light);
-  border-color: var(--color-accent);
+  padding: 4px 12px; border-radius: var(--radius-md); font-size: var(--font-size-sm);
+  cursor: pointer; border: 1px solid var(--color-accent);
+  background: var(--color-bg-tertiary); color: var(--color-accent-light); transition: all var(--transition-fast);
 }
 .sp-btn-tag:hover { background: var(--color-accent); color: #fff; }
 .tag-picker {
-  position: absolute; top: 100%; right: 0; margin-top: 4px; z-index: 200;
+  position: absolute; top: 100%; left: 0; margin-top: 4px; z-index: 200;
   background: var(--color-bg-overlay); border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-md); box-shadow: var(--shadow-md);
   padding: var(--space-1) 0; min-width: 140px; max-height: 240px; overflow-y: auto;

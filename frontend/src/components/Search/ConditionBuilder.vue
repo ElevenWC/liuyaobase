@@ -153,6 +153,12 @@ function remove(id) { store.removeCondition(id) }
     <div class="cb-header">
       <span>检索条件</span>
       <span class="cb-hint">（条件间为 AND 关系）</span>
+      <div class="cb-header-actions">
+        <button class="cb-btn cb-btn-search" :disabled="store.loading" @click="store.executeSearch()">
+          {{ store.loading ? '检索中...' : '搜索' }}
+        </button>
+        <button class="cb-btn cb-btn-clear" @click="store.conditions = []; store.logicChain = []; store.results = []">清空</button>
+      </div>
     </div>
 
     <div v-if="!store.conditions.length" class="cb-empty">点击下方按钮或左侧字段库添加条件</div>
@@ -204,6 +210,8 @@ function remove(id) { store.removeCondition(id) }
           <option value="父母爻">父母爻</option>
           <option value="兄弟爻">兄弟爻</option>
           <option value="子孙爻">子孙爻</option>
+          <option disabled>──</option>
+          <option v-for="c in store.conditions.filter(x=>x.id!==cond.id)" :key="c.id" :value="c.id">{{ c.id }}{{ c.groupType ? '(组)' : '' }}</option>
         </select>
         <select v-model="cond.field" class="cb-sel" @change="(e)=>{ if(e.target.value==='is_dong'||e.target.value==='is_an_dong'){cond.value='true';cond.operator='equals'} }">
           <option value="">--神煞--</option>
@@ -217,6 +225,7 @@ function remove(id) { store.removeCondition(id) }
         <select v-model="cond.left_type" class="cb-sel">
           <option value="yao_object">爻对象</option>
           <option value="time_object">时间对象</option>
+          <option value="condition_group_ref">条件组引用</option>
         </select>
         <select v-if="cond.left_type==='yao_object'" v-model="cond.left_value" class="cb-sel">
           <option value="">--对象--</option>
@@ -228,11 +237,15 @@ function remove(id) { store.removeCondition(id) }
           <option value="兄弟爻">兄弟爻</option>
           <option value="子孙爻">子孙爻</option>
         </select>
-        <select v-else v-model="cond.left_value" class="cb-sel">
+        <select v-else-if="cond.left_type==='time_object'" v-model="cond.left_value" class="cb-sel">
           <option value="">--时间--</option>
           <option value="年支">年支</option>
           <option value="月支">月支</option>
           <option value="日支">日支</option>
+        </select>
+        <select v-else v-model="cond.left_value" class="cb-sel">
+          <option value="">--条件ID--</option>
+          <option v-for="c in store.conditions.filter(x=>x.id!==cond.id)" :key="c.id" :value="c.id">{{ c.id }}{{ c.groupType ? '(组)' : '' }}</option>
         </select>
 
         <!-- 三合布局：x y z 三合▼ 局▼ -->
@@ -242,6 +255,7 @@ function remove(id) { store.removeCondition(id) }
             <option value="">--类型--</option>
             <option value="yao_object">爻对象</option>
             <option value="time_object">时间对象</option>
+            <option value="condition_group_ref">条件组引用</option>
           </select>
           <select v-if="cond.middle_type==='yao_object'" v-model="cond.middle_value" class="cb-sel">
             <option value="">--对象--</option>
@@ -253,11 +267,15 @@ function remove(id) { store.removeCondition(id) }
             <option value="兄弟爻">兄弟爻</option>
             <option value="子孙爻">子孙爻</option>
           </select>
-          <select v-else v-model="cond.middle_value" class="cb-sel">
+          <select v-else-if="cond.middle_type==='time_object'" v-model="cond.middle_value" class="cb-sel">
             <option value="">--时间--</option>
             <option value="年支">年支</option>
             <option value="月支">月支</option>
             <option value="日支">日支</option>
+          </select>
+          <select v-else v-model="cond.middle_value" class="cb-sel">
+            <option value="">--条件ID--</option>
+            <option v-for="c in store.conditions.filter(x=>x.id!==cond.id)" :key="c.id" :value="c.id">{{ c.id }}{{ c.groupType ? '(组)' : '' }}</option>
           </select>
           <span class="cb-gap"></span>
           <select v-model="cond.right_type" class="cb-sel">
@@ -367,10 +385,10 @@ function remove(id) { store.removeCondition(id) }
     </div>
 
     <div class="cb-actions">
+      <button @click="addTimeCondition" class="cb-btn">+ 时间</button>
+      <button @click="addGuaCondition" class="cb-btn">+ 卦类</button>
       <button @click="addYaoCondition" class="cb-btn">+ 爻属性</button>
       <button @click="addRelationCondition" class="cb-btn">+ 关系</button>
-      <button @click="addGuaCondition" class="cb-btn">+ 卦类</button>
-      <button @click="addTimeCondition" class="cb-btn">+ 时间</button>
       <button @click="addShenshaCondition" class="cb-btn">+ 神煞</button>
       <span class="cb-sep">|</span>
       <button @click="store.addConditionGroup('same_yao')" class="cb-btn cg-btn">+ 同一爻</button>
@@ -385,6 +403,11 @@ function remove(id) { store.removeCondition(id) }
 .cb-header { display: flex; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-2); }
 .cb-header span { font-size: var(--font-size-sm); font-weight: 600; color: var(--color-text-primary); }
 .cb-hint { font-size: var(--font-size-xs); color: var(--color-text-muted); font-weight: normal; }
+.cb-header-actions { margin-left: auto; display: flex; gap: var(--space-2); }
+.cb-btn-search { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
+.cb-btn-search:hover { filter: brightness(1.1); }
+.cb-btn-search:disabled { opacity: 0.5; cursor: not-allowed; }
+.cb-btn-clear:hover { border-color: var(--color-danger); color: var(--color-danger); }
 .cb-empty { text-align: center; padding: var(--space-5); color: var(--color-text-muted); font-size: var(--font-size-sm); }
 
 .cond-item { display: flex; align-items: center; gap: 4px; padding: 4px 6px; margin-bottom: 4px; background: var(--color-bg-tertiary); border-radius: var(--radius-md); flex-wrap: wrap; }
