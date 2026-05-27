@@ -85,7 +85,7 @@ export const useSearchStore = defineStore('search', () => {
     } else {
       conditions.value.push(base)
     }
-    rebuildLogicChain()
+    _syncLogicChainForAdd(id, false)
     return id
   }
 
@@ -100,13 +100,13 @@ export const useSearchStore = defineStore('search', () => {
     } else if (groupType === 'feishen') {
       conditions.value.push({ id, groupType: 'feishen', feishenType: '增删飞神', yongshen: '妻财' })
     }
-    rebuildLogicChain()
+    _syncLogicChainForAdd(id, true)
     return id
   }
 
   function removeConditionGroup(id) {
     conditions.value = conditions.value.filter(c => c.id !== id)
-    rebuildLogicChain()
+    _syncLogicChainForRemove(id)
   }
 
   function updateConditionGroup(id, patch) {
@@ -152,7 +152,7 @@ export const useSearchStore = defineStore('search', () => {
 
   function removeCondition(id) {
     conditions.value = conditions.value.filter(c => c.id !== id)
-    rebuildLogicChain()
+    _syncLogicChainForRemove(id)
   }
 
   function updateCondition(id, patch) {
@@ -162,8 +162,37 @@ export const useSearchStore = defineStore('search', () => {
 
   function setLogic(chain) { logicChain.value = chain }
 
-  // 自动构建默认 AND 逻辑链
+  // 增量维护逻辑链：新条件追加时默认 AND
+  function _syncLogicChainForAdd(newId, isGroup) {
+    const chain = logicChain.value
+    if (chain.length > 0) chain.push({ type: 'and' })
+    chain.push({ type: isGroup ? 'condition_group' : 'condition', id: newId })
+  }
+
+  function _syncLogicChainForRemove(removedId) {
+    const chain = logicChain.value
+    // 找到该 condition 在链中的位置
+    const idx = chain.findIndex(l => l.id === removedId)
+    if (idx < 0) return
+    // 移除它前后的 AND/OR 连接器
+    if (idx > 0 && (chain[idx - 1].type === 'and' || chain[idx - 1].type === 'or')) {
+      chain.splice(idx - 1, 1)  // 先删前面的连接器
+      const newIdx = chain.findIndex(l => l.id === removedId)
+      chain.splice(newIdx, 1)     // 再删条件本身
+    } else if (idx < chain.length - 1 && (chain[idx + 1].type === 'and' || chain[idx + 1].type === 'or')) {
+      chain.splice(idx, 1)        // 删条件
+      chain.splice(idx, 1)        // 删后面的连接器
+    } else {
+      chain.splice(idx, 1)        // 只有一个条件，直接删
+    }
+    // 如果链为空或只剩 and/or，清空
+    const hasCondition = chain.some(l => l.type === 'condition' || l.type === 'condition_group')
+    if (!hasCondition) logicChain.value = []
+  }
+
+  // 页面加载时，如果 logicChain 为空但有条件，重建
   function rebuildLogicChain() {
+    if (logicChain.value.length > 0) return  // 已有则不动
     const chain = []
     const items = conditions.value.filter(c => c.id)
     for (let i = 0; i < items.length; i++) {
