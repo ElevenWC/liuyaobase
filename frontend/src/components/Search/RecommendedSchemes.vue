@@ -49,7 +49,7 @@ function formatTime(ts) {
     <div v-if="showPanel" class="sch-panel">
       <div class="sch-save">
         <input v-model="saveName" class="cb-input" placeholder="方案名称" style="width:120px" @keyup.enter="onSave" />
-        <button @click="onSave" class="cb-btn" :disabled="!saveName.trim()">保存当前条件</button>
+        <button @click="onSave" class="cb-btn sch-save-btn" :disabled="!saveName.trim()">保存当前条件</button>
       </div>
 
       <div v-if="schemes.length" class="sch-list">
@@ -79,11 +79,14 @@ function formatTime(ts) {
 .sch-arrow { font-size: var(--font-size-xs); width: 14px; }
 .sch-count { font-size: var(--font-size-xs); color: var(--color-text-muted); }
 
-.sch-panel { margin-top: var(--space-1); padding: var(--space-2); background: var(--color-bg-tertiary); border-radius: var(--radius-md); }
-.sch-save { display: flex; gap: var(--space-2); align-items: center; margin-bottom: var(--space-2); }
+.sch-panel { margin-top: var(--space-1); padding: var(--space-3); background: var(--color-bg-secondary); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+.sch-save { display: flex; gap: var(--space-2); align-items: center; margin-bottom: var(--space-3); }
+.sch-save-btn { background: var(--color-accent) !important; color: #fff !important; border-color: var(--color-accent) !important; }
+.sch-save-btn:hover { filter: brightness(1.1); }
+.sch-save-btn:disabled { opacity: 0.4; cursor: not-allowed; filter: none; }
 .sch-list { display: flex; flex-direction: column; gap: 4px; }
 .sch-item { display: flex; align-items: center; gap: var(--space-2); padding: 3px 6px; border-radius: var(--radius-sm); }
-.sch-item:hover { background: var(--color-bg-secondary); }
+.sch-item:hover { background: var(--color-bg-tertiary); }
 .sch-name { font-size: var(--font-size-sm); color: var(--color-text-primary); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sch-time { font-size: var(--font-size-xs); color: var(--color-text-muted); flex-shrink: 0; }
 .sch-apply { color: var(--color-accent-light) !important; border-color: var(--color-accent) !important; }
