@@ -1,18 +1,24 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useSearchStore } from '../../stores/useSearchStore.js'
 
 const store = useSearchStore()
 const showPanel = ref(false)
 const saveName = ref('')
 
-const schemes = computed(() => store.loadSchemes().sort((a, b) => b.time - a.time))
+const schemes = ref([])
+
+function refreshSchemes() {
+  schemes.value = store.loadSchemes().sort((a, b) => b.time - a.time)
+}
+refreshSchemes()
 
 function onSave() {
   const name = saveName.value.trim()
   if (!name) { alert('请输入方案名称'); return }
   store.saveScheme(name)
   saveName.value = ''
+  refreshSchemes()
 }
 
 function onApply(scheme) {
@@ -23,6 +29,7 @@ function onApply(scheme) {
 function onDelete(name) {
   if (!confirm(`删除方案"${name}"？`)) return
   store.deleteScheme(name)
+  refreshSchemes()
 }
 
 function formatTime(ts) {
