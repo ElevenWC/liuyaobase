@@ -8,6 +8,23 @@ import FeishenGroup from './FeishenGroup.vue'
 const store = useSearchStore()
 function isGroup(c) { return !!c.groupType }
 
+// 括号组范围：从 logicChain 中提取 [start, end] 条件索引
+const bracketGroups = computed(() => {
+  const chain = store.logicChain
+  const groups = []
+  let depth = 0, start = -1, ci = 0
+  for (const item of chain) {
+    if (item.type === '(') { if (depth === 0) start = ci; depth++ }
+    else if (item.type === ')') { depth--; if (depth === 0 && start >= 0) { groups.push({ start, end: ci - 1 }); start = -1 } }
+    else if (item.type === 'condition' || item.type === 'condition_group') ci++
+  }
+  return groups
+})
+
+function isGroupStart(condIdx) { return bracketGroups.value.some(g => g.start === condIdx) }
+function isGroupEnd(condIdx) { return bracketGroups.value.some(g => g.end === condIdx) }
+function inBracketGroup(condIdx) { return bracketGroups.value.some(g => condIdx >= g.start && condIdx <= g.end) }
+
 function groupSummary(c) {
   if (c.groupType === 'same_yao') return `${c.id} 同一爻[${c.sources.join('/')}]`
   if (c.groupType === 'same_position') return `${c.id} 同爻位[第${c.position||1}爻]`
@@ -110,6 +127,63 @@ const SHENSHA_TYPES = [
 
 function isShensha(field) { return SHENSHA_FIELDS.includes(field) }
 function isCount(field) { return field === '_count' }
+
+function getLogicOp(condIndex) {
+  // 找到第 condIndex 个 condition 之前的 and/or 操作符
+  const chain = store.logicChain
+  let seen = 0
+  for (let i = 0; i < chain.length; i++) {
+    if (chain[i].type === 'condition' || chain[i].type === 'condition_group') {
+      if (seen === condIndex) {
+        // 向前找最近的 and/or
+        for (let j = i - 1; j >= 0; j--) {
+          if (chain[j].type === 'and' || chain[j].type === 'or') return chain[j].type
+          if (chain[j].type === 'condition' || chain[j].type === 'condition_group') break
+        }
+        return 'and' // default
+      }
+      seen++
+    }
+  }
+  return 'and'
+}
+
+function hasOpenBracket(condId) {
+  const chain = store.logicChain
+  const idx = chain.findIndex(l => l.id === condId)
+  return idx > 0 && chain[idx - 1].type === '('
+}
+function hasCloseBracket(condId) {
+  const chain = store.logicChain
+  const idx = chain.findIndex(l => l.id === condId)
+  if (idx < 0) return false
+  // 向后找 )，跳过中间的 and/or/not
+  for (let j = idx + 1; j < chain.length; j++) {
+    if (chain[j].type === ')') return true
+    if (chain[j].type === 'condition' || chain[j].type === 'condition_group') break
+  }
+  return false
+}
+
+function toggleLogicAt(condIndex) {
+  const chain = store.logicChain
+  let seen = 0
+  for (let i = 0; i < chain.length; i++) {
+    if (chain[i].type === 'condition' || chain[i].type === 'condition_group') {
+      if (seen === condIndex) {
+        for (let j = i - 1; j >= 0; j--) {
+          if (chain[j].type === 'and' || chain[j].type === 'or') {
+            chain[j].type = chain[j].type === 'and' ? 'or' : 'and'
+            return
+          }
+          if (chain[j].type === 'condition' || chain[j].type === 'condition_group') break
+        }
+        return
+      }
+      seen++
+    }
+  }
+}
 const SHENGWANG_RELATIONS = ['长生', '帝旺', '墓', '绝']
 
 const COUNT_SCOPES = [
@@ -185,7 +259,7 @@ function remove(id) { store.removeCondition(id) }
   <div class="cond-builder">
     <div class="cb-header">
       <span>检索条件</span>
-      <span class="cb-hint">（条件间为 AND 关系）</span>
+      <span class="cb-hint">条件间逻辑可编辑</span>
       <div class="cb-header-actions">
         <button class="cb-btn cb-btn-search" :disabled="store.loading" @click="store.executeSearch()">
           {{ store.loading ? '检索中...' : '搜索' }}
@@ -196,8 +270,30 @@ function remove(id) { store.removeCondition(id) }
 
     <div v-if="!store.conditions.length" class="cb-empty">点击下方按钮或左侧字段库添加条件</div>
 
-    <div v-for="cond in store.conditions" :key="cond.id" class="cond-item">
-      <button class="cond-remove" @click="remove(cond.id)" title="删除此条件">×</button>
+    <template v-for="(cond, ci) in store.conditions" :key="cond.id">
+      <!-- 逻辑连接器（非第一个条件时显示） -->
+      <div v-if="ci > 0" class="logic-bar">
+        <button class="logic-btn" :class="{ 'logic-or': getLogicOp(ci) === 'or' }"
+          @click="toggleLogicAt(ci)" :title="getLogicOp(ci)==='and'?'AND→OR':'OR→AND'">
+          {{ getLogicOp(ci) === 'or' ? 'OR' : 'AND' }}
+        </button>
+      </div>
+
+      <div class="cond-item" :class="{
+        'bracket-first': isGroupStart(ci),
+        'bracket-inner': inBracketGroup(ci) && !isGroupStart(ci) && !isGroupEnd(ci),
+        'bracket-last': isGroupEnd(ci),
+        'bracket-single': isGroupStart(ci) && isGroupEnd(ci)
+      }">
+        <!-- NOT 按钮 -->
+        <button class="logic-not" :class="{ active: store.hasNot(cond.id) }"
+          @click="store.toggleNot(cond.id)" title="取反">NOT</button>
+        <!-- 括号 -->
+        <button class="logic-br" :class="{ active: hasOpenBracket(cond.id) }"
+          @click="store.addOpenBracket(cond.id)" title="左括号">⌈</button>
+        <button class="logic-br" :class="{ active: hasCloseBracket(cond.id) }"
+          @click="store.addCloseBracket(cond.id)" title="右括号">⌋</button>
+        <button class="cond-remove" @click="remove(cond.id)" title="删除此条件">×</button>
 
       <!-- 条件组 -->
       <SameYaoGroup v-if="cond.groupType==='same_yao'" :group="cond" />
@@ -440,6 +536,7 @@ function remove(id) { store.removeCondition(id) }
         </template>
       </template>
     </div>
+    </template>
 
     <div class="cb-actions">
       <button @click="addTimeCondition" class="cb-btn">+ 时间</button>
@@ -471,6 +568,26 @@ function remove(id) { store.removeCondition(id) }
 .cond-item { display: flex; align-items: center; gap: 4px; padding: 4px 6px; margin-bottom: 4px; background: var(--color-bg-tertiary); border-radius: var(--radius-md); flex-wrap: wrap; }
 .cond-remove { width: 18px; height: 18px; padding: 0; background: none; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .cond-remove:hover { border-color: var(--color-danger); color: var(--color-danger); }
+
+/* logic controls */
+.logic-bar { display: flex; justify-content: center; padding: 2px 0; }
+.logic-btn { height: 18px; padding: 0 8px; background: var(--color-bg-tertiary); color: var(--color-accent-light); border: 1px solid var(--color-accent); border-radius: var(--radius-sm); font-size: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; }
+.logic-btn:hover { background: var(--color-accent); color: #fff; }
+.logic-or { color: #e67e22; border-color: #e67e22; }
+.logic-or:hover { background: #e67e22; color: #fff; }
+.logic-not { height: 18px; min-width: 28px; padding: 0 4px; background: none; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: 10px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.logic-not:hover { border-color: var(--color-danger); color: var(--color-danger); }
+.logic-not.active { background: var(--color-danger); color: #fff; border-color: var(--color-danger); }
+.logic-br { height: 18px; width: 18px; padding: 0; background: none; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: 11px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.logic-br:hover { border-color: var(--color-accent); color: var(--color-accent-light); }
+.logic-br.active { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
+
+/* bracket group card */
+.bracket-first { border: 2px solid var(--color-accent); border-bottom: none; border-radius: var(--radius-md) var(--radius-md) 0 0; margin-bottom: 0; padding-bottom: 4px; }
+.bracket-inner { border-left: 2px solid var(--color-accent); border-right: 2px solid var(--color-accent); border-top: none; border-bottom: none; border-radius: 0; margin-bottom: 0; margin-top: 0; }
+.bracket-last { border: 2px solid var(--color-accent); border-top: none; border-radius: 0 0 var(--radius-md) var(--radius-md); padding-top: 4px; }
+.bracket-single { border: 2px solid var(--color-accent); border-radius: var(--radius-md); }
+.bracket-mark { display: none; }
 
 .cb-sel { padding: 2px 4px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); font-size: var(--font-size-sm); }
 .cb-sel:focus { outline: none; border-color: var(--color-accent); }

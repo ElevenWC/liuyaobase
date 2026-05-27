@@ -85,6 +85,7 @@ export const useSearchStore = defineStore('search', () => {
     } else {
       conditions.value.push(base)
     }
+    _syncLogicChainForAdd(id, false)
     return id
   }
 
@@ -99,12 +100,13 @@ export const useSearchStore = defineStore('search', () => {
     } else if (groupType === 'feishen') {
       conditions.value.push({ id, groupType: 'feishen', feishenType: '增删飞神', yongshen: '妻财' })
     }
+    _syncLogicChainForAdd(id, true)
     return id
   }
 
   function removeConditionGroup(id) {
     conditions.value = conditions.value.filter(c => c.id !== id)
-    logicChain.value = logicChain.value.filter(l => l.id !== id)
+    _syncLogicChainForRemove(id)
   }
 
   function updateConditionGroup(id, patch) {
@@ -150,7 +152,7 @@ export const useSearchStore = defineStore('search', () => {
 
   function removeCondition(id) {
     conditions.value = conditions.value.filter(c => c.id !== id)
-    logicChain.value = logicChain.value.filter(l => l.id !== id)
+    _syncLogicChainForRemove(id)
   }
 
   function updateCondition(id, patch) {
@@ -160,7 +162,112 @@ export const useSearchStore = defineStore('search', () => {
 
   function setLogic(chain) { logicChain.value = chain }
 
+  // 增量维护逻辑链：新条件追加时默认 AND
+  function _syncLogicChainForAdd(newId, isGroup) {
+    const chain = logicChain.value
+    if (chain.length > 0) chain.push({ type: 'and' })
+    chain.push({ type: isGroup ? 'condition_group' : 'condition', id: newId })
+  }
+
+  function _syncLogicChainForRemove(removedId) {
+    const chain = logicChain.value
+    // 找到该 condition 在链中的位置
+    const idx = chain.findIndex(l => l.id === removedId)
+    if (idx < 0) return
+    // 移除它前后的 AND/OR 连接器
+    if (idx > 0 && (chain[idx - 1].type === 'and' || chain[idx - 1].type === 'or')) {
+      chain.splice(idx - 1, 1)  // 先删前面的连接器
+      const newIdx = chain.findIndex(l => l.id === removedId)
+      chain.splice(newIdx, 1)     // 再删条件本身
+    } else if (idx < chain.length - 1 && (chain[idx + 1].type === 'and' || chain[idx + 1].type === 'or')) {
+      chain.splice(idx, 1)        // 删条件
+      chain.splice(idx, 1)        // 删后面的连接器
+    } else {
+      chain.splice(idx, 1)        // 只有一个条件，直接删
+    }
+    // 如果链为空或只剩 and/or，清空
+    const hasCondition = chain.some(l => l.type === 'condition' || l.type === 'condition_group')
+    if (!hasCondition) logicChain.value = []
+  }
+
+  // 页面加载时，如果 logicChain 为空但有条件，重建
+  function rebuildLogicChain() {
+    if (logicChain.value.length > 0) return  // 已有则不动
+    const chain = []
+    const items = conditions.value.filter(c => c.id)
+    for (let i = 0; i < items.length; i++) {
+      if (i > 0) chain.push({ type: 'and' })
+      chain.push({ type: items[i].groupType ? 'condition_group' : 'condition', id: items[i].id })
+    }
+    logicChain.value = chain
+  }
+
+  function toggleLogicOp(logicIdx) {
+    const item = logicChain.value[logicIdx]
+    if (!item || (item.type !== 'and' && item.type !== 'or')) return
+    item.type = item.type === 'and' ? 'or' : 'and'
+  }
+
+  function toggleNot(condId) {
+    // 在 condition 前插入或移除 NOT
+    const idx = logicChain.value.findIndex(l => l.id === condId)
+    if (idx < 0) return
+    if (idx > 0 && logicChain.value[idx - 1].type === 'not') {
+      logicChain.value.splice(idx - 1, 1)
+    } else {
+      logicChain.value.splice(idx, 0, { type: 'not' })
+    }
+  }
+
+  function hasNot(condId) {
+    const idx = logicChain.value.findIndex(l => l.id === condId)
+    return idx > 0 && logicChain.value[idx - 1].type === 'not'
+  }
+
+  // 括号：左括号 ( 加在条件前，右括号 ) 加在条件后
+  function addOpenBracket(condId) {
+    const idx = logicChain.value.findIndex(l => l.id === condId)
+    if (idx < 0) return
+    if (idx > 0 && logicChain.value[idx - 1].type === '(') {
+      logicChain.value.splice(idx - 1, 1)  // 已有则移除
+    } else {
+      logicChain.value.splice(idx, 0, { type: '(' })
+    }
+  }
+
+  function addCloseBracket(condId) {
+    const idx = logicChain.value.findIndex(l => l.id === condId)
+    if (idx < 0) return
+    // 向后找 )，跳过 and/or/not
+    for (let j = idx + 1; j < logicChain.value.length; j++) {
+      if (logicChain.value[j].type === ')') {
+        logicChain.value.splice(j, 1)
+        return
+      }
+      if (logicChain.value[j].type === 'condition' || logicChain.value[j].type === 'condition_group') break
+    }
+    // 找到下一个 condition 或末尾前插入 )
+    let ins = idx + 1
+    while (ins < logicChain.value.length && (logicChain.value[ins].type === 'and' || logicChain.value[ins].type === 'or' || logicChain.value[ins].type === 'not')) {
+      ins++
+    }
+    logicChain.value.splice(ins, 0, { type: ')' })
+  }
+
+  function checkBracketBalance() {
+    let depth = 0
+    for (const item of logicChain.value) {
+      if (item.type === '(') depth++
+      if (item.type === ')') depth--
+      if (depth < 0) return '括号不匹配：多余的右括号'
+    }
+    if (depth > 0) return `括号不匹配：缺少 ${depth} 个右括号`
+    return null
+  }
+
   async function executeSearch() {
+    const bracketErr = checkBracketBalance()
+    if (bracketErr) { alert(bracketErr); return }
     loading.value = true
     try {
       const body = {
@@ -212,7 +319,8 @@ export const useSearchStore = defineStore('search', () => {
     expressionPreview, addCondition, removeCondition, updateCondition,
     addConditionGroup, removeConditionGroup, updateConditionGroup,
     addSubCondition, removeSubCondition, updateSubCondition,
-    setLogic, executeSearch, setPage,
+    setLogic, rebuildLogicChain, toggleLogicOp, toggleNot, hasNot, addOpenBracket, addCloseBracket, checkBracketBalance,
+    executeSearch, setPage,
     loadSchemes, saveScheme, applyScheme, deleteScheme,
   }
 })
