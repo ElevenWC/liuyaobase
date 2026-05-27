@@ -58,20 +58,23 @@
 | #102 | frontend/components/Search/FieldLibrary.vue（字段库面板） | 已合并 |
 | #103 | frontend/components/Search/ResultList.vue（结果列表） | 已合并 |
 
-### 待完成
+### 待完成（v0.4 二期）
 
 | Issue | 内容 | 优先级 |
 |:--:|------|:--:|
-| ~~#107~~ | ~~frontend/views/Search.vue（检索主页面）~~ | ✅ 已完成 |
-| ~~#104~~ | ~~CompareMode.vue（对比模式）~~ | ❌ 已取消 |
-| #105 | RecommendedSchemes.vue（自定义方案管理——仅 localStorage） | P2 |
+| #118 | 数目判断完整实现——前端UI + 后端COUNT子查询 | P0 |
+| #119 | 检索页右栏卦例查看——复用 GualiDetail.vue | P1 |
+| #120 | 逻辑链可视化编辑——AND/OR/NOT/括号 | P1 |
+| #121 | 关系对象扩展——六神/状态/伏神飞神类 | P2 |
+| #122 | scope=null 全部来源 + 标签搜索 + 批量打标签排查 | P2 |
 
-### v0.4 后续迭代待办（首版简化的功能）
+### 已取消
 
-1. 逻辑链可视化 AND/OR/NOT 编辑
-2. scope=null 全部来源
-3. 字段库拖拽交互
-4. 条件组折叠/展开
+| Issue | 内容 |
+|:--:|------|
+| ~~#104~~ | CompareMode.vue（对比模式） |
+| ~~条件组折叠~~ | 不需要 |
+| ~~字段库拖拽~~ | 跳过 |
 5. _assemble_logic 静默错误改为抛异常
 
 ### v0.4 代码审核发现（2026-05-26 两遍制审核）
