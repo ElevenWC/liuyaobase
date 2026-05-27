@@ -7,6 +7,7 @@ import BagongPage from '../views/BagongPage.vue'
 import HuguaPage from '../views/HuguaPage.vue'
 import GraphPage from '../views/GraphPage.vue'
 import NotFound from '../views/NotFound.vue'
+import Search from '../views/Search.vue'
 
 const routes = [
   { path: '/', redirect: '/guali' },
@@ -18,6 +19,7 @@ const routes = [
   { path: '/input', name: 'input', component: GualiInput },
   { path: '/import', name: 'import', component: ImportJson },
   { path: '/tags', name: 'tags', component: TagManager },
+  { path: '/search', name: 'search', component: Search },
   { path: '/:pathMatch(.*)*', component: NotFound },
 ]
 

@@ -17,6 +17,7 @@
       <router-link to="/input">手动导入</router-link>
       <router-link to="/import">JSON导入</router-link>
       <router-link to="/tags">标签</router-link>
+      <router-link to="/search">检索</router-link>
     </div>
   </nav>
 </template>

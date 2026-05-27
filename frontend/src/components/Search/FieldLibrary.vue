@@ -40,21 +40,21 @@ const categories = [
   {
     key: 'yao', name: '爻属性',
     fields: [
-      { key: 'yao_position', label: '爻位', type: 'normal' },
-      { key: 'ben_yao_type', label: '爻类型', type: 'normal' },
-      { key: 'ben_liuqin', label: '六亲', type: 'normal' },
-      { key: 'ben_dizhi', label: '地支', type: 'normal' },
-      { key: 'ben_tiangan', label: '天干', type: 'normal' },
-      { key: 'ben_shi_ying', label: '世应', type: 'normal' },
-      { key: 'is_dong', label: '动爻', type: 'normal' },
-      { key: 'is_an_dong', label: '暗动', type: 'normal' },
-      { key: 'liushen', label: '六神', type: 'normal' },
-      { key: 'zhi_liuqin', label: '之卦六亲', type: 'normal' },
-      { key: 'zhi_dizhi', label: '之卦地支', type: 'normal' },
-      { key: 'yimao_liuqin', label: '易冒六亲', type: 'normal' },
-      { key: 'yimao_dizhi', label: '易冒地支', type: 'normal' },
-      { key: 'zengshan_liuqin', label: '增删六亲', type: 'normal' },
-      { key: 'zengshan_dizhi', label: '增删地支', type: 'normal' },
+      { key: 'yao_position', label: '爻位', type: 'normal', scopes: '全部来源' },
+      { key: 'ben_yao_type', label: '本卦爻类型', type: 'normal', scopes: '仅本卦' },
+      { key: 'ben_liuqin', label: '本卦六亲', type: 'normal', scopes: '仅本卦' },
+      { key: 'ben_dizhi', label: '本卦地支', type: 'normal', scopes: '仅本卦' },
+      { key: 'ben_tiangan', label: '本卦天干', type: 'normal', scopes: '仅本卦' },
+      { key: 'ben_shi_ying', label: '本卦世应', type: 'normal', scopes: '仅本卦' },
+      { key: 'is_dong', label: '本卦动爻', type: 'normal', scopes: '仅本卦' },
+      { key: 'is_an_dong', label: '本卦暗动', type: 'normal', scopes: '仅本卦' },
+      { key: 'liushen', label: '六神', type: 'normal', scopes: '全部来源' },
+      { key: 'zhi_liuqin', label: '之卦六亲', type: 'normal', scopes: '仅变爻/之卦' },
+      { key: 'zhi_dizhi', label: '之卦地支', type: 'normal', scopes: '仅变爻/之卦' },
+      { key: 'yimao_liuqin', label: '易冒六亲', type: 'normal', scopes: '仅易冒' },
+      { key: 'yimao_dizhi', label: '易冒地支', type: 'normal', scopes: '仅易冒' },
+      { key: 'zengshan_liuqin', label: '增删六亲', type: 'normal', scopes: '仅增删' },
+      { key: 'zengshan_dizhi', label: '增删地支', type: 'normal', scopes: '仅增删' },
     ],
   },
   {
@@ -62,9 +62,9 @@ const categories = [
     fields: [
       { key: 'shengke', label: '生克', type: 'relation' },
       { key: 'he_chong', label: '合冲', type: 'relation' },
+      { key: 'xiangdeng', label: '相等', type: 'relation' },
       { key: 'banhe', label: '半合', type: 'relation' },
       { key: 'sanhe', label: '三合', type: 'relation' },
-      { key: 'xiangdeng', label: '相等', type: 'relation' },
       { key: 'shengwang', label: '生旺墓绝', type: 'relation' },
     ],
   },
@@ -119,7 +119,7 @@ function onSelect(cat, field) {
         </div>
         <div v-if="!collapsed[cat.key]" class="fl-fields">
           <span v-for="f in cat.fields" :key="f.key"
-            class="fl-field" @click="onSelect(cat, f)">{{ f.label }}</span>
+            class="fl-field" :class="{ 'fl-field-limited': f.scopes && f.scopes !== '全部来源' }" :title="f.scopes || ''" @click="onSelect(cat, f)">{{ f.label }}</span>
         </div>
       </div>
     </div>
@@ -127,7 +127,7 @@ function onSelect(cat, field) {
 </template>
 
 <style scoped>
-.field-library { width: 180px; flex-shrink: 0; background: var(--color-bg-secondary); border-radius: var(--radius-lg); padding: var(--space-3); box-shadow: var(--shadow-sm); }
+.field-library { width: 270px; flex-shrink: 0; background: var(--color-bg-secondary); border-radius: var(--radius-lg); padding: var(--space-3); box-shadow: var(--shadow-sm); }
 .fl-header { font-size: var(--font-size-sm); font-weight: 600; color: var(--color-text-primary); margin-bottom: var(--space-2); }
 .fl-search { width: 100%; padding: 3px 8px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); font-size: var(--font-size-sm); margin-bottom: var(--space-2); box-sizing: border-box; }
 .fl-search:focus { outline: none; border-color: var(--color-accent); }
@@ -141,4 +141,5 @@ function onSelect(cat, field) {
 .fl-fields { display: flex; flex-wrap: wrap; gap: 3px; padding: 2px 0 6px 16px; }
 .fl-field { padding: 1px 8px; background: var(--color-bg-tertiary); border-radius: var(--radius-sm); font-size: var(--font-size-xs); color: var(--color-text-secondary); cursor: pointer; transition: all var(--transition-fast); }
 .fl-field:hover { background: var(--color-accent); color: #fff; }
+.fl-field-limited { color: var(--color-text-muted); border: 1px dashed var(--color-border-subtle); }
 </style>
