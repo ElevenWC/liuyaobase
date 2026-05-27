@@ -290,9 +290,9 @@ function remove(id) { store.removeCondition(id) }
           @click="store.toggleNot(cond.id)" title="取反">NOT</button>
         <!-- 括号 -->
         <button class="logic-br" :class="{ active: hasOpenBracket(cond.id) }"
-          @click="store.addOpenBracket(cond.id)" title="左括号">┌</button>
+          @click="store.addOpenBracket(cond.id)" title="左括号">「</button>
         <button class="logic-br" :class="{ active: hasCloseBracket(cond.id) }"
-          @click="store.addCloseBracket(cond.id)" title="右括号">└</button>
+          @click="store.addCloseBracket(cond.id)" title="右括号">」</button>
         <button class="cond-remove" @click="remove(cond.id)" title="删除此条件">×</button>
 
       <!-- 条件组 -->
@@ -578,7 +578,7 @@ function remove(id) { store.removeCondition(id) }
 .logic-not { height: 18px; min-width: 28px; padding: 0 4px; background: none; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: 10px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 .logic-not:hover { border-color: var(--color-danger); color: var(--color-danger); }
 .logic-not.active { background: var(--color-danger); color: #fff; border-color: var(--color-danger); }
-.logic-br { height: 18px; width: 16px; padding: 0; background: none; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: 10px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.logic-br { height: 18px; width: 18px; padding: 0; background: none; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: 11px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 .logic-br:hover { border-color: var(--color-accent); color: var(--color-accent-light); }
 .logic-br.active { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
 
