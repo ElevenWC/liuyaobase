@@ -126,34 +126,37 @@ function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of n
       <button @click="batchDelete" class="btn-batch-del">批量删除</button>
     </div>
 
-    <div class="cards" v-if="!loading">
-      <div v-for="item in items" :key="item.id"
-        class="card" :class="{ selected: store.currentGualiId === item.id }"
-        @click="selectGuali(item)">
-        <div class="card-top">
-          <input type="checkbox" :checked="selectedIds.has(item.id)" @click="toggleSelect(item.id, $event)" class="card-check" />
-          <span class="card-id">ID: {{ item.id }}</span>
-          <span class="card-time">{{ formatTime(item.zhanwen_time) }}</span>
+    <div class="scroll-area">
+      <div class="cards" v-if="!loading">
+        <div v-for="item in items" :key="item.id"
+          class="card" :class="{ selected: store.currentGualiId === item.id }"
+          @click="selectGuali(item)">
+          <div class="card-top">
+            <input type="checkbox" :checked="selectedIds.has(item.id)" @click="toggleSelect(item.id, $event)" class="card-check" />
+            <span class="card-id">ID: {{ item.id }}</span>
+            <span class="card-time">{{ formatTime(item.zhanwen_time) }}</span>
+          </div>
+          <div class="card-shiyou">{{ item.zhanwen_shiyou }}</div>
+          <div class="card-tags" v-if="item.tags?.length">
+            <span v-for="t in item.tags" :key="t" class="tag-badge" :style="{ background: cardTagColor(t) }">{{ rootTagName(t) }}</span>
+          </div>
         </div>
-        <div class="card-shiyou">{{ item.zhanwen_shiyou }}</div>
-        <div class="card-tags" v-if="item.tags?.length">
-          <span v-for="t in item.tags" :key="t" class="tag-badge" :style="{ background: cardTagColor(t) }">{{ rootTagName(t) }}</span>
-        </div>
+        <p v-if="!items.length" class="empty">暂无卦例</p>
       </div>
-      <p v-if="!items.length" class="empty">暂无卦例</p>
-    </div>
-    <div v-else class="loading">加载中...</div>
+      <div v-else class="loading">加载中...</div>
 
-    <div class="pagination" v-if="totalPages() > 1">
-      <button :disabled="page <= 1" @click="onPageChange(page - 1)">上一页</button>
-      <span>{{ page }} / {{ totalPages() }}</span>
-      <button :disabled="page >= totalPages()" @click="onPageChange(page + 1)">下一页</button>
+      <div class="pagination" v-if="totalPages() > 1">
+        <button :disabled="page <= 1" @click="onPageChange(page - 1)">上一页</button>
+        <span>{{ page }} / {{ totalPages() }}</span>
+        <button :disabled="page >= totalPages()" @click="onPageChange(page + 1)">下一页</button>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.guali-list { padding: var(--space-3); background: transparent; }
+.guali-list { padding: var(--space-3); background: transparent; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.scroll-area { flex: 1; min-height: 0; overflow-y: auto; }
 .list-toolbar { margin-bottom: var(--space-3); }
 .search-input {
   width: 100%; padding: var(--space-2); border: 1px solid var(--color-border-primary);

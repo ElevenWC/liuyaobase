@@ -25,7 +25,7 @@ import GualiDetail from './GualiDetail.vue'
   width: 340px; min-width: 280px;
   border-right: 1px solid var(--color-border-primary);
   background: var(--color-bg-glass); backdrop-filter: blur(var(--glass-blur));
-  overflow-y: auto;
+  display: flex; flex-direction: column;
 }
 .panel-header { padding: var(--space-3); font-size: var(--font-size-md); font-weight: bold; color: var(--color-text-primary); border-bottom: 1px solid var(--color-border-primary); }
 .right-panel { flex: 1; background: var(--color-bg-primary); overflow-y: auto; }
