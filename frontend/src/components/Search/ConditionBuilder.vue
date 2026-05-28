@@ -750,7 +750,7 @@ function remove(id) { store.removeCondition(id) }
 .cb-gap { width: 6px; flex-shrink: 0; }
 
 .cb-actions { display: flex; gap: var(--space-2); margin-top: var(--space-2); }
-.cb-actions + .cb-actions { margin-top: var(--space-1); }
+
 .cb-btn { padding: 3px 10px; background: var(--color-bg-tertiary); color: var(--color-text-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); font-size: var(--font-size-xs); cursor: pointer; transition: all var(--transition-fast); }
 .cb-btn:hover { border-color: var(--color-accent); color: var(--color-accent-light); }
 .cb-sep { color: var(--color-border-primary); font-size: var(--font-size-xs); }
