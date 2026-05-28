@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useSearchStore } from '../stores/useSearchStore.js'
 import { useAppStore } from '../stores/index.js'
-import { fetchTagTree, addGualiTag, fetchSearchResults } from '../api/index.js'
+import { fetchTagTree, addGualiTag, removeGualiTag, fetchSearchResults } from '../api/index.js'
 import FieldLibrary from '../components/Search/FieldLibrary.vue'
 import ConditionBuilder from '../components/Search/ConditionBuilder.vue'
 import RecommendedSchemes from '../components/Search/RecommendedSchemes.vue'
@@ -76,7 +76,31 @@ async function batchAddTag(tagId) {
   if (resultListRef.value) resultListRef.value.clearSelection()
   if (ok === ids.length) alert(`已为全部 ${ok} 个卦例添加标签`)
   else if (ok > 0) alert(`已为 ${ok}/${ids.length} 个卦例添加标签（${ids.length - ok} 个失败）`)
-  else alert('打标签失败，请检查标签是否已存在')
+  else alert('添加标签失败，请检查标签是否已存在')
+}
+
+async function batchRemoveTag(tagId) {
+  if (!tagId) return
+  let ids = resultListRef.value?.selected || []
+  if (selectAllResults.value && store.pagination.total > 0) {
+    try {
+      const allRes = await fetchSearchResults({ conditions: store.conditions, logic: store.logicChain, pagination: { page: 1, page_size: 99999 } })
+      ids = (allRes.data.data?.results || []).map(r => r.id)
+    } catch { ids = [] }
+  }
+  if (!ids.length) return
+  if (!confirm(`确认从 ${ids.length} 个卦例中删除此标签？`)) return
+  batchTagging.value = true
+  let ok = 0
+  for (const gualiId of ids) {
+    try { await removeGualiTag(gualiId, tagId); ok++ } catch { /* skip */ }
+  }
+  batchTagging.value = false
+  batchTagId.value = null; batchTagId2.value = null; selectAllResults.value = false
+  if (resultListRef.value) resultListRef.value.clearSelection()
+  if (ok === ids.length) alert(`已从全部 ${ok} 个卦例中删除标签`)
+  else if (ok > 0) alert(`已从 ${ok}/${ids.length} 个卦例中删除标签（${ids.length - ok} 个失败）`)
+  else alert('删除标签失败')
 }
 
 function onFieldSelect({ cat, field, type, label }) {
@@ -142,16 +166,19 @@ function onPageChange(page) {
         <ConditionBuilder />
         <div v-if="selectedCount() || selectAllResults" class="sp-batch-bar">
           <label class="sp-all-check"><input type="checkbox" v-model="selectAllResults" /> 全选所有结果（共 {{ store.pagination.total }} 条）</label>
-          <select v-model="batchTagId" class="cb-sel" @change="batchTagId2=null" style="width:auto">
+          <select v-model="batchTagId" class="sp-batch-sel" @change="batchTagId2=null">
             <option :value="null">一级标签</option>
             <option v-for="t in appStore.tagTree" :key="t.id" :value="t.id">{{ t.name }}</option>
           </select>
-          <select v-if="batchTagId" v-model="batchTagId2" class="cb-sel" style="width:auto">
+          <select v-if="batchTagId" v-model="batchTagId2" class="sp-batch-sel">
             <option :value="null">二级标签</option>
             <option v-for="t in batchLevel2Options" :key="t.id" :value="t.id">{{ t.name }}</option>
           </select>
-          <button class="sp-btn sp-btn-tag" :disabled="!selectedTagId()" @click="batchAddTag(selectedTagId())">
-            {{ batchTagging ? '打标中...' : `批量打标签（${selectAllResults ? store.pagination.total : selectedCount()} 条）` }}
+          <button class="sp-batch-btn sp-batch-add" :disabled="!selectedTagId()" @click="batchAddTag(selectedTagId())">
+            {{ batchTagging ? '打标中...' : `加标签(${selectAllResults ? store.pagination.total : selectedCount()})` }}
+          </button>
+          <button class="sp-batch-btn sp-batch-del" :disabled="!selectedTagId()" @click="batchRemoveTag(selectedTagId())">
+            {{ batchTagging ? '删标中...' : `删标签(${selectAllResults ? store.pagination.total : selectedCount()})` }}
           </button>
         </div>
         <RecommendedSchemes />
@@ -182,15 +209,14 @@ function onPageChange(page) {
 
 .sp-batch-bar { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); position: relative; flex-wrap: wrap; }
 .sp-all-check { font-size: var(--font-size-xs); color: var(--color-text-secondary); display: flex; align-items: center; gap: 4px; cursor: pointer; accent-color: var(--color-accent); }
-.sp-btn-tag {
-  padding: 4px 12px; border-radius: var(--radius-md); font-size: var(--font-size-sm);
-  cursor: pointer; border: 1px solid var(--color-accent);
-  background: var(--color-bg-tertiary); color: var(--color-accent-light); transition: all var(--transition-fast);
-}
-.sp-btn-tag:hover { background: var(--color-accent); color: #fff; }
-.sp-btn-tag:disabled { opacity: 0.4; cursor: not-allowed; }
-.cb-sel { padding: 2px 4px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); font-size: var(--font-size-sm); }
-.cb-sel:focus { outline: none; border-color: var(--color-accent); }
+.sp-batch-sel { height: 26px; padding: 0 4px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); font-size: var(--font-size-sm); cursor: pointer; }
+.sp-batch-sel:focus { outline: none; border-color: var(--color-accent); }
+.sp-batch-btn { height: 26px; padding: 0 10px; border-radius: var(--radius-md); font-size: var(--font-size-xs); cursor: pointer; border: 1px solid var(--color-accent); transition: all var(--transition-fast); }
+.sp-batch-add { background: var(--color-bg-tertiary); color: var(--color-accent-light); }
+.sp-batch-add:hover { background: var(--color-accent); color: #fff; }
+.sp-batch-del { background: var(--color-bg-tertiary); color: var(--color-danger); border-color: var(--color-danger); }
+.sp-batch-del:hover { background: var(--color-danger); color: #fff; }
+.sp-batch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .sp-main {
   display: flex; gap: var(--space-3);
