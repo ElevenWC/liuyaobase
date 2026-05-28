@@ -58,7 +58,7 @@ async function batchAddTag(tagId) {
   showTagPicker.value = false
   tagSearch.value = ''
   // 清除选择
-  if (resultListRef.value) resultListRef.value.selected = []
+  if (resultListRef.value) resultListRef.value.clearSelection()
   if (ok > 0) alert(`已为 ${ok}/${ids.length} 个卦例添加标签`)
 }
 
