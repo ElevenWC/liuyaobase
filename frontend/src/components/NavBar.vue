@@ -28,6 +28,7 @@
   height: var(--navbar-height); padding: 0 var(--space-5);
   background: var(--color-bg-glass); backdrop-filter: blur(var(--glass-blur));
   border-bottom: 1px solid var(--glass-border);
+  position: relative; z-index: 10;
 }
 .brand { color: #fff; font-weight: bold; font-size: 1.1rem; text-decoration: none; }
 .nav-links { display: flex; align-items: center; gap: var(--space-4); }
