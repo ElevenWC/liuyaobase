@@ -127,6 +127,7 @@ const SHENSHA_TYPES = [
 
 function isShensha(field) { return SHENSHA_FIELDS.includes(field) }
 function isCount(field) { return field === '_count' }
+function isFushenFeishen(v) { return ['易冒伏神','增删伏神','易冒飞神','增删飞神'].includes(v) }
 
 function getLogicOp(condIndex) {
   // 找到第 condIndex 个 condition 之前的 and/or 操作符
@@ -396,7 +397,7 @@ function remove(id) { store.removeCondition(id) }
           <option value="time_object">时间对象</option>
           <option value="condition_group_ref">条件组引用</option>
         </select>
-        <select v-if="cond.left_type==='yao_object'" v-model="cond.left_scope" class="cb-sel">
+        <select v-if="cond.left_type==='yao_object' && !isFushenFeishen(cond.left_value)" v-model="cond.left_scope" class="cb-sel">
           <option value="ben_gua">本卦</option>
           <option value="zhi_gua">之卦</option>
           <option value="bian_yao">变爻</option>
@@ -449,7 +450,7 @@ function remove(id) { store.removeCondition(id) }
             <option value="time_object">时间对象</option>
             <option value="condition_group_ref">条件组引用</option>
           </select>
-          <select v-if="cond.middle_type==='yao_object'" v-model="cond.middle_scope" class="cb-sel">
+          <select v-if="cond.middle_type==='yao_object' && !isFushenFeishen(cond.middle_value)" v-model="cond.middle_scope" class="cb-sel">
             <option value="ben_gua">本卦</option>
             <option value="zhi_gua">之卦</option>
             <option value="bian_yao">变爻</option>
@@ -499,7 +500,7 @@ function remove(id) { store.removeCondition(id) }
             <option value="time_object">时间对象</option>
             <option value="condition_group_ref">条件组引用</option>
           </select>
-          <select v-if="cond.right_type==='yao_object'" v-model="cond.right_scope" class="cb-sel">
+          <select v-if="cond.right_type==='yao_object' && !isFushenFeishen(cond.right_value)" v-model="cond.right_scope" class="cb-sel">
             <option value="ben_gua">本卦</option>
             <option value="zhi_gua">之卦</option>
             <option value="bian_yao">变爻</option>
@@ -598,7 +599,7 @@ function remove(id) { store.removeCondition(id) }
             <option value="time_object">时间对象</option>
             <option value="condition_group_ref">条件组引用</option>
           </select>
-          <select v-if="cond.right_type==='yao_object'" v-model="cond.right_scope" class="cb-sel">
+          <select v-if="cond.right_type==='yao_object' && !isFushenFeishen(cond.right_value)" v-model="cond.right_scope" class="cb-sel">
             <option value="ben_gua">本卦</option>
             <option value="zhi_gua">之卦</option>
             <option value="bian_yao">变爻</option>

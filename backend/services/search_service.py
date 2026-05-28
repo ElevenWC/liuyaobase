@@ -473,6 +473,11 @@ def _build_shensha_clause(field: str, mode: str, scope: str, obj_value: str, par
     # 爻对象过滤（如"妻财爻" → 限制六亲 + 神煞）
     if obj_value and obj_value in YAO_OBJECTS:
         obj_col, obj_val, _ = _parse_yao_object(obj_value)
+        # 伏神/飞神：val为空，用存在性过滤
+        if obj_val == "":
+            if obj_value in ("增删飞神", "增删伏神"):
+                return f"({sub}) AND y.zengshan_exists = TRUE"
+            return f"({sub})"  # 易冒伏神/飞神：每个爻位都有，无需额外过滤
         params[f"s{idx}"] = obj_val
         return f"({sub}) AND y.{obj_col} = :s{idx}"
 
