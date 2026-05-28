@@ -62,7 +62,9 @@ SHENSHA_MAP = {
 }
 
 # yao_object 六爻对象 → 查找方式
-YAO_OBJECTS = {"世爻", "应爻", "妻财爻", "官鬼爻", "父母爻", "兄弟爻", "子孙爻"}
+YAO_OBJECTS = {"世爻", "应爻", "妻财爻", "官鬼爻", "父母爻", "兄弟爻", "子孙爻",
+               "青龙爻", "朱雀爻", "勾陈爻", "螣蛇爻", "白虎爻", "玄武爻",
+               "动爻", "静爻", "暗动爻", "易冒伏神", "增删伏神", "易冒飞神", "增删飞神"}
 
 # ── 条件组：通用字段名 × 来源 → SQL 列名 ──
 GENERIC_YAO_FIELDS: dict[str, dict[str, str | None]] = {
@@ -217,7 +219,9 @@ def _build_same_position_group_sql(group, params: dict, idx: int) -> str:
     position = group.position if hasattr(group, 'position') else group.get("position", 1)
     sources_cfg = group.sources if hasattr(group, 'sources') else group.get("sources", [])
 
-    clauses = [f"y.yao_position = {int(position)}"]
+    clauses = []
+    if int(position) > 0:
+        clauses.append(f"y.yao_position = {int(position)}")
 
     for si, src_cfg in enumerate(sources_cfg):
         source = src_cfg.source if hasattr(src_cfg, 'source') else src_cfg.get("source", "")
@@ -253,16 +257,33 @@ def _build_feishen_group_sql(group, params: dict, idx: int) -> str:
         return f"(y.yimao_liuqin = :{key})"
 
 
-def _parse_yao_object(value: str) -> tuple[str, str]:
-    """世爻 → ('ben_shi_ying', '世')，妻财爻 → ('ben_liuqin', '妻财')"""
-    if value == "世爻":
-        return "ben_shi_ying", "世"
-    if value == "应爻":
-        return "ben_shi_ying", "应"
+def _parse_yao_object(value: str) -> tuple[str, object, str]:
+    """返回 (filter_col, filter_val, dizhi_col)"""
+    # 六亲
     for qin in ["妻财", "官鬼", "父母", "兄弟", "子孙"]:
         if value == f"{qin}爻":
-            return "ben_liuqin", qin
-    return "ben_liuqin", value
+            return "ben_liuqin", qin, "ben_dizhi"
+    # 世应
+    if value == "世爻": return "ben_shi_ying", "世", "ben_dizhi"
+    if value == "应爻": return "ben_shi_ying", "应", "ben_dizhi"
+    # 六神
+    if value == "青龙爻": return "liushen", "青龙", "ben_dizhi"
+    if value == "朱雀爻": return "liushen", "朱雀", "ben_dizhi"
+    if value == "勾陈爻": return "liushen", "勾陈", "ben_dizhi"
+    if value == "螣蛇爻": return "liushen", "螣蛇", "ben_dizhi"
+    if value == "白虎爻": return "liushen", "白虎", "ben_dizhi"
+    if value == "玄武爻": return "liushen", "玄武", "ben_dizhi"
+    # 状态
+    if value == "动爻": return "is_dong", 1, "zhi_dizhi"
+    if value == "静爻": return "is_dong", 0, "ben_dizhi"
+    if value == "暗动爻": return "is_an_dong", 1, "ben_dizhi"
+    # 伏神
+    if value == "易冒伏神": return "yimao_dizhi", "", "yimao_dizhi"
+    if value == "增删伏神": return "zengshan_dizhi", "", "zengshan_dizhi"
+    # 飞神
+    if value == "易冒飞神": return "ben_dizhi", "", "ben_dizhi"  # 飞神=同爻位本卦爻
+    if value == "增删飞神": return "ben_dizhi", "", "ben_dizhi"
+    return "ben_liuqin", value, "ben_dizhi"
 
 
 def _build_number_judgment_clause(cond, params: dict, idx: int) -> str:
@@ -453,7 +474,12 @@ def _build_shensha_clause(field: str, mode: str, scope: str, obj_value: str, par
 
     # 爻对象过滤（如"妻财爻" → 限制六亲 + 神煞）
     if obj_value and obj_value in YAO_OBJECTS:
-        obj_col, obj_val = _parse_yao_object(obj_value)
+        obj_col, obj_val, _ = _parse_yao_object(obj_value)
+        # 伏神/飞神：val为空，用存在性过滤
+        if obj_val == "":
+            if obj_value in ("增删飞神", "增删伏神"):
+                return f"({sub}) AND y.zengshan_exists = TRUE"
+            return f"({sub})"  # 易冒伏神/飞神：每个爻位都有，无需额外过滤
         params[f"s{idx}"] = obj_val
         return f"({sub}) AND y.{obj_col} = :s{idx}"
 
@@ -470,11 +496,32 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int,
     cg_counter = [0]
 
     # 获取地支值：yao_object → 子查询查爻表，time_object → 时间表字段
-    def resolve_dz(obj_type, obj_value, suffix):
+    def resolve_dz(obj_type, obj_value, suffix, scope='ben_gua'):
+        # scope → 列前缀映射
+        _PFX = {'ben_gua': 'ben', 'zhi_gua': 'zhi', 'bian_yao': 'zhi', 'yimao': 'yimao', 'zengshan': 'zengshan'}
+        pfx = _PFX.get(scope, 'ben')
         if obj_type == "yao_object":
-            col, val = _parse_yao_object(obj_value)
+            col, val, dz_col = _parse_yao_object(obj_value)
+            # 伏神/飞神直接返回列名（列名自带来源前缀，不参与scope映射）
+            if val == "":
+                return f"y.{dz_col}"
+            # 根据 scope 调整列前缀
+            def _scoped(col_name, pfx):
+                for old in ['ben_', 'zhi_', 'yimao_', 'zengshan_']:
+                    if col_name.startswith(old):
+                        return col_name.replace(old, pfx + '_', 1)
+                return f"{pfx}_{col_name}" if '_' not in col_name else col_name
+
+            dz = _scoped(dz_col, pfx)
+            # 构建子查询
+            col_scoped = _scoped(col, pfx)
             params[suffix] = val
-            return f"(SELECT y_inner.ben_dizhi FROM guali_yao y_inner WHERE y_inner.guali_id = guali.id AND y_inner.{col} = :{suffix} LIMIT 1)"
+            # 额外 scope 过滤
+            extra = ''
+            if scope == 'bian_yao': extra = ' AND y_inner.is_dong = TRUE'
+            elif scope == 'zhi_gua': extra = ' AND y_inner.is_dong = FALSE'
+            elif scope == 'zengshan': extra = ' AND y_inner.zengshan_exists = TRUE'
+            return f"(SELECT y_inner.{dz} FROM guali_yao y_inner WHERE y_inner.guali_id = guali.id AND y_inner.{col_scoped} = :{suffix}{extra} LIMIT 1)"
         elif obj_type == "time_object":
             tm_map = {"年支": "t.year_zhi", "月支": "t.month_zhi", "日支": "t.day_zhi"}
             dz_col = tm_map.get(obj_value)
@@ -511,12 +558,12 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int,
         params[suffix] = obj_value
         return f":{suffix}"
 
-    dz1 = resolve_dz(rel.left_type, rel.left_value, f"l{idx}")
-    dz2 = resolve_dz(rel.right_type, rel.right_value, f"r{idx}")
+    dz1 = resolve_dz(rel.left_type, rel.left_value, f"l{idx}", getattr(rel, 'left_scope', None) or 'ben_gua')
+    dz2 = resolve_dz(rel.right_type, rel.right_value, f"r{idx}", getattr(rel, 'right_scope', None) or 'ben_gua')
 
     if relation == "三合":
         # 三合需要 3 个地支对象
-        dz_mid = resolve_dz(rel.middle_type, rel.middle_value, f"m{idx}")
+        dz_mid = resolve_dz(rel.middle_type, rel.middle_value, f"m{idx}", getattr(rel, 'middle_scope', None) or 'ben_gua')
         if bureau:
             return f"check_sanhe({dz1}, {dz_mid}, {dz2}) = '{bureau}'"
         return f"check_sanhe({dz1}, {dz_mid}, {dz2}) != '无'"

@@ -127,6 +127,7 @@ const SHENSHA_TYPES = [
 
 function isShensha(field) { return SHENSHA_FIELDS.includes(field) }
 function isCount(field) { return field === '_count' }
+function isFushenFeishen(v) { return ['易冒伏神','增删伏神','易冒飞神','增删飞神'].includes(v) }
 
 function getLogicOp(condIndex) {
   // 找到第 condIndex 个 condition 之前的 and/or 操作符
@@ -340,6 +341,22 @@ function remove(id) { store.removeCondition(id) }
           <option value="父母爻">父母爻</option>
           <option value="兄弟爻">兄弟爻</option>
           <option value="子孙爻">子孙爻</option>
+          <option disabled>── 六神</option>
+          <option value="青龙爻">青龙爻</option>
+          <option value="朱雀爻">朱雀爻</option>
+          <option value="勾陈爻">勾陈爻</option>
+          <option value="螣蛇爻">螣蛇爻</option>
+          <option value="白虎爻">白虎爻</option>
+          <option value="玄武爻">玄武爻</option>
+          <option disabled>── 状态</option>
+          <option value="动爻">动爻</option>
+          <option value="静爻">静爻</option>
+          <option value="暗动爻">暗动爻</option>
+          <option disabled>── 伏神/飞神</option>
+          <option value="易冒伏神">易冒伏神</option>
+          <option value="增删伏神">增删伏神</option>
+          <option value="易冒飞神">易冒飞神</option>
+          <option value="增删飞神">增删飞神</option>
           <option disabled>──</option>
           <option v-for="c in store.conditions.filter(x=>x.id!==cond.id&&x.groupType)" :key="c.id" :value="c.id">{{ groupSummary(c) }}</option>
         </select>
@@ -380,6 +397,13 @@ function remove(id) { store.removeCondition(id) }
           <option value="time_object">时间对象</option>
           <option value="condition_group_ref">条件组引用</option>
         </select>
+        <select v-if="cond.left_type==='yao_object' && !isFushenFeishen(cond.left_value)" v-model="cond.left_scope" class="cb-sel">
+          <option value="ben_gua">本卦</option>
+          <option value="zhi_gua">之卦</option>
+          <option value="bian_yao">变爻</option>
+          <option value="yimao">易冒</option>
+          <option value="zengshan">增删</option>
+        </select>
         <select v-if="cond.left_type==='yao_object'" v-model="cond.left_value" class="cb-sel">
           <option value="">--对象--</option>
           <option value="世爻">世爻</option>
@@ -389,6 +413,22 @@ function remove(id) { store.removeCondition(id) }
           <option value="父母爻">父母爻</option>
           <option value="兄弟爻">兄弟爻</option>
           <option value="子孙爻">子孙爻</option>
+          <option disabled>── 六神</option>
+          <option value="青龙爻">青龙爻</option>
+          <option value="朱雀爻">朱雀爻</option>
+          <option value="勾陈爻">勾陈爻</option>
+          <option value="螣蛇爻">螣蛇爻</option>
+          <option value="白虎爻">白虎爻</option>
+          <option value="玄武爻">玄武爻</option>
+          <option disabled>── 状态</option>
+          <option value="动爻">动爻</option>
+          <option value="静爻">静爻</option>
+          <option value="暗动爻">暗动爻</option>
+          <option disabled>── 伏神飞神</option>
+          <option value="易冒伏神">易冒伏神</option>
+          <option value="增删伏神">增删伏神</option>
+          <option value="易冒飞神">易冒飞神</option>
+          <option value="增删飞神">增删飞神</option>
         </select>
         <select v-else-if="cond.left_type==='time_object'" v-model="cond.left_value" class="cb-sel">
           <option value="">--时间--</option>
@@ -410,6 +450,13 @@ function remove(id) { store.removeCondition(id) }
             <option value="time_object">时间对象</option>
             <option value="condition_group_ref">条件组引用</option>
           </select>
+          <select v-if="cond.middle_type==='yao_object' && !isFushenFeishen(cond.middle_value)" v-model="cond.middle_scope" class="cb-sel">
+            <option value="ben_gua">本卦</option>
+            <option value="zhi_gua">之卦</option>
+            <option value="bian_yao">变爻</option>
+            <option value="yimao">易冒</option>
+            <option value="zengshan">增删</option>
+          </select>
           <select v-if="cond.middle_type==='yao_object'" v-model="cond.middle_value" class="cb-sel">
             <option value="">--对象--</option>
             <option value="世爻">世爻</option>
@@ -419,6 +466,22 @@ function remove(id) { store.removeCondition(id) }
             <option value="父母爻">父母爻</option>
             <option value="兄弟爻">兄弟爻</option>
             <option value="子孙爻">子孙爻</option>
+            <option disabled>── 六神</option>
+            <option value="青龙爻">青龙爻</option>
+            <option value="朱雀爻">朱雀爻</option>
+            <option value="勾陈爻">勾陈爻</option>
+            <option value="螣蛇爻">螣蛇爻</option>
+            <option value="白虎爻">白虎爻</option>
+            <option value="玄武爻">玄武爻</option>
+            <option disabled>── 状态</option>
+            <option value="动爻">动爻</option>
+            <option value="静爻">静爻</option>
+            <option value="暗动爻">暗动爻</option>
+            <option disabled>── 伏神飞神</option>
+            <option value="易冒伏神">易冒伏神</option>
+            <option value="增删伏神">增删伏神</option>
+            <option value="易冒飞神">易冒飞神</option>
+            <option value="增删飞神">增删飞神</option>
           </select>
           <select v-else-if="cond.middle_type==='time_object'" v-model="cond.middle_value" class="cb-sel">
             <option value="">--时间--</option>
@@ -437,6 +500,13 @@ function remove(id) { store.removeCondition(id) }
             <option value="time_object">时间对象</option>
             <option value="condition_group_ref">条件组引用</option>
           </select>
+          <select v-if="cond.right_type==='yao_object' && !isFushenFeishen(cond.right_value)" v-model="cond.right_scope" class="cb-sel">
+            <option value="ben_gua">本卦</option>
+            <option value="zhi_gua">之卦</option>
+            <option value="bian_yao">变爻</option>
+            <option value="yimao">易冒</option>
+            <option value="zengshan">增删</option>
+          </select>
           <select v-if="cond.right_type==='yao_object'" v-model="cond.right_value" class="cb-sel">
             <option value="">--对象--</option>
             <option value="世爻">世爻</option>
@@ -446,6 +516,22 @@ function remove(id) { store.removeCondition(id) }
             <option value="父母爻">父母爻</option>
             <option value="兄弟爻">兄弟爻</option>
             <option value="子孙爻">子孙爻</option>
+            <option disabled>── 六神</option>
+            <option value="青龙爻">青龙爻</option>
+            <option value="朱雀爻">朱雀爻</option>
+            <option value="勾陈爻">勾陈爻</option>
+            <option value="螣蛇爻">螣蛇爻</option>
+            <option value="白虎爻">白虎爻</option>
+            <option value="玄武爻">玄武爻</option>
+            <option disabled>── 状态</option>
+            <option value="动爻">动爻</option>
+            <option value="静爻">静爻</option>
+            <option value="暗动爻">暗动爻</option>
+            <option disabled>── 伏神飞神</option>
+            <option value="易冒伏神">易冒伏神</option>
+            <option value="增删伏神">增删伏神</option>
+            <option value="易冒飞神">易冒飞神</option>
+            <option value="增删飞神">增删飞神</option>
           </select>
           <select v-else-if="cond.right_type==='time_object'" v-model="cond.right_value" class="cb-sel">
             <option value="">--时间--</option>
@@ -513,6 +599,13 @@ function remove(id) { store.removeCondition(id) }
             <option value="time_object">时间对象</option>
             <option value="condition_group_ref">条件组引用</option>
           </select>
+          <select v-if="cond.right_type==='yao_object' && !isFushenFeishen(cond.right_value)" v-model="cond.right_scope" class="cb-sel">
+            <option value="ben_gua">本卦</option>
+            <option value="zhi_gua">之卦</option>
+            <option value="bian_yao">变爻</option>
+            <option value="yimao">易冒</option>
+            <option value="zengshan">增删</option>
+          </select>
           <select v-if="cond.right_type==='yao_object'" v-model="cond.right_value" class="cb-sel">
             <option value="">--对象--</option>
             <option value="世爻">世爻</option>
@@ -522,6 +615,22 @@ function remove(id) { store.removeCondition(id) }
             <option value="父母爻">父母爻</option>
             <option value="兄弟爻">兄弟爻</option>
             <option value="子孙爻">子孙爻</option>
+            <option disabled>── 六神</option>
+            <option value="青龙爻">青龙爻</option>
+            <option value="朱雀爻">朱雀爻</option>
+            <option value="勾陈爻">勾陈爻</option>
+            <option value="螣蛇爻">螣蛇爻</option>
+            <option value="白虎爻">白虎爻</option>
+            <option value="玄武爻">玄武爻</option>
+            <option disabled>── 状态</option>
+            <option value="动爻">动爻</option>
+            <option value="静爻">静爻</option>
+            <option value="暗动爻">暗动爻</option>
+            <option disabled>── 伏神飞神</option>
+            <option value="易冒伏神">易冒伏神</option>
+            <option value="增删伏神">增删伏神</option>
+            <option value="易冒飞神">易冒飞神</option>
+            <option value="增删飞神">增删飞神</option>
           </select>
           <select v-else-if="cond.right_type==='time_object'" v-model="cond.right_value" class="cb-sel">
             <option value="">--时间--</option>
