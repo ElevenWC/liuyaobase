@@ -71,6 +71,18 @@ function onFieldSelect({ cat, field, type, label }) {
     if (c) store.updateCondition(c.id, { field: '_count', scope: 'ben_gua', countAttr: 'liuqin', countValue: '妻财', operator: 'equals', value: '0' })
     return
   }
+  if (field === '_keyword') {
+    store.addCondition('normal')
+    const c = store.conditions[store.conditions.length - 1]
+    if (c) store.updateCondition(c.id, { field: '_keyword', operator: 'equals', value: '', scope: null })
+    return
+  }
+  if (field === '_tag') {
+    store.addCondition('normal')
+    const c = store.conditions[store.conditions.length - 1]
+    if (c) store.updateCondition(c.id, { field: '_tag', tagId: null, tagId2: null, operator: 'equals', value: '', scope: null })
+    return
+  }
   if (type === 'relation') {
     store.addCondition('relation')
     const c = store.conditions[store.conditions.length - 1]

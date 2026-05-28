@@ -266,7 +266,7 @@ function addTimeCondition() {
 function addKeywordCondition() {
   store.addCondition('normal')
   const c = store.conditions[store.conditions.length - 1]
-  if (c) store.updateCondition(c.id, { field: '_keyword', operator: 'contains', value: '', scope: null })
+  if (c) store.updateCondition(c.id, { field: '_keyword', operator: 'equals', value: '', scope: null })
 }
 function addTagCondition() {
   store.addCondition('normal')
