@@ -289,7 +289,7 @@ function onPageChange(page) {
   position: relative;
 }
 .sp-detail-close {
-  position: absolute; top: var(--space-2); right: var(--space-2); z-index: 10;
+  position: absolute; top: var(--space-5); right: var(--space-2); z-index: 10;
   width: 24px; height: 24px; border: none; background: var(--color-bg-tertiary);
   color: var(--color-text-muted); border-radius: 50%; cursor: pointer;
   font-size: 14px; display: flex; align-items: center; justify-content: center;
