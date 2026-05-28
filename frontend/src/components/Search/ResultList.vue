@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import GuaCiFloat from '../shared/GuaCiFloat.vue'
 
@@ -32,7 +32,10 @@ function toggleSelect(id) {
 
 const totalPages = computed(() => Math.ceil(props.total / props.pageSize) || 1)
 
-defineExpose({ selected })
+watch(() => props.results, (v) => { if (!v?.length) selected.value = [] })
+
+function clearSelection() { selected.value = [] }
+defineExpose({ selected, clearSelection })
 </script>
 
 <template>

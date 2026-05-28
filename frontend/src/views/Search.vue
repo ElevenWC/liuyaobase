@@ -1,50 +1,69 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useSearchStore } from '../stores/useSearchStore.js'
-import { fetchTagTree, addGualiTag } from '../api/index.js'
+import { useAppStore } from '../stores/index.js'
+import { fetchTagTree, addGualiTag, removeGualiTag, fetchSearchResults } from '../api/index.js'
 import FieldLibrary from '../components/Search/FieldLibrary.vue'
 import ConditionBuilder from '../components/Search/ConditionBuilder.vue'
 import RecommendedSchemes from '../components/Search/RecommendedSchemes.vue'
 import ResultList from '../components/Search/ResultList.vue'
 
 const store = useSearchStore()
+const appStore = useAppStore()
 const fieldLibCollapsed = ref(false)
 const resultListRef = ref(null)
 
 // 批量打标签
-const tagTree = ref([])
-const showTagPicker = ref(false)
 const batchTagging = ref(false)
+const batchTagId = ref(null)
+const batchTagId2 = ref(null)
+
+const batchLevel2Options = computed(() => {
+  if (!batchTagId.value) return []
+  const parent = appStore.tagTree.find(t => t.id === batchTagId.value)
+  return parent?.children || []
+})
+
+function selectedTagId() {
+  return batchTagId2.value || batchTagId.value || null
+}
 
 onMounted(async () => {
   // 已有条件但无逻辑链时自动重建
   if (store.conditions.length && !store.logicChain.length) store.rebuildLogicChain()
   try {
     const res = await fetchTagTree()
-    if (res.data.code === 200) tagTree.value = res.data.data || []
+    if (res.data.code === 200) appStore.tagTree = res.data.data || []
   } catch { /* 标签加载失败不影响检索功能 */ }
 })
-
-function flatTags(tree) {
-  const result = []
-  for (const node of tree) {
-    result.push({ id: node.id, name: node.name, indent: '' })
-    if (node.children) {
-      for (const child of node.children) {
-        result.push({ id: child.id, name: child.name, indent: '  └ ' })
-      }
-    }
-  }
-  return result
-}
 
 function selectedCount() {
   return resultListRef.value?.selected?.length || 0
 }
 
+const selectAllResults = ref(false)
+
+// 清空或条件变化时重置全选
+watch(() => store.results.length, (n) => { if (!n) selectAllResults.value = false })
+
 async function batchAddTag(tagId) {
-  const ids = resultListRef.value?.selected || []
-  if (!ids.length || !tagId) return
+  if (!tagId) return
+
+  let ids = resultListRef.value?.selected || []
+  // 全选所有结果：重新查询获取全部ID
+  if (selectAllResults.value && store.pagination.total > 0) {
+    batchTagging.value = true
+    try {
+      const allRes = await fetchSearchResults({
+        conditions: store.conditions,
+        logic: store.logicChain,
+        pagination: { page: 1, page_size: 99999 },
+      })
+      ids = (allRes.data.data?.results || []).map(r => r.id)
+    } catch { ids = []; alert('获取全部卦例失败') }
+  }
+
+  if (!ids.length) { batchTagging.value = false; return }
   batchTagging.value = true
   let ok = 0
   for (const gualiId of ids) {
@@ -54,10 +73,37 @@ async function batchAddTag(tagId) {
     } catch { /* 单个失败不影响其他 */ }
   }
   batchTagging.value = false
-  showTagPicker.value = false
-  // 清除选择
-  if (resultListRef.value) resultListRef.value.selected = []
-  if (ok > 0) alert(`已为 ${ok}/${ids.length} 个卦例添加标签`)
+  batchTagId.value = null
+  batchTagId2.value = null
+  selectAllResults.value = false
+  if (resultListRef.value) resultListRef.value.clearSelection()
+  if (ok === ids.length) alert(`已为全部 ${ok} 个卦例添加标签`)
+  else if (ok > 0) alert(`已为 ${ok}/${ids.length} 个卦例添加标签（${ids.length - ok} 个失败）`)
+  else alert('添加标签失败，请检查标签是否已存在')
+}
+
+async function batchRemoveTag(tagId) {
+  if (!tagId) return
+  let ids = resultListRef.value?.selected || []
+  if (selectAllResults.value && store.pagination.total > 0) {
+    try {
+      const allRes = await fetchSearchResults({ conditions: store.conditions, logic: store.logicChain, pagination: { page: 1, page_size: 99999 } })
+      ids = (allRes.data.data?.results || []).map(r => r.id)
+    } catch { ids = [] }
+  }
+  if (!ids.length) return
+  if (!confirm(`确认从 ${ids.length} 个卦例中删除此标签？`)) return
+  batchTagging.value = true
+  let ok = 0
+  for (const gualiId of ids) {
+    try { await removeGualiTag(gualiId, tagId); ok++ } catch { /* skip */ }
+  }
+  batchTagging.value = false
+  batchTagId.value = null; batchTagId2.value = null; selectAllResults.value = false
+  if (resultListRef.value) resultListRef.value.clearSelection()
+  if (ok === ids.length) alert(`已从全部 ${ok} 个卦例中删除标签`)
+  else if (ok > 0) alert(`已从 ${ok}/${ids.length} 个卦例中删除标签（${ids.length - ok} 个失败）`)
+  else alert('删除标签失败')
 }
 
 function onFieldSelect({ cat, field, type, label }) {
@@ -65,6 +111,18 @@ function onFieldSelect({ cat, field, type, label }) {
     store.addCondition('normal')
     const c = store.conditions[store.conditions.length - 1]
     if (c) store.updateCondition(c.id, { field: '_count', scope: 'ben_gua', countAttr: 'liuqin', countValue: '妻财', operator: 'equals', value: '0' })
+    return
+  }
+  if (field === '_keyword') {
+    store.addCondition('normal')
+    const c = store.conditions[store.conditions.length - 1]
+    if (c) store.updateCondition(c.id, { field: '_keyword', operator: 'equals', value: '', scope: null })
+    return
+  }
+  if (field === '_tag') {
+    store.addCondition('normal')
+    const c = store.conditions[store.conditions.length - 1]
+    if (c) store.updateCondition(c.id, { field: '_tag', tagId: null, tagId2: null, operator: 'equals', value: '', scope: null })
     return
   }
   if (type === 'relation') {
@@ -109,14 +167,22 @@ function onPageChange(page) {
       </div>
       <div class="sp-right">
         <ConditionBuilder />
-        <div v-if="selectedCount()" class="sp-batch-bar">
-          <button class="sp-btn sp-btn-tag" @click="showTagPicker = !showTagPicker">
-            {{ batchTagging ? '打标中...' : `批量打标签（已选 ${selectedCount()} 条）` }}
+        <div v-if="selectedCount() || selectAllResults" class="sp-batch-bar">
+          <label class="sp-all-check"><input type="checkbox" v-model="selectAllResults" /> 全选所有结果（共 {{ store.pagination.total }} 条）</label>
+          <select v-model="batchTagId" class="sp-batch-sel" @change="batchTagId2=null">
+            <option :value="null">一级标签</option>
+            <option v-for="t in appStore.tagTree" :key="t.id" :value="t.id">{{ t.name }}</option>
+          </select>
+          <select v-if="batchTagId" v-model="batchTagId2" class="sp-batch-sel">
+            <option :value="null">二级标签</option>
+            <option v-for="t in batchLevel2Options" :key="t.id" :value="t.id">{{ t.name }}</option>
+          </select>
+          <button class="sp-batch-btn sp-batch-add" :disabled="!selectedTagId()" @click="batchAddTag(selectedTagId())">
+            {{ batchTagging ? '打标中...' : `加标签(${selectAllResults ? store.pagination.total : selectedCount()})` }}
           </button>
-          <div v-if="showTagPicker" class="tag-picker">
-            <span v-for="t in flatTags(tagTree)" :key="t.id"
-              class="tag-opt" @click="batchAddTag(t.id)">{{ t.indent }}{{ t.name }}</span>
-          </div>
+          <button class="sp-batch-btn sp-batch-del" :disabled="!selectedTagId()" @click="batchRemoveTag(selectedTagId())">
+            {{ batchTagging ? '删标中...' : `删标签(${selectAllResults ? store.pagination.total : selectedCount()})` }}
+          </button>
         </div>
         <RecommendedSchemes />
         <div class="sp-results">
@@ -144,24 +210,16 @@ function onPageChange(page) {
   box-sizing: border-box;
 }
 
-.sp-batch-bar { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); position: relative; }
-.sp-btn-tag {
-  padding: 4px 12px; border-radius: var(--radius-md); font-size: var(--font-size-sm);
-  cursor: pointer; border: 1px solid var(--color-accent);
-  background: var(--color-bg-tertiary); color: var(--color-accent-light); transition: all var(--transition-fast);
-}
-.sp-btn-tag:hover { background: var(--color-accent); color: #fff; }
-.tag-picker {
-  position: absolute; top: 100%; left: 0; margin-top: 4px; z-index: 200;
-  background: var(--color-bg-overlay); border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-md); box-shadow: var(--shadow-md);
-  padding: var(--space-1) 0; min-width: 140px; max-height: 240px; overflow-y: auto;
-}
-.tag-opt {
-  display: block; padding: 4px 12px; font-size: var(--font-size-sm);
-  color: var(--color-text-secondary); cursor: pointer; white-space: nowrap;
-}
-.tag-opt:hover { background: var(--color-bg-tertiary); color: var(--color-text-primary); }
+.sp-batch-bar { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); position: relative; flex-wrap: wrap; }
+.sp-all-check { font-size: var(--font-size-xs); color: var(--color-text-secondary); display: flex; align-items: center; gap: 4px; cursor: pointer; accent-color: var(--color-accent); }
+.sp-batch-sel { height: 26px; padding: 0 4px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); font-size: var(--font-size-sm); cursor: pointer; }
+.sp-batch-sel:focus { outline: none; border-color: var(--color-accent); }
+.sp-batch-btn { height: 26px; padding: 0 10px; border-radius: var(--radius-md); font-size: var(--font-size-xs); cursor: pointer; border: 1px solid var(--color-accent); transition: all var(--transition-fast); }
+.sp-batch-add { background: var(--color-bg-tertiary); color: var(--color-accent-light); }
+.sp-batch-add:hover { background: var(--color-accent); color: #fff; }
+.sp-batch-del { background: var(--color-bg-tertiary); color: var(--color-danger); border-color: var(--color-danger); }
+.sp-batch-del:hover { background: var(--color-danger); color: #fff; }
+.sp-batch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .sp-main {
   display: flex; gap: var(--space-3);

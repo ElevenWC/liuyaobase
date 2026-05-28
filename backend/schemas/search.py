@@ -22,6 +22,8 @@ class Condition(BaseModel):
     scope: Optional[str] = None  # ben_gua / zhi_gua / bian_yao / yimao / zengshan
     countAttr: Optional[str] = None   # 数目判断专用：统计属性
     countValue: Optional[str] = None  # 数目判断专用：属性值
+    tagId: Optional[int] = None       # 标签筛选专用：一级标签ID
+    tagId2: Optional[int] = None      # 标签筛选专用：二级标签ID
 
     @field_validator("operator")
     @classmethod

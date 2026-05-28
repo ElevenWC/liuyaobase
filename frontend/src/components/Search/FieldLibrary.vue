@@ -87,6 +87,13 @@ const categories = [
       { key: 'count', label: '属性数目', type: 'count' },
     ],
   },
+  {
+    key: 'other', name: '其他',
+    fields: [
+      { key: '_keyword', label: '文本搜索', type: 'normal' },
+      { key: '_tag', label: '标签筛选', type: 'normal' },
+    ],
+  },
 ]
 
 const filtered = computed(() => {
