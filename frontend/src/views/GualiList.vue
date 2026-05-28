@@ -106,7 +106,7 @@ function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of n
 <template>
   <div class="guali-list">
     <div class="list-toolbar">
-      <input v-model="keyword" class="search-input" placeholder="搜索占问事由..." @input="onSearch" />
+      <input v-model="keyword" class="search-input" placeholder="搜索编号/日期/占问事由..." @input="onSearch" />
     </div>
 
     <div class="tag-filters" v-if="store.tagTree.length">
