@@ -21,7 +21,7 @@ const error = ref('')
 const showTianGan = ref(false)
 const showLiuShen = ref(true)
 const showYiMao = ref(false)
-const zhiMode = ref('all')
+const zhiMode = ref('changed')
 
 const editingShiyou = ref(false)
 const editingZhanduan = ref(false)
