@@ -10,8 +10,10 @@ from backend.crud.tag import get_child_tag_ids
 def _build_keyword_conditions(keyword: str) -> list:
     """根据关键词构建搜索条件列表，多条之间 OR 关系。
 
-    纯数字：ID 精确匹配 + 日期格式匹配(6位YYMMDD/4位MMDD) + 文本搜索
-    非纯数字：仅文本搜索
+    纯数字且无前导零：ID 精确匹配（避免 "0126" 匹配到 ID=126）
+    4位纯数字：MMDD 日期匹配
+    6位纯数字：YYMMDD 日期匹配（校验年份后两位）
+    始终包含：占问事由文本模糊搜索
     """
     if not keyword:
         return []
@@ -19,10 +21,13 @@ def _build_keyword_conditions(keyword: str) -> list:
     conds = [Guali.zhanwen_shiyou.contains(keyword)]
 
     if keyword.isdigit():
-        num = int(keyword)
-        conds.append(Guali.id == num)
+        n = len(keyword)
 
-        if len(keyword) == 6:  # YYMMDD
+        # ID 匹配：仅当无前导零时（"126"→ID=126，"0126"→不做ID匹配）
+        if str(int(keyword)) == keyword:
+            conds.append(Guali.id == int(keyword))
+
+        if n == 6:  # YYMMDD
             yy = int(keyword[0:2])
             mm = int(keyword[2:4])
             dd = int(keyword[4:6])
@@ -33,7 +38,7 @@ def _build_keyword_conditions(keyword: str) -> list:
                     func.DAY(Guali.zhanwen_time) == dd,
                 )
             )
-        elif len(keyword) == 4:  # MMDD
+        elif n == 4:  # MMDD
             mm = int(keyword[0:2])
             dd = int(keyword[2:4])
             conds.append(
