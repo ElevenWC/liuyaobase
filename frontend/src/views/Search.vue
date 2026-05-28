@@ -14,35 +14,28 @@ const fieldLibCollapsed = ref(false)
 const resultListRef = ref(null)
 
 // 批量打标签
-const tagTree = ref([])
-const showTagPicker = ref(false)
 const batchTagging = ref(false)
-const tagSearch = ref('')
+const batchTagId = ref(null)
+const batchTagId2 = ref(null)
+
+const batchLevel2Options = computed(() => {
+  if (!batchTagId.value) return []
+  const parent = appStore.tagTree.find(t => t.id === batchTagId.value)
+  return parent?.children || []
+})
+
+function selectedTagId() {
+  return batchTagId2.value || batchTagId.value || null
+}
 
 onMounted(async () => {
   // 已有条件但无逻辑链时自动重建
   if (store.conditions.length && !store.logicChain.length) store.rebuildLogicChain()
   try {
     const res = await fetchTagTree()
-    if (res.data.code === 200) {
-      tagTree.value = res.data.data || []
-      appStore.tagTree = res.data.data || []
-    }
+    if (res.data.code === 200) appStore.tagTree = res.data.data || []
   } catch { /* 标签加载失败不影响检索功能 */ }
 })
-
-function flatTags(tree) {
-  const result = []
-  for (const node of tree) {
-    result.push({ id: node.id, name: node.name, indent: '' })
-    if (node.children) {
-      for (const child of node.children) {
-        result.push({ id: child.id, name: child.name, indent: '  └ ' })
-      }
-    }
-  }
-  return result
-}
 
 function selectedCount() {
   return resultListRef.value?.selected?.length || 0
@@ -77,8 +70,8 @@ async function batchAddTag(tagId) {
     } catch { /* 单个失败不影响其他 */ }
   }
   batchTagging.value = false
-  showTagPicker.value = false
-  tagSearch.value = ''
+  batchTagId.value = null
+  batchTagId2.value = null
   selectAllResults.value = false
   if (resultListRef.value) resultListRef.value.clearSelection()
   if (ok === ids.length) alert(`已为全部 ${ok} 个卦例添加标签`)
@@ -149,14 +142,17 @@ function onPageChange(page) {
         <ConditionBuilder />
         <div v-if="selectedCount() || selectAllResults" class="sp-batch-bar">
           <label class="sp-all-check"><input type="checkbox" v-model="selectAllResults" /> 全选所有结果（共 {{ store.pagination.total }} 条）</label>
-          <button class="sp-btn sp-btn-tag" @click="showTagPicker = !showTagPicker">
+          <select v-model="batchTagId" class="cb-sel" @change="batchTagId2=null" style="width:auto">
+            <option :value="null">一级标签</option>
+            <option v-for="t in appStore.tagTree" :key="t.id" :value="t.id">{{ t.name }}</option>
+          </select>
+          <select v-if="batchTagId" v-model="batchTagId2" class="cb-sel" style="width:auto">
+            <option :value="null">二级标签</option>
+            <option v-for="t in batchLevel2Options" :key="t.id" :value="t.id">{{ t.name }}</option>
+          </select>
+          <button class="sp-btn sp-btn-tag" :disabled="!selectedTagId()" @click="batchAddTag(selectedTagId())">
             {{ batchTagging ? '打标中...' : `批量打标签（${selectAllResults ? store.pagination.total : selectedCount()} 条）` }}
           </button>
-          <div v-if="showTagPicker" class="tag-picker">
-            <input v-model="tagSearch" placeholder="搜索标签..." style="width:100%;box-sizing:border-box;margin-bottom:4px;padding:2px 6px;background:var(--color-bg-input);color:var(--color-text-primary);border:1px solid var(--color-border-primary);border-radius:var(--radius-sm);font-size:var(--font-size-sm)" @click.stop />
-            <span v-for="t in flatTags(tagTree).filter(x=>!tagSearch||x.name.includes(tagSearch))" :key="t.id"
-              class="tag-opt" @click="batchAddTag(t.id)">{{ t.indent }}{{ t.name }}</span>
-          </div>
         </div>
         <RecommendedSchemes />
         <div class="sp-results">
@@ -192,17 +188,9 @@ function onPageChange(page) {
   background: var(--color-bg-tertiary); color: var(--color-accent-light); transition: all var(--transition-fast);
 }
 .sp-btn-tag:hover { background: var(--color-accent); color: #fff; }
-.tag-picker {
-  position: absolute; top: 100%; left: 0; margin-top: 4px; z-index: 200;
-  background: var(--color-bg-overlay); border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-md); box-shadow: var(--shadow-md);
-  padding: var(--space-1) 0; min-width: 140px; max-height: 240px; overflow-y: auto;
-}
-.tag-opt {
-  display: block; padding: 4px 12px; font-size: var(--font-size-sm);
-  color: var(--color-text-secondary); cursor: pointer; white-space: nowrap;
-}
-.tag-opt:hover { background: var(--color-bg-tertiary); color: var(--color-text-primary); }
+.sp-btn-tag:disabled { opacity: 0.4; cursor: not-allowed; }
+.cb-sel { padding: 2px 4px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); font-size: var(--font-size-sm); }
+.cb-sel:focus { outline: none; border-color: var(--color-accent); }
 
 .sp-main {
   display: flex; gap: var(--space-3);
