@@ -99,7 +99,7 @@ defineExpose({ selected, clearSelection })
 .col-cb { width: 28px; }
 .col-num { width: 32px; }
 .col-time { width: 90px; white-space: nowrap; }
-.col-ben, .col-zhi { width: 60px; }
+.col-ben, .col-zhi { width: 80px; }
 .rl-gua-link { color: var(--color-accent-light); cursor: pointer; }
 .rl-gua-link:hover { text-decoration: underline; }
 
