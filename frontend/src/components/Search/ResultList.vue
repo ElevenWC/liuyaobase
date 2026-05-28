@@ -82,7 +82,7 @@ defineExpose({ selected, clearSelection })
               <span class="rl-gua-link" @click.stop="openGuaCi(r.ben_code, r.ben_name)">{{ r.ben_name || r.ben_code }}</span>
             </td>
             <td class="col-zhi">
-              <span class="rl-gua-link" @click.stop="openGuaCi(r.zhi_code, r.zhi_name)">{{ r.zhi_name || r.zhi_code }}</span>
+              <span v-if="r.zhi_name" class="rl-gua-link" @click.stop="openGuaCi(r.zhi_code, r.zhi_name)">{{ r.zhi_name }}</span>
             </td>
           </tr>
         </tbody>
