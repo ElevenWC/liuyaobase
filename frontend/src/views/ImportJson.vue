@@ -9,18 +9,24 @@ const result = ref(null)
 const error = ref('')
 const uploading = ref(false)
 
+function isValid(f) { return f.name.endsWith('.json') || f.name.endsWith('.ly') }
+
 function onFileSelect(e) {
   droppedFile.value = null
   const f = e.target.files?.[0]
   if (!f) { selectedFileName.value = ''; return }
-  if (!f.name.endsWith('.json')) { error.value = '仅支持 JSON 文件'; selectedFileName.value = ''; return }
+  if (!isValid(f)) { error.value = '仅支持 JSON 或 LY 文件'; selectedFileName.value = ''; return }
   selectedFileName.value = f.name
   error.value = ''
 }
 
 async function upload() {
-  const file = droppedFile.value || fileInput.value?.files?.[0]
-  if (!file) { error.value = '请选择 JSON 文件'; return }
+  let file = droppedFile.value || fileInput.value?.files?.[0]
+  if (!file) { error.value = '请选择 JSON 或 LY 文件'; return }
+  // 将 .ly 后缀改为 .json，后端按 JSON 解析
+  if (file.name.endsWith('.ly')) {
+    file = new File([file], file.name.replace(/\.ly$/, '.json'), { type: file.type })
+  }
   uploading.value = true; error.value = ''; result.value = null
   try {
     const res = await importJson(file)
@@ -35,7 +41,7 @@ function onDrop(e) {
   e.preventDefault()
   const f = e.dataTransfer.files?.[0]
   if (!f) return
-  if (!f.name.endsWith('.json')) { error.value = '仅支持 JSON 文件'; return }
+  if (!isValid(f)) { error.value = '仅支持 JSON 或 LY 文件'; return }
   droppedFile.value = f
   selectedFileName.value = f.name
   error.value = ''
@@ -47,7 +53,7 @@ function triggerBrowse() { fileInput.value?.click() }
 <template>
   <div class="import-page">
     <h2>JSON 批量导入</h2>
-    <input ref="fileInput" type="file" accept=".json" @change="onFileSelect" hidden />
+    <input ref="fileInput" type="file" accept=".json,.ly" @change="onFileSelect" hidden />
     <div class="drop-zone" @dragover.prevent @drop="onDrop" @click="triggerBrowse">
       <p>{{ selectedFileName || '选择 JSON 文件或拖拽到此处' }}</p>
       <button @click.stop="upload" :disabled="uploading || !selectedFileName" class="btn-upload">
