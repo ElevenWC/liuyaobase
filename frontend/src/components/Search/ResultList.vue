@@ -58,14 +58,14 @@ defineExpose({ selected, clearSelection })
         <tbody>
           <tr v-for="(r, i) in results" :key="r.id" @click="onRowClick(r.id)" class="rl-row" :class="{ active: r.id === props.selectedId }">
             <td class="col-cb" @click.stop><input type="checkbox" :checked="selected.includes(r.id)" @change="toggleSelect(r.id)" /></td>
-            <td class="col-num">{{ (page - 1) * pageSize + i + 1 }}</td>
+            <td class="col-num">{{ r.id }}</td>
             <td class="col-time">{{ r.zhanwen_time?.slice(0, 10) }}</td>
             <td class="col-shiyou">{{ r.zhanwen_shiyou }}</td>
             <td class="col-ben">
-              <span class="rl-gua-link" @click.stop="openGuaCi(r.ben_code, r.ben_name)">{{ r.ben_code }}</span>
+              <span class="rl-gua-link" @click.stop="openGuaCi(r.ben_code, r.ben_name)">{{ r.ben_name || r.ben_code }}</span>
             </td>
             <td class="col-zhi">
-              <span class="rl-gua-link" @click.stop="openGuaCi(r.zhi_code, r.zhi_name)">{{ r.zhi_code }}</span>
+              <span class="rl-gua-link" @click.stop="openGuaCi(r.zhi_code, r.zhi_name)">{{ r.zhi_name || r.zhi_code }}</span>
             </td>
           </tr>
         </tbody>
