@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useSearchStore } from '../stores/useSearchStore.js'
 import { useAppStore } from '../stores/index.js'
 import { fetchTagTree, addGualiTag, removeGualiTag, fetchSearchResults } from '../api/index.js'
@@ -42,6 +42,9 @@ function selectedCount() {
 }
 
 const selectAllResults = ref(false)
+
+// 清空或条件变化时重置全选
+watch(() => store.results.length, (n) => { if (!n) selectAllResults.value = false })
 
 async function batchAddTag(tagId) {
   if (!tagId) return
