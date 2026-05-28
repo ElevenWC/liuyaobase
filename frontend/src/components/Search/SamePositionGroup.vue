@@ -59,6 +59,7 @@ function removeSub(si, ci) { store.removeSubCondition(props.group.id, ci, si) }
     <div class="cg-pos-bar">
       <span class="cg-lbl">爻位：</span>
       <select v-model="group.position" class="cb-sel">
+        <option :value="0">任意</option>
         <option v-for="(lbl, i) in POS_LABELS" :key="i" :value="i+1">{{ lbl }}</option>
       </select>
     </div>

@@ -219,7 +219,9 @@ def _build_same_position_group_sql(group, params: dict, idx: int) -> str:
     position = group.position if hasattr(group, 'position') else group.get("position", 1)
     sources_cfg = group.sources if hasattr(group, 'sources') else group.get("sources", [])
 
-    clauses = [f"y.yao_position = {int(position)}"]
+    clauses = []
+    if int(position) > 0:
+        clauses.append(f"y.yao_position = {int(position)}")
 
     for si, src_cfg in enumerate(sources_cfg):
         source = src_cfg.source if hasattr(src_cfg, 'source') else src_cfg.get("source", "")
