@@ -33,7 +33,6 @@ function groupSummary(c) {
 }
 
 const SCOPE_OPTIONS = [
-  { v: '', label: '全部来源' },
   { v: 'ben_gua', label: '本卦' },
   { v: 'bian_yao', label: '变爻' },
   { v: 'zhi_gua', label: '之卦静爻' },
