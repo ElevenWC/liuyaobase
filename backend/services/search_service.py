@@ -709,7 +709,7 @@ def execute_search(session: Session, request: SearchRequest) -> SearchResponse:
     for r in rows:
         d = dict(r)
         d["ben_name"] = CODE_TO_NAME.get(d.get("ben_code", ""), "")
-        d["zhi_name"] = CODE_TO_NAME.get(d.get("zhi_code", ""), "") if d.get("zhi_code", "000000") != "000000" else ""
+        d["zhi_name"] = CODE_TO_NAME.get(d.get("zhi_code", ""), "") if d.get("yao_bian_code", "000000") != "000000" else ""
         results.append(d)
 
     return SearchResponse(
