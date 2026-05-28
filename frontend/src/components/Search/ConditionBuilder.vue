@@ -696,7 +696,8 @@ function remove(id) { store.removeCondition(id) }
       <button @click="addCountCondition" class="cb-btn">+ 数目</button>
       <button @click="addKeywordCondition" class="cb-btn">+ 文本搜索</button>
       <button @click="addTagCondition" class="cb-btn">+ 标签</button>
-      <span class="cb-sep">|</span>
+    </div>
+    <div class="cb-actions">
       <button @click="store.addConditionGroup('same_yao')" class="cb-btn cg-btn">+ 同一爻</button>
       <button @click="store.addConditionGroup('same_position')" class="cb-btn cg-btn">+ 同爻位</button>
       <button @click="store.addConditionGroup('feishen')" class="cb-btn cg-btn">+ 飞神</button>
@@ -748,7 +749,8 @@ function remove(id) { store.removeCondition(id) }
 .cb-yu { font-size: var(--font-size-sm); color: var(--color-text-secondary); flex-shrink: 0; }
 .cb-gap { width: 6px; flex-shrink: 0; }
 
-.cb-actions { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
+.cb-actions { display: flex; gap: var(--space-2); margin-top: var(--space-2); }
+
 .cb-btn { padding: 3px 10px; background: var(--color-bg-tertiary); color: var(--color-text-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); font-size: var(--font-size-xs); cursor: pointer; transition: all var(--transition-fast); }
 .cb-btn:hover { border-color: var(--color-accent); color: var(--color-accent-light); }
 .cb-sep { color: var(--color-border-primary); font-size: var(--font-size-xs); }

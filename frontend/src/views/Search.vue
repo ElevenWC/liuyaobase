@@ -7,6 +7,7 @@ import FieldLibrary from '../components/Search/FieldLibrary.vue'
 import ConditionBuilder from '../components/Search/ConditionBuilder.vue'
 import RecommendedSchemes from '../components/Search/RecommendedSchemes.vue'
 import ResultList from '../components/Search/ResultList.vue'
+import GualiDetail from './GualiDetail.vue'
 
 const store = useSearchStore()
 const appStore = useAppStore()
@@ -41,6 +42,7 @@ function selectedCount() {
   return resultListRef.value?.selected?.length || 0
 }
 
+const selectedGualiId = ref(null)
 const selectAllResults = ref(false)
 
 // 清空或条件变化时重置全选
@@ -147,6 +149,10 @@ function onFieldSelect({ cat, field, type, label }) {
   }
 }
 
+function onSelectGuali(id) {
+  selectedGualiId.value = id
+}
+
 function onPageChange(page) {
   store.setPage(page)
 }
@@ -165,7 +171,7 @@ function onPageChange(page) {
           <span>◂</span>
         </div>
       </div>
-      <div class="sp-right">
+      <div class="sp-center">
         <ConditionBuilder />
         <div v-if="selectedCount() || selectAllResults" class="sp-batch-bar">
           <label class="sp-all-check"><input type="checkbox" v-model="selectAllResults" /> 全选所有结果（共 {{ store.pagination.total }} 条）</label>
@@ -192,9 +198,15 @@ function onPageChange(page) {
             :page="store.pagination.page"
             :page-size="store.pagination.pageSize"
             :loading="store.loading"
+            :selected-id="selectedGualiId"
             @page-change="onPageChange"
+            @select-guali="onSelectGuali"
           />
         </div>
+      </div>
+      <div class="sp-detail" v-if="selectedGualiId">
+        <button class="sp-detail-close" @click="selectedGualiId = null" title="关闭详情">✕</button>
+        <GualiDetail :guali-id="selectedGualiId" :embedded="true" @deleted="selectedGualiId = null" />
       </div>
     </div>
   </div>
@@ -241,7 +253,7 @@ function onPageChange(page) {
 .fl-toggle:hover { background: var(--color-bg-tertiary); color: var(--color-accent-light); }
 
 /* 右侧：条件构建 + 结果列表 */
-.sp-right {
+.sp-center {
   flex: 1; min-width: 0;
   display: flex; flex-direction: column; gap: var(--space-3);
 }
@@ -250,4 +262,21 @@ function onPageChange(page) {
   flex: 1; min-height: 0;
   overflow-y: auto;
 }
+
+/* 右侧：卦例详情 */
+.sp-detail {
+  flex: 1; min-width: 0;
+  overflow-y: auto;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  position: relative;
+}
+.sp-detail-close {
+  position: absolute; top: var(--space-2); right: var(--space-2); z-index: 10;
+  width: 24px; height: 24px; border: none; background: var(--color-bg-tertiary);
+  color: var(--color-text-muted); border-radius: 50%; cursor: pointer;
+  font-size: 14px; display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition-fast);
+}
+.sp-detail-close:hover { background: var(--color-danger); color: #fff; }
 </style>
