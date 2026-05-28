@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useSearchStore } from '../stores/useSearchStore.js'
-import { fetchTagTree, addGualiTag } from '../api/index.js'
+import { fetchTagTree, addGualiTag, fetchSearchResults } from '../api/index.js'
 import FieldLibrary from '../components/Search/FieldLibrary.vue'
 import ConditionBuilder from '../components/Search/ConditionBuilder.vue'
 import RecommendedSchemes from '../components/Search/RecommendedSchemes.vue'
@@ -43,9 +43,26 @@ function selectedCount() {
   return resultListRef.value?.selected?.length || 0
 }
 
+const selectAllResults = ref(false)
+
 async function batchAddTag(tagId) {
-  const ids = resultListRef.value?.selected || []
-  if (!ids.length || !tagId) return
+  if (!tagId) return
+
+  let ids = resultListRef.value?.selected || []
+  // 全选所有结果：重新查询获取全部ID
+  if (selectAllResults.value && store.pagination.total > 0) {
+    batchTagging.value = true
+    try {
+      const allRes = await fetchSearchResults({
+        conditions: store.conditions,
+        logic: store.logicChain,
+        pagination: { page: 1, page_size: 99999 },
+      })
+      ids = (allRes.data.data?.results || []).map(r => r.id)
+    } catch { ids = []; alert('获取全部卦例失败') }
+  }
+
+  if (!ids.length) { batchTagging.value = false; return }
   batchTagging.value = true
   let ok = 0
   for (const gualiId of ids) {
@@ -57,7 +74,7 @@ async function batchAddTag(tagId) {
   batchTagging.value = false
   showTagPicker.value = false
   tagSearch.value = ''
-  // 清除选择
+  selectAllResults.value = false
   if (resultListRef.value) resultListRef.value.clearSelection()
   if (ok === ids.length) alert(`已为全部 ${ok} 个卦例添加标签`)
   else if (ok > 0) alert(`已为 ${ok}/${ids.length} 个卦例添加标签（${ids.length - ok} 个失败）`)
@@ -125,9 +142,10 @@ function onPageChange(page) {
       </div>
       <div class="sp-right">
         <ConditionBuilder />
-        <div v-if="selectedCount()" class="sp-batch-bar">
+        <div v-if="selectedCount() || selectAllResults" class="sp-batch-bar">
+          <label class="sp-all-check"><input type="checkbox" v-model="selectAllResults" /> 全选所有结果（共 {{ store.pagination.total }} 条）</label>
           <button class="sp-btn sp-btn-tag" @click="showTagPicker = !showTagPicker">
-            {{ batchTagging ? '打标中...' : `批量打标签（已选 ${selectedCount()} 条）` }}
+            {{ batchTagging ? '打标中...' : `批量打标签（${selectAllResults ? store.pagination.total : selectedCount()} 条）` }}
           </button>
           <div v-if="showTagPicker" class="tag-picker">
             <input v-model="tagSearch" placeholder="搜索标签..." style="width:100%;box-sizing:border-box;margin-bottom:4px;padding:2px 6px;background:var(--color-bg-input);color:var(--color-text-primary);border:1px solid var(--color-border-primary);border-radius:var(--radius-sm);font-size:var(--font-size-sm)" @click.stop />
@@ -161,7 +179,8 @@ function onPageChange(page) {
   box-sizing: border-box;
 }
 
-.sp-batch-bar { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); position: relative; }
+.sp-batch-bar { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); position: relative; flex-wrap: wrap; }
+.sp-all-check { font-size: var(--font-size-xs); color: var(--color-text-secondary); display: flex; align-items: center; gap: 4px; cursor: pointer; accent-color: var(--color-accent); }
 .sp-btn-tag {
   padding: 4px 12px; border-radius: var(--radius-md); font-size: var(--font-size-sm);
   cursor: pointer; border: 1px solid var(--color-accent);
