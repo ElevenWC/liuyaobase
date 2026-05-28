@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useSearchStore } from '../stores/useSearchStore.js'
 import { useAppStore } from '../stores/index.js'
 import { fetchTagTree, addGualiTag, fetchSearchResults } from '../api/index.js'
