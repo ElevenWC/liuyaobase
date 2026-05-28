@@ -344,6 +344,20 @@ def _build_condition_clause(cond: Condition, params: dict, idx: int, cond_clause
     if cond.field == '_count' or getattr(cond, 'countAttr', None):
         return _build_number_judgment_clause(cond, params, idx)
 
+    # 文本搜索
+    if cond.field == '_keyword':
+        kw = cond.value if isinstance(cond.value, str) else ''
+        params[f"kw{idx}"] = f"%{kw}%"
+        return f"guali.zhanwen_shiyou LIKE :kw{idx}"
+
+    # 标签筛选
+    if cond.field == '_tag':
+        tag_id = getattr(cond, 'tagId2', None) or getattr(cond, 'tagId', None)
+        if not tag_id:
+            return "FALSE"
+        params[f"tg{idx}"] = int(tag_id)
+        return f"guali.id IN (SELECT gt.guali_id FROM guali_tag gt WHERE gt.tag_id = :tg{idx})"
+
     # 神煞字段：委托给 _build_shensha_clause
     shensha_key = cond.field.replace("is_", "").replace("dai_", "")
     if shensha_key in SHENSHA_MAP:

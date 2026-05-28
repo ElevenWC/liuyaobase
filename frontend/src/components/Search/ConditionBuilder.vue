@@ -1,11 +1,13 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useSearchStore } from '../../stores/useSearchStore.js'
+import { useAppStore } from '../../stores/index.js'
 import SameYaoGroup from './SameYaoGroup.vue'
 import SamePositionGroup from './SamePositionGroup.vue'
 import FeishenGroup from './FeishenGroup.vue'
 
 const store = useSearchStore()
+const appStore = useAppStore()
 function isGroup(c) { return !!c.groupType }
 
 // 括号组范围：从 logicChain 中提取 [start, end] 条件索引
@@ -127,7 +129,16 @@ const SHENSHA_TYPES = [
 
 function isShensha(field) { return SHENSHA_FIELDS.includes(field) }
 function isCount(field) { return field === '_count' }
+function isKeyword(field) { return field === '_keyword' }
+function isTag(field) { return field === '_tag' }
 function isFushenFeishen(v) { return ['易冒伏神','增删伏神','易冒飞神','增删飞神'].includes(v) }
+
+const level2Options = computed(() => {
+  const g = store.conditions.find(c => c.field === '_tag')
+  if (!g?.tagId) return []
+  const parent = appStore.tagTree.find(t => t.id === g.tagId)
+  return parent?.children || []
+})
 
 function getLogicOp(condIndex) {
   // 找到第 condIndex 个 condition 之前的 and/or 操作符
@@ -252,6 +263,16 @@ function addTimeCondition() {
   const c = store.conditions[store.conditions.length - 1]
   if (c) store.updateCondition(c.id, { field: 'day_zhi', scope: null })
 }
+function addKeywordCondition() {
+  store.addCondition('normal')
+  const c = store.conditions[store.conditions.length - 1]
+  if (c) store.updateCondition(c.id, { field: '_keyword', operator: 'contains', value: '', scope: null })
+}
+function addTagCondition() {
+  store.addCondition('normal')
+  const c = store.conditions[store.conditions.length - 1]
+  if (c) store.updateCondition(c.id, { field: '_tag', tagId: null, tagId2: null, operator: 'equals', value: '', scope: null })
+}
 
 function remove(id) { store.removeCondition(id) }
 </script>
@@ -302,7 +323,7 @@ function remove(id) { store.removeCondition(id) }
       <FeishenGroup v-else-if="cond.groupType==='feishen'" :group="cond" />
 
       <!-- 爻属性条件 -->
-      <template v-else-if="!cond.relation && !isShensha(cond.field) && !isCount(cond.field)">
+      <template v-else-if="!cond.relation && !isShensha(cond.field) && !isCount(cond.field) && !isKeyword(cond.field) && !isTag(cond.field)">
         <select v-if="cond.scope !== null && cond.field && cond.field !== 'yao_position' && !GUA_FIELDS.find(f=>f.v===cond.field) && !TIME_FIELDS.find(f=>f.v===cond.field)" v-model="cond.scope" @change="()=>{}" class="cb-sel">
           <option v-for="s in SCOPE_OPTIONS" :key="s.v" :value="s.v">{{ s.label }}</option>
         </select>
@@ -387,6 +408,25 @@ function remove(id) { store.removeCondition(id) }
           <option v-for="op in COUNT_OPS" :key="op" :value="op">{{ OP_DISPLAY[op] || op }}</option>
         </select>
         <input v-model="cond.value" class="cb-input" placeholder="0" style="width:45px" />
+      </template>
+
+      <!-- 文本搜索 -->
+      <template v-else-if="isKeyword(cond.field)">
+        <span class="cb-yu">占问事由 包含</span>
+        <input v-model="cond.value" class="cb-input" placeholder="输入关键词..." style="width:180px" />
+      </template>
+
+      <!-- 标签筛选 -->
+      <template v-else-if="isTag(cond.field)">
+        <span class="cb-yu">标签</span>
+        <select v-model="cond.tagId" class="cb-sel" @change="cond.tagId2=null">
+          <option :value="null">一级：全部</option>
+          <option v-for="t in appStore.tagTree" :key="t.id" :value="t.id">{{ t.name }}</option>
+        </select>
+        <select v-if="cond.tagId" v-model="cond.tagId2" class="cb-sel">
+          <option :value="null">二级：全部</option>
+          <option v-for="t in level2Options" :key="t.id" :value="t.id">{{ t.name }}</option>
+        </select>
       </template>
 
       <!-- 关系条件 -->
@@ -654,6 +694,8 @@ function remove(id) { store.removeCondition(id) }
       <button @click="addRelationCondition" class="cb-btn">+ 关系</button>
       <button @click="addShenshaCondition" class="cb-btn">+ 神煞</button>
       <button @click="addCountCondition" class="cb-btn">+ 数目</button>
+      <button @click="addKeywordCondition" class="cb-btn">+ 文本搜索</button>
+      <button @click="addTagCondition" class="cb-btn">+ 标签</button>
       <span class="cb-sep">|</span>
       <button @click="store.addConditionGroup('same_yao')" class="cb-btn cg-btn">+ 同一爻</button>
       <button @click="store.addConditionGroup('same_position')" class="cb-btn cg-btn">+ 同爻位</button>
