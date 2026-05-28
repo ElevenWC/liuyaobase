@@ -59,7 +59,9 @@ async function batchAddTag(tagId) {
   tagSearch.value = ''
   // 清除选择
   if (resultListRef.value) resultListRef.value.clearSelection()
-  if (ok > 0) alert(`已为 ${ok}/${ids.length} 个卦例添加标签`)
+  if (ok === ids.length) alert(`已为全部 ${ok} 个卦例添加标签`)
+  else if (ok > 0) alert(`已为 ${ok}/${ids.length} 个卦例添加标签（${ids.length - ok} 个失败）`)
+  else alert('打标签失败，请检查标签是否已存在')
 }
 
 function onFieldSelect({ cat, field, type, label }) {
