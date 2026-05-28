@@ -15,6 +15,7 @@ const resultListRef = ref(null)
 const tagTree = ref([])
 const showTagPicker = ref(false)
 const batchTagging = ref(false)
+const tagSearch = ref('')
 
 onMounted(async () => {
   // 已有条件但无逻辑链时自动重建
@@ -55,6 +56,7 @@ async function batchAddTag(tagId) {
   }
   batchTagging.value = false
   showTagPicker.value = false
+  tagSearch.value = ''
   // 清除选择
   if (resultListRef.value) resultListRef.value.selected = []
   if (ok > 0) alert(`已为 ${ok}/${ids.length} 个卦例添加标签`)
@@ -114,7 +116,8 @@ function onPageChange(page) {
             {{ batchTagging ? '打标中...' : `批量打标签（已选 ${selectedCount()} 条）` }}
           </button>
           <div v-if="showTagPicker" class="tag-picker">
-            <span v-for="t in flatTags(tagTree)" :key="t.id"
+            <input v-model="tagSearch" class="cb-input" placeholder="搜索标签..." style="width:100%;box-sizing:border-box;margin-bottom:4px" @click.stop />
+            <span v-for="t in flatTags(tagTree).filter(x=>!tagSearch||x.name.includes(tagSearch))" :key="t.id"
               class="tag-opt" @click="batchAddTag(t.id)">{{ t.indent }}{{ t.name }}</span>
           </div>
         </div>

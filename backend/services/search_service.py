@@ -368,6 +368,26 @@ def _build_condition_clause(cond: Condition, params: dict, idx: int, cond_clause
     val = _norm_bool(cond.value)
 
     clauses = []
+    # scope="" = "全部来源"：对5个来源生成 OR 子句
+    all_sources = False
+    if not cond.scope and cond.operator == 'equals':
+        col_to_generic = { 'ben_liuqin':'liuqin','zhi_liuqin':'liuqin','yimao_liuqin':'liuqin','zengshan_liuqin':'liuqin', 'ben_dizhi':'dizhi','zhi_dizhi':'dizhi','yimao_dizhi':'dizhi','zengshan_dizhi':'dizhi', 'ben_shi_ying':'shi_ying','zhi_shi_ying':'shi_ying', 'ben_yao_type':'yao_type','zhi_yao_type':'yao_type', 'ben_tiangan':'tiangan','zhi_tiangan':'tiangan', 'is_dong':'is_dong','is_an_dong':'is_an_dong', 'liushen':'liushen','yao_position':'yao_position','zengshan_exists':'zengshan_exists', }
+        gkey = col_to_generic.get(cond.field, '')
+        if gkey and gkey in GENERIC_YAO_FIELDS:
+            src_clauses = []
+            for src in ['本卦','变爻','之卦(静爻)','易冒伏神','增删伏神']:
+                sql_col = GENERIC_YAO_FIELDS[gkey].get(src)
+                if sql_col is None: continue
+                src_scope = SOURCE_TO_SCOPE.get(src, '')
+                src_filter = _scope_filter(src_scope, {})
+                pk = f"v{idx}_{src}"
+                params[pk] = val
+                src_sql = f"{sql_col} = :{pk}"
+                if src_filter: src_sql = f"({src_filter} AND {src_sql})"
+                src_clauses.append(f"({src_sql})")
+            if src_clauses:
+                return f"({' OR '.join(src_clauses)})"
+
     # scope 过滤：按来源范围限定
     if cond.scope:
         scope_clause = _scope_filter(cond.scope, field_info)
