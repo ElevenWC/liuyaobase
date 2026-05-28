@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useSearchStore } from '../stores/useSearchStore.js'
+import { useAppStore } from '../stores/index.js'
 import { fetchTagTree, addGualiTag, fetchSearchResults } from '../api/index.js'
 import FieldLibrary from '../components/Search/FieldLibrary.vue'
 import ConditionBuilder from '../components/Search/ConditionBuilder.vue'
@@ -8,6 +9,7 @@ import RecommendedSchemes from '../components/Search/RecommendedSchemes.vue'
 import ResultList from '../components/Search/ResultList.vue'
 
 const store = useSearchStore()
+const appStore = useAppStore()
 const fieldLibCollapsed = ref(false)
 const resultListRef = ref(null)
 
@@ -22,7 +24,10 @@ onMounted(async () => {
   if (store.conditions.length && !store.logicChain.length) store.rebuildLogicChain()
   try {
     const res = await fetchTagTree()
-    if (res.data.code === 200) tagTree.value = res.data.data || []
+    if (res.data.code === 200) {
+      tagTree.value = res.data.data || []
+      appStore.tagTree = res.data.data || []
+    }
   } catch { /* 标签加载失败不影响检索功能 */ }
 })
 
