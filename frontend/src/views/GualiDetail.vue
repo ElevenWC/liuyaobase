@@ -6,6 +6,14 @@ import GuaCiFloat from '../components/shared/GuaCiFloat.vue'
 
 const store = useAppStore()
 
+const props = defineProps({
+  gualiId: { type: Number, default: null },
+  embedded: { type: Boolean, default: false },
+})
+
+const effectiveId = computed(() => props.gualiId || store.currentGualiId)
+const emit = defineEmits(['deleted'])
+
 const detail = ref(null)
 const loading = ref(false)
 const error = ref('')
@@ -130,13 +138,13 @@ const isJingGua = computed(() => detail.value?.yao_bian_code === '000000')
 const hasZengshan = computed(() => detail.value?.yaos?.some(y => y.zengshan_exists))
 const showZhiColumns = computed(() => zhiMode.value !== 'hide' && !isJingGua.value)
 
-watch(() => store.currentGualiId, loadDetail, { immediate: true })
+watch(effectiveId, (id) => { if (id) loadDetail() }, { immediate: true })
 
 async function loadDetail() {
-  if (!store.currentGualiId) return
+  if (!effectiveId.value) return
   loading.value = true; error.value = ''
   try {
-    const res = await fetchGualiDetail(store.currentGualiId)
+    const res = await fetchGualiDetail(effectiveId.value)
     if (res.data.code === 200) detail.value = res.data.data
     else error.value = res.data.message || '加载失败'
     if (!store.tagTree.length) await loadTagTree()
@@ -186,7 +194,7 @@ async function saveZhanduan() {
 }
 async function onDelete() {
   if (!confirm('确定删除此卦例？')) return
-  try { await deleteGuali(detail.value.id); detail.value = null; store.currentGualiId = null }
+  try { await deleteGuali(detail.value.id); detail.value = null; store.currentGualiId = null; emit('deleted') }
   catch (e) { error.value = '删除失败：' + (e.response?.data?.message || '未知错误') }
 }
 function openGuaCi(guaCode, guaName) {
@@ -205,7 +213,7 @@ function fanYinText() {
 </script>
 
 <template>
-  <div class="guali-detail" v-if="store.currentGualiId">
+  <div class="guali-detail" :class="{ embedded: props.embedded }" v-if="effectiveId">
     <div v-if="loading">加载中...</div>
     <div v-else-if="error" class="error-msg">{{ error }}</div>
     <template v-else-if="detail">
@@ -388,6 +396,7 @@ function fanYinText() {
 
 <style scoped>
 .guali-detail { padding: var(--space-6); color: var(--color-text-primary); background: var(--color-bg-primary); min-height: 100%; }
+.guali-detail.embedded { padding: var(--space-3); min-height: auto; overflow-y: auto; background: transparent; }
 .error-msg { color: var(--color-danger); padding: var(--space-5); }
 .no-selection { text-align: center; color: var(--color-text-muted); padding: var(--space-10); }
 

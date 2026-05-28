@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import GuaCiFloat from '../shared/GuaCiFloat.vue'
 
 const props = defineProps({
@@ -9,11 +8,11 @@ const props = defineProps({
   page: { type: Number, default: 1 },
   pageSize: { type: Number, default: 50 },
   loading: { type: Boolean, default: false },
+  selectedId: { type: Number, default: null },
 })
 
-const emit = defineEmits(['page-change'])
+const emit = defineEmits(['page-change', 'select-guali'])
 
-const router = useRouter()
 const selected = ref([])
 const activeFloats = ref([])
 
@@ -22,7 +21,7 @@ function openGuaCi(code, name) {
 }
 function closeFloat(id) { activeFloats.value = activeFloats.value.filter(f => f.id !== id) }
 
-function gotoDetail(id) { router.push(`/guali?id=${id}`) }
+function onRowClick(id) { emit('select-guali', id) }
 
 function toggleSelect(id) {
   const idx = selected.value.indexOf(id)
@@ -57,7 +56,7 @@ defineExpose({ selected, clearSelection })
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(r, i) in results" :key="r.id" @click="gotoDetail(r.id)" class="rl-row">
+          <tr v-for="(r, i) in results" :key="r.id" @click="onRowClick(r.id)" class="rl-row" :class="{ active: r.id === props.selectedId }">
             <td class="col-cb" @click.stop><input type="checkbox" :checked="selected.includes(r.id)" @change="toggleSelect(r.id)" /></td>
             <td class="col-num">{{ (page - 1) * pageSize + i + 1 }}</td>
             <td class="col-time">{{ r.zhanwen_time?.slice(0, 10) }}</td>
@@ -95,6 +94,7 @@ defineExpose({ selected, clearSelection })
 .rl-table td { padding: 4px 6px; color: var(--color-text-primary); border-bottom: 1px solid var(--color-border-subtle); }
 .rl-row { cursor: pointer; transition: background var(--transition-fast); }
 .rl-row:hover { background: var(--color-bg-tertiary); }
+.rl-row.active { background: var(--color-accent-soft); }
 
 .col-cb { width: 28px; }
 .col-num { width: 32px; }
