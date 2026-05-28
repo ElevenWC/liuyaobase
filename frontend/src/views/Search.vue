@@ -118,7 +118,7 @@ function onPageChange(page) {
             {{ batchTagging ? '打标中...' : `批量打标签（已选 ${selectedCount()} 条）` }}
           </button>
           <div v-if="showTagPicker" class="tag-picker">
-            <input v-model="tagSearch" class="cb-input" placeholder="搜索标签..." style="width:100%;box-sizing:border-box;margin-bottom:4px" @click.stop />
+            <input v-model="tagSearch" placeholder="搜索标签..." style="width:100%;box-sizing:border-box;margin-bottom:4px;padding:2px 6px;background:var(--color-bg-input);color:var(--color-text-primary);border:1px solid var(--color-border-primary);border-radius:var(--radius-sm);font-size:var(--font-size-sm)" @click.stop />
             <span v-for="t in flatTags(tagTree).filter(x=>!tagSearch||x.name.includes(tagSearch))" :key="t.id"
               class="tag-opt" @click="batchAddTag(t.id)">{{ t.indent }}{{ t.name }}</span>
           </div>
