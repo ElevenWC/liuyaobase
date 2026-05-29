@@ -40,9 +40,10 @@ async def import_json(file: UploadFile, session: Session = Depends(get_session))
         tmp.write(content.decode("utf-8"))
         tmp.close()
 
-        result = import_from_json(tmp.name, session)
+        result = import_from_json(tmp.name, session, original_filename=file.filename)
         return _success({"imported": result["imported"],
-                         "skipped": result["skipped"]})
+                         "duplicates": result.get("duplicates", 0),
+                         "message": result.get("message", "")})
     except Exception as e:
         return _error(str(e))
     finally:

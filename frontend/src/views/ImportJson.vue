@@ -63,7 +63,8 @@ function triggerBrowse() { fileInput.value?.click() }
     <p v-if="error" class="error">{{ error }}</p>
     <div v-if="result" class="result">
       <p>导入：{{ result.imported }} 条</p>
-      <p>跳过：{{ result.skipped }} 条</p>
+      <p v-if="result.duplicates">跳过重复：{{ result.duplicates }} 条</p>
+      <p v-if="result.message" class="result-msg">{{ result.message }}</p>
     </div>
   </div>
 </template>
