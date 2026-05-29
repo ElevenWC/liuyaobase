@@ -281,7 +281,7 @@ function yaoType(code, pos) { return code[5 - pos] === '1' ? '阳' : '阴' }
           v-if="graphData.nodes.length"
           :nodes="graphData.nodes" :edges="graphData.edges"
           :canvas-width="540" :canvas-height="480"
-          :show-controls="false" :show-legend="true"
+          :show-controls="true" :show-legend="true"
           :initial-scale="1.2"
           @select-node="onGraphSelect" @dblclick-node="onGraphDblClick"
         />
