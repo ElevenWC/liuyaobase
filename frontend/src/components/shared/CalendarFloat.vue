@@ -104,7 +104,10 @@ const grid = computed(() => {
       <button class="cal-nav" @click.stop="prevMonth">◀</button>
       <span class="cal-title">{{ calendarYear }}年{{ calendarMonth }}月</span>
       <button class="cal-nav" @click.stop="nextMonth">▶</button>
-      <button class="cal-back" @click.stop="backToZhanwen" title="回到占问日期">⟳</button>
+      <span class="cal-back-wrap">
+        <button class="cal-back" @click.stop="backToZhanwen">⟳</button>
+        <span class="cal-tip">回到占问日期</span>
+      </span>
       <button class="cal-close" @click="$emit('close')">&times;</button>
     </div>
 
@@ -125,11 +128,11 @@ const grid = computed(() => {
               'cal-sel': d && d.day === selDay && calendarYear === selYear && calendarMonth === selMonth,
               'cal-jieqi': d && d.jieqi,
             }"
-            :title="d?.jieqi || ''"
             @click="d && selectDate(calendarYear, calendarMonth, d.day)">
             <template v-if="d">
               <span class="cal-dn">{{ d.day }}</span>
               <span class="cal-dgz">{{ d.day_ganzhi }}</span>
+              <span v-if="d.jieqi" class="cal-tip">{{ d.jieqi }}</span>
             </template>
           </div>
         </template>
@@ -170,6 +173,7 @@ const grid = computed(() => {
   text-align: center; padding: 2px 0; border-radius: var(--radius-sm);
   min-height: 38px; display: flex; flex-direction: column; align-items: center; justify-content: center;
   font-size: var(--font-size-xs); border: 2px solid transparent;
+  position: relative;
 }
 .cal-cell.cal-empty { background: none; }
 .cal-cell.cal-sel { background: var(--color-accent); }
@@ -182,5 +186,19 @@ const grid = computed(() => {
 .cal-dgz { font-size: 10px; color: var(--color-text-muted); line-height: 1.2; }
 .cal-back { width: 24px; height: 24px; border: none; background: none; color: var(--color-text-secondary); font-size: 16px; cursor: pointer; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; }
 .cal-back:hover { background: var(--color-accent-soft); color: var(--color-accent-light); }
+.cal-back-wrap { position: relative; display: inline-flex; }
+.cal-back-wrap:hover .cal-tip { display: block; }
+
+/* 悬浮提示——与btn-edit-tip风格一致 */
+.cal-tip {
+  display: none; position: absolute; top: 100%; right: 0;
+  padding: 4px 8px; background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary); font-size: var(--font-size-xs);
+  border-radius: var(--radius-sm); border: 1px solid var(--color-border-primary);
+  white-space: nowrap; z-index: 200; pointer-events: none;
+  font-weight: normal;
+}
+.cal-cell:hover .cal-tip { display: block; }
+.cal-cell .cal-tip { right: auto; left: 50%; transform: translateX(-50%); top: 100%; }
 .cal-loading { text-align: center; padding: var(--space-5); color: var(--color-text-muted); font-size: var(--font-size-sm); }
 </style>
