@@ -8,6 +8,18 @@ import NetworkGraph from '../components/shared/NetworkGraph.vue'
 const route = useRoute()
 const router = useRouter()
 
+// ── 八卦 ──
+const TRIGRAMS = [
+  { code: '111', name: '乾', symbol: '天' },
+  { code: '110', name: '兑', symbol: '泽' },
+  { code: '101', name: '离', symbol: '火' },
+  { code: '100', name: '震', symbol: '雷' },
+  { code: '011', name: '巽', symbol: '风' },
+  { code: '010', name: '坎', symbol: '水' },
+  { code: '001', name: '艮', symbol: '山' },
+  { code: '000', name: '坤', symbol: '地' },
+]
+
 // ── 64 卦数据 ──
 const GUA_NAMES = [
   '乾为天','坤为地','水雷屯','山水蒙','水天需','天水讼','地水师','水地比',
@@ -19,16 +31,23 @@ const GUA_NAMES = [
   '泽火革','火风鼎','震为雷','艮为山','风山渐','雷泽归妹','雷火丰','火山旅',
   '巽为风','兑为泽','风水涣','水泽节','风泽中孚','雷山小过','水火既济','火水未济',
 ]
+// outer+inner 格式的正确卦码
 const GUA_CODES = [
-  '111111','000000','010001','001010','010111','111010','000010','010000',
-  '011111','110111','000111','111000','101111','111101','000001','001000',
-  '011001','100110','000011','011000','100101','101001','001000','000100',
-  '100111','001111','100001','011110','010010','101101','011100','001110',
-  '001111','111100','101000','000101','101011','110101','001010','010100',
-  '001110','011001','111110','011111','000110','011000','010110','001011',
-  '011101','101110','100100','001001','100011','011010','101100','001101',
-  '011011','110110','110010','010011','110011','001100','010101','101010',
+  '111111','000000','010100','001010','010111','111010','000010','010000',
+  '011111','111110','000111','111000','111101','101111','000001','100000',
+  '110100','001011','000110','011000','101100','001101','001000','000100',
+  '111100','001111','001100','110011','010010','101101','110001','100011',
+  '111001','100111','101000','000101','011101','101110','010001','100010',
+  '001110','011100','110111','111011','110000','000011','110010','010011',
+  '110101','101011','100100','001001','011001','100110','100101','101001',
+  '011011','110110','011010','010110','011110','100001','010101','101010',
 ]
+
+function findGua(innerCode, outerCode) {
+  const full = outerCode + innerCode
+  const idx = GUA_CODES.indexOf(full)
+  return idx >= 0 ? GUA_NAMES[idx] : null
+}
 
 function nameToCode(name) { const i = GUA_NAMES.indexOf(name); return i >= 0 ? GUA_CODES[i] : '' }
 function codeToName(code) { const i = GUA_CODES.indexOf(code); return i >= 0 ? GUA_NAMES[i] : code }
@@ -43,7 +62,20 @@ const rows = ref([makeRow(), makeRow(), makeRow(), makeRow()])
 
 // 当前编辑的行索引（用于自定义选择器）
 const editingRowIndex = ref(0)
-const customGuaName = ref('')
+const customOuter = ref('')
+const customInner = ref('')
+const customPreview = computed(() => {
+  if (customOuter.value && customInner.value) return findGua(customInner.value, customOuter.value) || ''
+  return ''
+})
+
+function setCustomGua() {
+  const name = customPreview.value
+  if (!name) return
+  setRowCustom(editingRowIndex.value, name)
+  customOuter.value = ''
+  customInner.value = ''
+}
 
 // GuaCiFloat 管理
 const activeFloats = ref([])
@@ -190,10 +222,14 @@ function yaoType(code, pos) { return code[5 - pos] === '1' ? '阳' : '阴' }
       </div>
       <div class="input-group">
         <label>自定义卦名</label>
-        <select v-model="customGuaName" @change="setRowCustom(editingRowIndex, customGuaName)">
-          <option value="">-- 选择卦 --</option>
-          <option v-for="name in GUA_NAMES" :key="name" :value="name">{{ name }}</option>
+        <select v-model="customOuter" class="tri-select"><option value="">外卦</option>
+          <option v-for="g in TRIGRAMS" :key="'o'+g.code" :value="g.code">{{ g.symbol }}{{ g.name }}</option>
         </select>
+        <select v-model="customInner" class="tri-select"><option value="">内卦</option>
+          <option v-for="g in TRIGRAMS" :key="'i'+g.code" :value="g.code">{{ g.symbol }}{{ g.name }}</option>
+        </select>
+        <span v-if="customPreview" class="tri-preview">→ {{ customPreview }}</span>
+        <button v-if="customPreview" @click="setCustomGua" class="tri-fill-btn">填入</button>
         <label style="margin-left:8px">填入行</label>
         <select v-model.number="editingRowIndex">
           <option :value="0">第1行（本卦）</option>
@@ -281,7 +317,7 @@ function yaoType(code, pos) { return code[5 - pos] === '1' ? '阳' : '阴' }
           v-if="graphData.nodes.length"
           :nodes="graphData.nodes" :edges="graphData.edges"
           :canvas-width="540" :canvas-height="480"
-          :show-controls="false" :show-legend="true"
+          :show-controls="true" :show-legend="true"
           :initial-scale="1.2"
           @select-node="onGraphSelect" @dblclick-node="onGraphDblClick"
         />
@@ -310,6 +346,9 @@ function yaoType(code, pos) { return code[5 - pos] === '1' ? '阳' : '阴' }
 .input-group select { padding: 3px 6px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); font-size: var(--font-size-sm); }
 .input-group button { padding: 3px 14px; background: var(--color-accent); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-sm); }
 .input-group button:hover { background: var(--color-accent-dark); }
+.tri-select { width: 64px; }
+.tri-preview { font-size: var(--font-size-sm); color: var(--color-accent-light); font-weight: bold; }
+.tri-fill-btn { padding: 2px 10px !important; font-size: var(--font-size-xs) !important; }
 
 /* 主区域 */
 .main-area { display: flex; gap: var(--space-3); }

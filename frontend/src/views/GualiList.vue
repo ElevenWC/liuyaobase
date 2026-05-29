@@ -14,6 +14,7 @@ const selectedLevel1 = ref(null)
 const selectedLevel2 = ref(null)
 const loading = ref(false)
 const selectedIds = ref(new Set())
+const fileInput = ref(null)
 
 let debounceTimer = null
 
@@ -49,6 +50,61 @@ async function loadData() {
 function onSearch() {
   clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => { page.value = 1; loadData() }, 300)
+}
+
+async function onFileLoad(e) {
+  const f = e.target.files?.[0]
+  if (!f) return
+  let ids = []
+  try {
+    const text = await f.text()
+    if (f.name.endsWith('.json')) {
+      const arr = JSON.parse(text)
+      ids = (Array.isArray(arr) ? arr : []).map(Number).filter(n => !isNaN(n) && n > 0)
+    } else {
+      ids = text.split(/[\r\n]+/)
+        .map(line => line.split(/[,;\t]/)[0].trim())
+        .filter(s => /^\d+$/.test(s))
+        .map(Number)
+    }
+  } catch {
+    alert('文件格式不符，请检查文件内容')
+    e.target.value = ''
+    return
+  }
+
+  if (!ids.length) {
+    alert('文件中未找到有效的卦例编号')
+    e.target.value = ''
+    return
+  }
+
+  ids = [...new Set(ids)]
+  loading.value = true
+  const found = []
+  const missing = []
+  for (const id of ids) {
+    try {
+      const res = await fetchGualiList({ page: 1, page_size: 1, keyword: String(id) })
+      const list = res.data.data?.items || []
+      if (list.length && list[0].id === id) {
+        found.push(list[0])
+      } else {
+        missing.push(id)
+      }
+    } catch {
+      missing.push(id)
+    }
+  }
+  loading.value = false
+  items.value = found
+  total.value = found.length
+  page.value = 1
+
+  let msg = `成功匹配 ${found.length} 条`
+  if (missing.length) msg += `，未找到 ${missing.length} 条（编号：${missing.join(', ')}）`
+  alert(msg)
+  e.target.value = ''
 }
 
 const level2Options = computed(() => {
@@ -106,7 +162,9 @@ function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of n
 <template>
   <div class="guali-list">
     <div class="list-toolbar">
-      <input v-model="keyword" class="search-input" placeholder="搜索占问事由..." @input="onSearch" />
+      <input v-model="keyword" class="search-input" placeholder="搜索编号/日期/占问事由..." @input="onSearch" />
+      <input ref="fileInput" type="file" accept=".csv,.json" @change="onFileLoad" hidden />
+      <button @click="fileInput.click()" class="batch-lookup-btn" :disabled="loading">批量查找</button>
     </div>
 
     <div class="tag-filters" v-if="store.tagTree.length">
@@ -126,41 +184,52 @@ function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of n
       <button @click="batchDelete" class="btn-batch-del">批量删除</button>
     </div>
 
-    <div class="cards" v-if="!loading">
-      <div v-for="item in items" :key="item.id"
-        class="card" :class="{ selected: store.currentGualiId === item.id }"
-        @click="selectGuali(item)">
-        <div class="card-top">
-          <input type="checkbox" :checked="selectedIds.has(item.id)" @click="toggleSelect(item.id, $event)" class="card-check" />
-          <span class="card-id">ID: {{ item.id }}</span>
-          <span class="card-time">{{ formatTime(item.zhanwen_time) }}</span>
+    <div class="scroll-area">
+      <div class="cards" v-if="!loading">
+        <div v-for="item in items" :key="item.id"
+          class="card" :class="{ selected: store.currentGualiId === item.id }"
+          @click="selectGuali(item)">
+          <div class="card-top">
+            <input type="checkbox" :checked="selectedIds.has(item.id)" @click="toggleSelect(item.id, $event)" class="card-check" />
+            <span class="card-id">ID: {{ item.id }}</span>
+            <span class="card-time">{{ formatTime(item.zhanwen_time) }}</span>
+          </div>
+          <div class="card-shiyou">{{ item.zhanwen_shiyou }}</div>
+          <div class="card-tags" v-if="item.tags?.length">
+            <span v-for="t in item.tags" :key="t" class="tag-badge" :style="{ background: cardTagColor(t) }">{{ rootTagName(t) }}</span>
+          </div>
         </div>
-        <div class="card-shiyou">{{ item.zhanwen_shiyou }}</div>
-        <div class="card-tags" v-if="item.tags?.length">
-          <span v-for="t in item.tags" :key="t" class="tag-badge" :style="{ background: cardTagColor(t) }">{{ rootTagName(t) }}</span>
-        </div>
+        <p v-if="!items.length" class="empty">暂无卦例</p>
       </div>
-      <p v-if="!items.length" class="empty">暂无卦例</p>
-    </div>
-    <div v-else class="loading">加载中...</div>
+      <div v-else class="loading">加载中...</div>
 
-    <div class="pagination" v-if="totalPages() > 1">
-      <button :disabled="page <= 1" @click="onPageChange(page - 1)">上一页</button>
-      <span>{{ page }} / {{ totalPages() }}</span>
-      <button :disabled="page >= totalPages()" @click="onPageChange(page + 1)">下一页</button>
+      <div class="pagination" v-if="totalPages() > 1">
+        <button :disabled="page <= 1" @click="onPageChange(page - 1)">上一页</button>
+        <span>{{ page }} / {{ totalPages() }}</span>
+        <button :disabled="page >= totalPages()" @click="onPageChange(page + 1)">下一页</button>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.guali-list { padding: var(--space-3); background: transparent; }
-.list-toolbar { margin-bottom: var(--space-3); }
+.guali-list { padding: var(--space-3); background: transparent; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.scroll-area { flex: 1; min-height: 0; overflow-y: auto; }
+.list-toolbar { display: flex; gap: var(--space-2); margin-bottom: var(--space-3); }
 .search-input {
-  width: 100%; padding: var(--space-2); border: 1px solid var(--color-border-primary);
+  flex: 1; min-width: 0; padding: var(--space-2); border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-md); background: var(--color-bg-input);
   color: var(--color-text-primary); font-size: var(--font-size-sm);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
+.batch-lookup-btn {
+  padding: 0 10px; border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md); background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary); font-size: var(--font-size-xs);
+  cursor: pointer; white-space: nowrap; transition: all var(--transition-fast);
+}
+.batch-lookup-btn:hover { border-color: var(--color-accent); color: var(--color-accent-light); }
+.batch-lookup-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .search-input::placeholder { color: var(--color-text-muted); }
 .search-input:focus { border-color: var(--color-accent); box-shadow: var(--shadow-glow); }
 

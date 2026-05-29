@@ -11,10 +11,20 @@ const props = defineProps({
   selectedId: { type: Number, default: null },
 })
 
-const emit = defineEmits(['page-change', 'select-guali'])
+const emit = defineEmits(['page-change', 'select-guali', 'export-data'])
 
 const selected = ref([])
 const activeFloats = ref([])
+const exportName = ref(defaultExportName())
+
+function defaultExportName() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}_export`
+}
+
+function doExport(fmt) {
+  emit('export-data', { format: fmt, filename: exportName.value || defaultExportName() })
+}
 
 function openGuaCi(code, name) {
   activeFloats.value.push({ id: Date.now() + Math.random(), guaCode: code, guaName: name || code })
@@ -42,7 +52,14 @@ defineExpose({ selected, clearSelection })
     <div v-if="loading" class="rl-loading">检索中...</div>
 
     <template v-else-if="results.length">
-      <div class="rl-info">共 {{ total }} 条，第 {{ page }} / {{ totalPages }} 页</div>
+      <div class="rl-info-bar">
+        <span class="rl-info">共 {{ total }} 条，第 {{ page }} / {{ totalPages }} 页</span>
+        <div class="rl-export">
+          <input v-model="exportName" class="rl-export-name" placeholder="文件名" />
+          <button class="rl-export-btn" @click="doExport('csv')">导出CSV</button>
+          <button class="rl-export-btn" @click="doExport('json')">导出JSON</button>
+        </div>
+      </div>
 
       <table class="rl-table">
         <thead>
@@ -58,14 +75,14 @@ defineExpose({ selected, clearSelection })
         <tbody>
           <tr v-for="(r, i) in results" :key="r.id" @click="onRowClick(r.id)" class="rl-row" :class="{ active: r.id === props.selectedId }">
             <td class="col-cb" @click.stop><input type="checkbox" :checked="selected.includes(r.id)" @change="toggleSelect(r.id)" /></td>
-            <td class="col-num">{{ (page - 1) * pageSize + i + 1 }}</td>
+            <td class="col-num">{{ r.id }}</td>
             <td class="col-time">{{ r.zhanwen_time?.slice(0, 10) }}</td>
             <td class="col-shiyou">{{ r.zhanwen_shiyou }}</td>
             <td class="col-ben">
-              <span class="rl-gua-link" @click.stop="openGuaCi(r.ben_code, r.ben_name)">{{ r.ben_code }}</span>
+              <span class="rl-gua-link" @click.stop="openGuaCi(r.ben_code, r.ben_name)">{{ r.ben_name || r.ben_code }}</span>
             </td>
             <td class="col-zhi">
-              <span class="rl-gua-link" @click.stop="openGuaCi(r.zhi_code, r.zhi_name)">{{ r.zhi_code }}</span>
+              <span v-if="r.zhi_name" class="rl-gua-link" @click.stop="openGuaCi(r.zhi_code, r.zhi_name)">{{ r.zhi_name }}</span>
             </td>
           </tr>
         </tbody>
@@ -87,7 +104,13 @@ defineExpose({ selected, clearSelection })
 <style scoped>
 .result-list { background: var(--color-bg-secondary); border-radius: var(--radius-lg); padding: var(--space-3); box-shadow: var(--shadow-sm); }
 .rl-loading, .rl-empty { text-align: center; padding: var(--space-5); color: var(--color-text-muted); font-size: var(--font-size-sm); }
-.rl-info { font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: var(--space-2); }
+.rl-info-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); }
+.rl-info { font-size: var(--font-size-xs); color: var(--color-text-muted); }
+.rl-export { display: flex; align-items: center; gap: var(--space-2); }
+.rl-export-name { width: 140px; padding: 2px 6px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); font-size: var(--font-size-xs); }
+.rl-export-name:focus { outline: none; border-color: var(--color-accent); }
+.rl-export-btn { padding: 2px 8px; background: var(--color-bg-tertiary); color: var(--color-text-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); font-size: var(--font-size-xs); cursor: pointer; transition: all var(--transition-fast); }
+.rl-export-btn:hover { border-color: var(--color-accent); color: var(--color-accent-light); }
 
 .rl-table { width: 100%; border-collapse: collapse; font-size: var(--font-size-sm); }
 .rl-table th { padding: 4px 6px; text-align: left; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-border-primary); font-weight: 500; }
@@ -99,7 +122,7 @@ defineExpose({ selected, clearSelection })
 .col-cb { width: 28px; }
 .col-num { width: 32px; }
 .col-time { width: 90px; white-space: nowrap; }
-.col-ben, .col-zhi { width: 60px; }
+.col-ben, .col-zhi { width: 80px; }
 .rl-gua-link { color: var(--color-accent-light); cursor: pointer; }
 .rl-gua-link:hover { text-decoration: underline; }
 

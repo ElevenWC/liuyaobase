@@ -1,6 +1,6 @@
 # AI 接手提示词 — liuyaobase
 
-> 新对话开始时粘贴以下内容给 AI，快速接手项目。2026-05-28 更新（v0.4 全部完成，v0.6 即将开始）。
+> 新对话开始时粘贴以下内容给 AI，快速接手项目。2026-05-29 更新（v0.4 全部完成 + 批量优化合并，v0.6 待开始）。
 
 ---
 
@@ -53,6 +53,21 @@
 | #122 | 标签筛选 + 占问事由文本搜索 + 批量打标签 |
 | #119 | 检索页右栏卦例查看——复用 GualiDetail.vue，三栏布局 |
 
+### PR #128 批量优化（2026-05-29）
+
+| 功能 | 说明 |
+|------|------|
+| 导入去重 | 串行级联四层判定（事由→时间→本卦→之卦），`zhanwen_shiyou(100)` 前缀索引 |
+| 文件去重 | 同名文件二次导入整批跳过，`system_config.imported_files` 记录 |
+| 干支日历 | CalendarFloat.vue 浮窗，点击柱行触发，逐日干支+节气标注，可拖动 |
+| 批量查找 | C1 搜索栏 CSV/JSON 按 ID 批量检索 |
+| 导出 | C3 结果 CSV/JSON 导出，文件名输入+按钮在分页信息行右侧 |
+| C1 侧栏折叠 | 复用 C3 fl-toggle，16px 窄条+◂/▸ |
+| 搜索增强 | 编号/日期(YYMMDD/MMDD)/文本混合搜索，前导零不查 ID |
+| 八宫页 | 卦名二级选择+预览、网络图谱卦名常驻、GUA_CODES 错码修复 |
+| 手动导入修复 | 二级选择失效(GUA_CODES 错码)、重复不提示(HTTP 200 假成功) |
+| UI 修复 | 导航栏 z-index、之卦列静卦留空、关闭按钮下移、卦名显示等 10+ 项 |
+
 ### 已取消
 
 | Issue | 内容 |
@@ -62,7 +77,9 @@
 
 ---
 
-## 当前代码结构（frontend/src/components/Search/）
+## 当前代码结构
+
+### frontend/src/components/Search/
 
 ```
 Search/
@@ -75,6 +92,9 @@ Search/
 ├── RecommendedSchemes.vue     # 自定义方案管理（localStorage）
 shared/
 ├── zCounter.js                # 全局 z-index 计数器
+├── GuaCiFloat.vue             # 卦爻辞浮窗（可拖动，各模块共用）
+├── CalendarFloat.vue          # 干支日历浮窗（可拖动，点击柱行触发）
+├── NetworkGraph.vue           # 纯 SVG 力导向网络图谱
 stores/
 ├── useSearchStore.js          # C3 Pinia store——conditions/logicChain/results
 ├── index.js                   # C1 全局 store——tagTree
@@ -127,6 +147,18 @@ FastAPI 字面路径（如 `/batch`）必须定义在路径参数（如 `/{id}`�
 ### 条件组引用
 
 关系条件 `right_type='condition_group_ref'` 可引用条件组 ID。后端 `resolve_dz` 用独立表别名重建子查询。神煞也可引用条件组（`_build_shensha_clause` 支持 cond_clauses）。
+
+### 导入去重机制
+
+`import_service.py` 的 `is_duplicate()` 串行级联判定：`SELECT WHERE zhanwen_shiyou = :v`（前缀索引）→ Python 中过滤 time/ben_code/zhi_code。同名文件通过 `system_config.imported_files`（JSON 数组）记录，二次导入整批跳过。手动导入同样走四层判定，重复抛 `ValueError`。
+
+### GUA_CODES 错码
+
+项目中曾有三处 `GUA_CODES` 数组含错码（水雷屯 `010001`→正确 `010100`，及其他）。已修复的文件：`GualiInput.vue`（CODES 数组）、`BagongPage.vue`（GUA_CODES 数组）。核心公式：`hexagram_code = outer_trigram + inner_trigram`。`GualiDetail.vue` 不依赖此数组（通过 `CODE_TO_NAME` 字典映射）。未来新增文件如需 64 卦码表，务必以此公式验证。
+
+### 日历组件
+
+`CalendarFloat.vue` 复用 `GuaCiFloat` 的拖动+层叠架构，共用 `zCounter.js`。数据源为 `GET /jiegua/calendar?year=&month=`，后端 `time_converter.py` 逐日调用 `lunar-python` 计算。星期顺序：一二三四五六日（周一为首，`weekday=0`）。
 
 ---
 

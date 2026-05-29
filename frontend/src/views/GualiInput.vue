@@ -16,7 +16,7 @@ const TRIGRAMS = [
   { code: '000', name: '坤', symbol: '地' },
 ]
 
-const GUA_NAMES = [
+const NAMES = [
   '乾为天','坤为地','水雷屯','山水蒙','水天需','天水讼','地水师','水地比',
   '风天小畜','天泽履','地天泰','天地否','天火同人','火天大有','地山谦','雷地豫',
   '泽雷随','山风蛊','地泽临','风地观','火雷噬嗑','山火贲','山地剥','地雷复',
@@ -27,22 +27,23 @@ const GUA_NAMES = [
   '巽为风','兑为泽','风水涣','水泽节','风泽中孚','雷山小过','水火既济','火水未济',
 ]
 
-const GUA_CODES = [
-  '111111','000000','010001','001010','010111','111010','000010','010000',
-  '011111','110111','000111','111000','101111','111101','000001','001000',
-  '011001','100110','000011','011000','100101','101001','001000','000100',
-  '100111','001111','100001','011110','010010','101101','011100','001110',
-  '001111','111100','101000','000101','101011','110101','001010','010100',
-  '001110','011001','111110','011111','000110','011000','010110','001011',
-  '011101','101110','100100','001001','100011','011010','101100','001101',
-  '011011','110110','110010','010011','110011','001100','010101','101010',
-]
-
 function findGua(innerCode, outerCode) {
-  const full = innerCode + outerCode
-  const idx = GUA_CODES.indexOf(full)
-  return idx >= 0 ? GUA_NAMES[idx] : null
+  const full = outerCode + innerCode
+  const idx = CODES.indexOf(full)
+  return idx >= 0 ? NAMES[idx] : null
 }
+
+// 正确的64卦代码（outer+inner格式），与NAMES一一对应
+const CODES = [
+  '111111','000000','010100','001010','010111','111010','000010','010000',
+  '011111','111110','000111','111000','111101','101111','000001','100000',
+  '110100','001011','000110','011000','101100','001101','001000','000100',
+  '111100','001111','001100','110011','010010','101101','110001','100011',
+  '111001','100111','101000','000101','011101','101110','010001','100010',
+  '001110','011100','110111','111011','110000','000011','110010','010011',
+  '110101','101011','100100','001001','011001','100110','100101','101001',
+  '011011','110110','011010','010110','011110','100001','010101','101010',
+]
 
 const form = ref({
   zhanwen_time: new Date().toISOString().slice(0, 10),
@@ -85,15 +86,19 @@ async function submit() {
 
   const benName = benComputed.value
   if (!t || !form.value.zhanwen_shiyou || !benName) { errorMsg.value = '占问时间、占问事由、本卦为必填项'; return }
-  if (!GUA_NAMES.includes(benName)) { errorMsg.value = '本卦名不在64卦中: ' + benName; return }
+  if (!NAMES.includes(benName)) { errorMsg.value = '本卦名不在64卦中: ' + benName; return }
 
   const zhiName = zhiComputed.value
-  if (zhiName && !GUA_NAMES.includes(zhiName)) { errorMsg.value = '之卦名不在64卦中: ' + zhiName; return }
+  if (zhiName && !NAMES.includes(zhiName)) { errorMsg.value = '之卦名不在64卦中: ' + zhiName; return }
 
   submitting.value = true
   try {
-    await importManual({ zhanwen_time: t, zhanwen_shiyou: form.value.zhanwen_shiyou, zhanduan: form.value.zhanduan, ben_name: benName, zhi_name: zhiName || undefined })
-    router.push('/')
+    const res = await importManual({ zhanwen_time: t, zhanwen_shiyou: form.value.zhanwen_shiyou, zhanduan: form.value.zhanduan, ben_name: benName, zhi_name: zhiName || undefined })
+    if (res.data.code === 200) {
+      router.push('/')
+    } else {
+      errorMsg.value = res.data.message || '导入失败'
+    }
   } catch (e) { errorMsg.value = e.response?.data?.message || '导入失败' }
   finally { submitting.value = false }
 }
@@ -181,9 +186,10 @@ input, textarea, select {
   padding: var(--space-2); border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-md); background: var(--color-bg-input);
   color: var(--color-text-primary); font-size: var(--font-size-base);
-  font-family: var(--font-family);
+  font-family: var(--font-family); color-scheme: dark;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
+input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
 input::placeholder, textarea::placeholder { color: var(--color-text-muted); }
 input:focus, textarea:focus, select:focus { border-color: var(--color-accent); box-shadow: var(--shadow-glow); }
 select option { background: var(--color-bg-secondary); color: var(--color-text-primary); }

@@ -14,10 +14,10 @@
           <router-link to="/jiegua/graph">网络图谱</router-link>
         </div>
       </div>
-      <router-link to="/input">手动导入</router-link>
-      <router-link to="/import">JSON导入</router-link>
       <router-link to="/tags">标签</router-link>
       <router-link to="/search">检索</router-link>
+      <router-link to="/input">手动导入</router-link>
+      <router-link to="/import">JSON导入</router-link>
     </div>
   </nav>
 </template>
@@ -28,6 +28,7 @@
   height: var(--navbar-height); padding: 0 var(--space-5);
   background: var(--color-bg-glass); backdrop-filter: blur(var(--glass-blur));
   border-bottom: 1px solid var(--glass-border);
+  position: relative; z-index: 10;
 }
 .brand { color: #fff; font-weight: bold; font-size: 1.1rem; text-decoration: none; }
 .nav-links { display: flex; align-items: center; gap: var(--space-4); }
@@ -41,7 +42,7 @@
   display: none; position: absolute; top: 100%; left: 0;
   background: var(--color-bg-secondary); border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-md); padding: var(--space-1) 0; min-width: 100px;
-  box-shadow: var(--shadow-md); z-index: 100;
+  box-shadow: var(--shadow-md); z-index: 200;
 }
 .nav-dropdown:hover .dropdown-menu { display: block; }
 .dropdown-menu a {

@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useSearchStore } from '../stores/useSearchStore.js'
 import { useAppStore } from '../stores/index.js'
-import { fetchTagTree, addGualiTag, removeGualiTag, fetchSearchResults } from '../api/index.js'
+import { fetchTagTree, addGualiTag, removeGualiTag, fetchSearchResults, fetchExport } from '../api/index.js'
 import FieldLibrary from '../components/Search/FieldLibrary.vue'
 import ConditionBuilder from '../components/Search/ConditionBuilder.vue'
 import RecommendedSchemes from '../components/Search/RecommendedSchemes.vue'
@@ -153,6 +153,22 @@ function onSelectGuali(id) {
   selectedGualiId.value = id
 }
 
+async function onExportData({ format, filename }) {
+  try {
+    const res = await fetchExport({
+      conditions: store.conditions,
+      logic: store.logicChain,
+      pagination: { page: 1, page_size: 99999 },
+    }, format)
+    const url = URL.createObjectURL(new Blob([res.data]))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${filename}.${format}`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch { alert('导出失败，请重试') }
+}
+
 function onPageChange(page) {
   store.setPage(page)
 }
@@ -201,6 +217,7 @@ function onPageChange(page) {
             :selected-id="selectedGualiId"
             @page-change="onPageChange"
             @select-guali="onSelectGuali"
+            @export-data="onExportData"
           />
         </div>
       </div>
@@ -272,7 +289,7 @@ function onPageChange(page) {
   position: relative;
 }
 .sp-detail-close {
-  position: absolute; top: var(--space-2); right: var(--space-2); z-index: 10;
+  position: absolute; top: 50px; right: 25px; z-index: 10;
   width: 24px; height: 24px; border: none; background: var(--color-bg-tertiary);
   color: var(--color-text-muted); border-radius: 50%; cursor: pointer;
   font-size: 14px; display: flex; align-items: center; justify-content: center;

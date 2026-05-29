@@ -1,6 +1,7 @@
 """C3 复杂检索核心——动态 SQL 生成 + 执行"""
 from sqlmodel import Session, text
 from backend.schemas.search import SearchRequest, Condition, RelationCondition, LogicItem, SearchResponse, SameYaoGroup, SamePositionGroup, FeishenGroup, SubCondition
+from backend.core.enums import CODE_TO_NAME
 
 # ── 字段映射白名单 ──
 # field_name → (table_alias, column_expression, needs_yao_join, needs_shensha_join, needs_gua_join, needs_time_join)
@@ -704,8 +705,15 @@ def execute_search(session: Session, request: SearchRequest) -> SearchResponse:
 
     rows = session.exec(text(query_sql).bindparams(**params)).mappings().all()
 
+    results = []
+    for r in rows:
+        d = dict(r)
+        d["ben_name"] = CODE_TO_NAME.get(d.get("ben_code", ""), "")
+        d["zhi_name"] = CODE_TO_NAME.get(d.get("zhi_code", ""), "") if d.get("yao_bian_code", "000000") != "000000" else ""
+        results.append(d)
+
     return SearchResponse(
-        data={"results": [dict(r) for r in rows], "total": total, "page": page, "page_size": page_size}
+        data={"results": results, "total": total, "page": page, "page_size": page_size}
     )
 
 

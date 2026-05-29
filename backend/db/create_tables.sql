@@ -45,6 +45,7 @@ CREATE TABLE guali (
 -- guali 索引
 CREATE INDEX idx_ben_code ON guali(ben_code);
 CREATE INDEX idx_zhi_code ON guali(zhi_code);
+CREATE INDEX idx_zhanwen_shiyou ON guali(zhanwen_shiyou(100));
 
 -- 2. 标签表
 CREATE TABLE tag (

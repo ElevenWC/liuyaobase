@@ -3,6 +3,7 @@ import { ref, watch, computed } from 'vue'
 import { useAppStore } from '../stores/index.js'
 import { fetchGualiDetail, updateGuali, deleteGuali, fetchTagTree, addGualiTag, removeGualiTag } from '../api/index.js'
 import GuaCiFloat from '../components/shared/GuaCiFloat.vue'
+import CalendarFloat from '../components/shared/CalendarFloat.vue'
 
 const store = useAppStore()
 
@@ -30,6 +31,7 @@ const editZhanduan = ref('')
 const saving = ref(false)
 
 const activeFloats = ref([])
+const showCalendar = ref(false)
 
 // 标签编辑
 const showTagEditor = ref(false)
@@ -250,7 +252,7 @@ function fanYinText() {
         </div>
       </div>
 
-      <div class="info-section">
+      <div class="info-section clickable" @click="showCalendar = true">
         <div class="info-row">
           <span class="label">年柱：</span>{{ detail.year_pillar }}
           <span style="margin-left:16px"><span class="label">月柱：</span>{{ detail.month_pillar }}</span>
@@ -389,6 +391,7 @@ function fanYinText() {
       </div>
 
       <GuaCiFloat v-for="f in activeFloats" :key="f.id" :gua-code="f.guaCode" :gua-name="f.guaName" :visible="true" @close="closeFloat(f.id)" />
+      <CalendarFloat v-if="showCalendar && detail.zhanwen_time" :zhanwen-time="detail.zhanwen_time" :visible="showCalendar" @close="showCalendar = false" />
     </template>
   </div>
   <div v-else class="no-selection">点击左侧卦例查看详情</div>

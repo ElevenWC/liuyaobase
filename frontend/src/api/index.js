@@ -109,6 +109,12 @@ export function fetchExport(body, fmt = 'csv') {
   return api.post('/search/export', body, { params: { fmt }, responseType: 'blob' })
 }
 
+// ── 干支日历 ──────────────────────────────────
+
+export function fetchCalendar(year, month) {
+  return api.get('/jiegua/calendar', { params: { year, month } })
+}
+
 // ── 卦爻辞 ────────────────────────────────────
 
 export function fetchGuaci(code) {
