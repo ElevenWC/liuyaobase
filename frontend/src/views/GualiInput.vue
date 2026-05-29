@@ -186,9 +186,10 @@ input, textarea, select {
   padding: var(--space-2); border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-md); background: var(--color-bg-input);
   color: var(--color-text-primary); font-size: var(--font-size-base);
-  font-family: var(--font-family);
+  font-family: var(--font-family); color-scheme: dark;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
+input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
 input::placeholder, textarea::placeholder { color: var(--color-text-muted); }
 input:focus, textarea:focus, select:focus { border-color: var(--color-accent); box-shadow: var(--shadow-glow); }
 select option { background: var(--color-bg-secondary); color: var(--color-text-primary); }
