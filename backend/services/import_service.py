@@ -93,6 +93,9 @@ def import_from_json(file_path: str, session: Session, original_filename: str = 
     if not isinstance(data, list):
         raise ValueError("JSON 应为数组格式")
 
+    # 文件为新→旧顺序，倒过来让最老记录先导入 → 编号最小
+    data.reverse()
+
     newest_time: datetime | None = None
 
     imported = 0
