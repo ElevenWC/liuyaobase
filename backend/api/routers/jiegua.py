@@ -5,6 +5,7 @@ from sqlmodel import Session
 from backend.db.connection import get_session
 from backend.core.hugua import calc_hugua
 from backend.core.bagong_bian import calc_bagong_bian
+from backend.core.time_converter import get_calendar_month
 from backend.crud.bagong_gua import get_by_code, get_all
 from backend.crud.guaci import get_by_code as get_guaci_by_code
 
@@ -127,6 +128,16 @@ async def get_graph(
     if graph_type not in ("yang", "yin"):
         return _err("图谱类型无效，仅支持 yang 或 yin")
     return _ok(_build_graph(graph_type, session))
+
+
+# ── 干支日历 ──
+
+@router.get("/calendar")
+async def get_calendar(year: int = 2024, month: int = 1):
+    """获取指定年月的干支日历数据"""
+    if month < 1 or month > 12:
+        return _err("月份需在 1-12 之间")
+    return _ok(get_calendar_month(year, month))
 
 
 # ── 卦爻辞 ──

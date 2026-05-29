@@ -75,3 +75,45 @@ def _prev_jieqi(lunar) -> str | None:
     if prev:
         return _JIEQI_EN_TO_CN.get(prev.getName(), prev.getName())
     return None
+
+
+def get_calendar_month(year: int, month: int) -> dict:
+    """返回指定年月的日历数据——每天的公历日期、星期、干支、节气标记。
+
+    返回: {
+        "year": 2026, "month": 5,
+        "days": [{"day": 1, "weekday": 0, "day_ganzhi": "甲子",
+                  "year_ganzhi": "丙午", "month_ganzhi": "癸巳", "jieqi": null}, ...]
+    }
+    weekday: 0=周一, 6=周日
+    """
+    import calendar as cal_mod
+
+    days = []
+    _, total_days = cal_mod.monthrange(year, month)
+
+    # 节气表：当前月 + 相邻月
+    jieqi_map: dict[int, str] = {}
+    for y in (year - 1, year, year + 1):
+        for name, d in get_jieqi_dates(y):
+            if d.year == year and d.month == month:
+                jieqi_map[d.day] = name
+
+    for day_num in range(1, total_days + 1):
+        dt = datetime(year, month, day_num)
+        solar = Solar.fromDate(dt)
+        lunar = solar.getLunar()
+
+        # weekday: Python 的 weekday() 0=周一 6=周日，正好与需求一致
+        wd = dt.weekday()
+
+        days.append({
+            "day": day_num,
+            "weekday": wd,
+            "day_ganzhi": lunar.getDayInGanZhi(),
+            "year_ganzhi": lunar.getYearInGanZhi(),
+            "month_ganzhi": lunar.getMonthInGanZhi(),
+            "jieqi": jieqi_map.get(day_num),
+        })
+
+    return {"year": year, "month": month, "days": days}
