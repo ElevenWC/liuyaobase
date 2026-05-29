@@ -53,6 +53,17 @@ watch(() => props.zhanwenTime, (t) => {
   calendarYear.value = d.getFullYear(); calendarMonth.value = d.getMonth() + 1
 })
 
+function selectDate(year, month, day) {
+  selYear.value = year; selMonth.value = month; selDay.value = day
+  calendarYear.value = year; calendarMonth.value = month
+}
+
+function backToZhanwen() {
+  const d = new Date(props.zhanwenTime)
+  selYear.value = d.getFullYear(); selMonth.value = d.getMonth() + 1; selDay.value = d.getDate()
+  calendarYear.value = d.getFullYear(); calendarMonth.value = d.getMonth() + 1
+}
+
 function prevMonth() { if (calendarMonth.value === 1) { calendarYear.value--; calendarMonth.value = 12 } else { calendarMonth.value-- } }
 function nextMonth() { if (calendarMonth.value === 12) { calendarYear.value++; calendarMonth.value = 1 } else { calendarMonth.value++ } }
 
@@ -93,6 +104,7 @@ const grid = computed(() => {
       <button class="cal-nav" @click.stop="prevMonth">◀</button>
       <span class="cal-title">{{ calendarYear }}年{{ calendarMonth }}月</span>
       <button class="cal-nav" @click.stop="nextMonth">▶</button>
+      <button class="cal-back" @click.stop="backToZhanwen" title="回到占问日期">⟳</button>
       <button class="cal-close" @click="$emit('close')">&times;</button>
     </div>
 
@@ -112,7 +124,9 @@ const grid = computed(() => {
               'cal-empty': !d,
               'cal-sel': d && d.day === selDay && calendarYear === selYear && calendarMonth === selMonth,
               'cal-jieqi': d && d.jieqi,
-            }">
+            }"
+            :title="d?.jieqi || ''"
+            @click="d && selectDate(calendarYear, calendarMonth, d.day)">
             <template v-if="d">
               <span class="cal-dn">{{ d.day }}</span>
               <span class="cal-dgz">{{ d.day_ganzhi }}</span>
@@ -158,9 +172,15 @@ const grid = computed(() => {
   font-size: var(--font-size-xs); border: 2px solid transparent;
 }
 .cal-cell.cal-empty { background: none; }
-.cal-cell.cal-sel { background: var(--color-accent-soft); }
+.cal-cell.cal-sel { background: var(--color-accent); }
+.cal-cell.cal-sel .cal-dn { color: #fff; font-weight: bold; }
+.cal-cell.cal-sel .cal-dgz { color: rgba(255,255,255,0.8); }
 .cal-cell.cal-jieqi { border-color: var(--color-accent); }
+.cal-cell:not(.cal-empty) { cursor: pointer; }
+.cal-cell:not(.cal-empty):hover:not(.cal-sel) { background: var(--color-bg-tertiary); }
 .cal-dn { font-weight: 500; color: var(--color-text-primary); line-height: 1.2; }
 .cal-dgz { font-size: 10px; color: var(--color-text-muted); line-height: 1.2; }
+.cal-back { width: 24px; height: 24px; border: none; background: none; color: var(--color-text-secondary); font-size: 16px; cursor: pointer; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; }
+.cal-back:hover { background: var(--color-accent-soft); color: var(--color-accent-light); }
 .cal-loading { text-align: center; padding: var(--space-5); color: var(--color-text-muted); font-size: var(--font-size-sm); }
 </style>
