@@ -170,28 +170,49 @@ function yaoMark(y) {
 
 const isEditing = computed(() => editingShiyou.value || editingZhanduan.value)
 
+function enterEdit() {
+  editingShiyou.value = true; editShiyou.value = detail.value.zhanwen_shiyou
+  editingZhanduan.value = true; editZhanduan.value = detail.value.zhanduan
+  setTimeout(() => document.addEventListener('click', onClickOutside))
+}
+
+function exitEdit() {
+  document.removeEventListener('click', onClickOutside)
+  if (editingShiyou.value) saveAll()
+  else { editingShiyou.value = false; editingZhanduan.value = false }
+}
+
+function onClickOutside(e) {
+  // 点击编辑按钮、输入框、文本域之外 → 保存退出
+  const target = e.target
+  if (target.closest('.edit-input') || target.closest('.edit-textarea') || target.closest('.btn-edit')) return
+  exitEdit()
+}
+
 function toggleEdit() {
   if (isEditing.value) {
-    if (editingShiyou.value) saveShiyou()
-    if (editingZhanduan.value) saveZhanduan()
+    exitEdit()
   } else {
-    editingShiyou.value = true; editShiyou.value = detail.value.zhanwen_shiyou
-    editingZhanduan.value = true; editZhanduan.value = detail.value.zhanduan
+    enterEdit()
   }
 }
-function onDblClickShiyou() { if (!editingShiyou.value) { editingShiyou.value = true; editShiyou.value = detail.value.zhanwen_shiyou } }
-function onDblClickZhanduan() { if (!editingZhanduan.value) { editingZhanduan.value = true; editZhanduan.value = detail.value.zhanduan } }
 
-async function saveShiyou() {
+function onDblClickShiyou() { if (!editingShiyou.value) { editingShiyou.value = true; editShiyou.value = detail.value.zhanwen_shiyou; setTimeout(() => document.addEventListener('click', onClickOutside)) } }
+function onDblClickZhanduan() { if (!editingZhanduan.value) { editingZhanduan.value = true; editZhanduan.value = detail.value.zhanduan; setTimeout(() => document.addEventListener('click', onClickOutside)) } }
+
+async function saveAll() {
   if (saving.value) return; saving.value = true
-  try { await updateGuali(detail.value.id, { zhanwen_shiyou: editShiyou.value }); detail.value.zhanwen_shiyou = editShiyou.value; editingShiyou.value = false }
-  catch { error.value = '保存失败' }
-  finally { saving.value = false }
-}
-async function saveZhanduan() {
-  if (saving.value) return; saving.value = true
-  try { await updateGuali(detail.value.id, { zhanduan: editZhanduan.value }); detail.value.zhanduan = editZhanduan.value; editingZhanduan.value = false }
-  catch { error.value = '保存失败' }
+  const changes = {}
+  if (editingShiyou.value) changes.zhanwen_shiyou = editShiyou.value
+  if (editingZhanduan.value) changes.zhanduan = editZhanduan.value
+  try {
+    if (Object.keys(changes).length) {
+      await updateGuali(detail.value.id, changes)
+      if (changes.zhanwen_shiyou) detail.value.zhanwen_shiyou = changes.zhanwen_shiyou
+      if (changes.zhanduan) detail.value.zhanduan = changes.zhanduan
+    }
+    editingShiyou.value = false; editingZhanduan.value = false
+  } catch { error.value = '保存失败' }
   finally { saving.value = false }
 }
 async function onDelete() {
@@ -222,7 +243,7 @@ function fanYinText() {
       <div class="top-bar">
         <span class="top-shiyou" @dblclick="onDblClickShiyou">
           <template v-if="!editingShiyou">{{ detail.zhanwen_shiyou }}</template>
-          <input v-else v-model="editShiyou" @blur="saveShiyou" @keyup.enter="saveShiyou" autofocus class="edit-input" />
+          <input v-else v-model="editShiyou" @keyup.enter="exitEdit" autofocus class="edit-input" />
         </span>
         <div class="top-right">
           <span class="guali-id">#{{ detail.id }}</span>
@@ -365,7 +386,7 @@ function fanYinText() {
       <div class="info-section" @dblclick="onDblClickZhanduan">
         <div class="label">占断内容：</div>
         <p v-if="!editingZhanduan" class="zhanduan-text">{{ detail.zhanduan }}</p>
-        <textarea v-else v-model="editZhanduan" @blur="saveZhanduan" rows="6" autofocus class="edit-textarea" />
+        <textarea v-else v-model="editZhanduan" rows="6" autofocus class="edit-textarea" />
       </div>
 
       <!-- 标签编辑弹窗 -->
