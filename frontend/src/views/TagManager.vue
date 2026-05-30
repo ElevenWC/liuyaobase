@@ -77,9 +77,9 @@ const flatNodes = () => {
           <input v-model="editName" @keyup.enter="saveEdit(n)" @blur="saveEdit(n)" autofocus />
         </template>
         <template v-else>
-          <span v-if="n.hasChildren" class="tag-arrow" @click="toggleCollapse(n)">{{ collapsed[n.id] ? '▾' : '▸' }}</span>
-          <span v-else class="tag-arrow-spacer"></span>
-          <span class="tag-name" :class="{ 'sys-tag': n.is_system }" @dblclick="!n.is_system && startEdit(n)">{{ n.name }}</span>
+          <span class="tag-name" :class="{ 'sys-tag': n.is_system, 'has-kids': n.hasChildren }"
+            @click="n.hasChildren && toggleCollapse(n)"
+            @dblclick="!n.is_system && !n.hasChildren && startEdit(n)">{{ n.hasChildren ? (collapsed[n.id] ? '▸' : '▾') + ' ' : '' }}{{ n.name }}</span>
           <span class="tag-children-count" v-if="n.children?.length">({{ n.children.length }} 子标签)</span>
           <span v-if="n.is_system" class="sys-badge">系统</span>
           <template v-if="!n.is_system">
@@ -104,9 +104,7 @@ h2 { margin-bottom: var(--space-4); }
 .tag-item { display: flex; align-items: center; gap: var(--space-2); padding: 6px 8px; border-radius: var(--radius-sm); }
 .tag-item:hover { background: var(--color-bg-tertiary); }
 .tag-name { flex: 1; cursor: pointer; }
-.tag-arrow { width: 16px; cursor: pointer; color: var(--color-text-muted); font-size: 12px; flex-shrink: 0; user-select: none; }
-.tag-arrow:hover { color: var(--color-accent-light); }
-.tag-arrow-spacer { width: 16px; flex-shrink: 0; }
+.tag-name.has-kids { user-select: none; }
 .tag-children-count { font-size: var(--font-size-xs); color: var(--color-text-muted); }
 .btn-sm { padding: 2px 10px; border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); background: var(--color-bg-secondary); color: var(--color-text-secondary); cursor: pointer; font-size: var(--font-size-xs); }
 .btn-sm.btn-del { color: var(--color-danger); border-color: var(--color-danger); }

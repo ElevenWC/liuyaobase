@@ -488,7 +488,7 @@ function fanYinText() {
 .toggles { display: flex; gap: 14px; align-items: center; margin: var(--space-3) 0; padding: var(--space-2) var(--space-3); background: var(--color-bg-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); font-size: var(--font-size-sm); }
 .toggles label { display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--color-text-secondary); }
 .toggles select { padding: 2px 4px; background: var(--color-bg-tertiary); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); transition: border-color var(--transition-fast); }
-.zy-select { color: #fff !important; margin-left: 14px; }
+.zy-select { color: #fff !important; margin-left: 14px; border-width: 2px !important; }
 .zy-select.zy-应验 { border-color: #4DA87A; }
 .zy-select.zy-模糊 { border-color: #5F8EC0; }
 .zy-select.zy-不验 { border-color: #C46B6B; }
