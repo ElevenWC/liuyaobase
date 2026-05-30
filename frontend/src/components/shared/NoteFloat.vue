@@ -158,7 +158,7 @@ function lastSaved() {
 </script>
 
 <template>
-  <div v-if="visible" class="nf-float" :style="{ left: posX + 'px', top: posY + 'px', zIndex, width: elWidth + 'px', height: elHeight + 'px' }">
+  <div v-show="visible" class="nf-float" :style="{ left: posX + 'px', top: posY + 'px', zIndex, width: elWidth + 'px', height: elHeight + 'px' }">
     <div class="nf-header" @mousedown="onMouseDown" :class="{ dragging }">
       <span class="nf-title">
         <svg class="nf-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -225,7 +225,7 @@ function lastSaved() {
 .nf-new:hover { border-color: var(--color-accent); color: var(--color-accent-light); }
 
 .nf-editor-wrap { flex: 1; display: flex; flex-direction: column; padding: 10px 14px; overflow-y: auto; min-width: 0; }
-.nf-title-input { width: 100%; padding: 4px 0 8px; margin-bottom: 10px; border: none; border-bottom: 1px solid var(--color-border-subtle); background: none; color: var(--color-text-primary); font-size: 1.4rem; font-weight: bold; outline: none !important; box-shadow: none !important; }
+.nf-title-input { width: 100%; padding: 4px 0 12px; margin-bottom: 10px; border: none; border-bottom: 1px solid var(--color-border-subtle); background: none; color: var(--color-text-primary); font-size: 1.4rem; font-weight: bold; outline: none !important; box-shadow: none !important; }
 .nf-title-input:focus, .nf-title-input:focus-visible { outline: none !important; box-shadow: none !important; border-bottom-color: var(--color-border-subtle); }
 
 .nf-editor { flex: 1; min-height: 0; }
