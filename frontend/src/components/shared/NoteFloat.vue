@@ -147,7 +147,7 @@ function onEditorClick(e) {
   }
 }
 
-watch(currentId, () => loadEditorContent())
+watch(currentId, () => loadEditorContent(), { immediate: true })
 
 function lastSaved() {
   const n = currentNote()
