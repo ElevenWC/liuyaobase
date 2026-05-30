@@ -33,6 +33,40 @@ const saving = ref(false)
 const activeFloats = ref([])
 const showCalendar = ref(false)
 
+// 占验情况选择器
+const ZY_NAMES = ['应验', '模糊', '不验', '未验']
+const currentZhanYan = computed(() => {
+  if (!detail.value?.tags) return '未验'
+  const t = detail.value.tags.find(t => ZY_NAMES.includes(t))
+  return t || '未验'
+})
+
+function findZhanYanTagId(name) {
+  const tree = store.tagTree.length ? store.tagTree : tagTree.value
+  for (const l1 of tree) {
+    if (l1.children) {
+      const c = l1.children.find(c => c.name === name)
+      if (c) return c.id
+    }
+  }
+  return null
+}
+
+async function onZhanYanChange(name) {
+  const oldName = currentZhanYan.value
+  if (name === oldName) return
+  const newId = findZhanYanTagId(name)
+  if (!newId) return
+  // 先移除旧标签
+  const oldId = findZhanYanTagId(oldName)
+  if (oldId) {
+    try { await removeGualiTag(detail.value.id, oldId) } catch { /* ok */ }
+    detail.value.tags = detail.value.tags.filter(t => t !== oldName)
+  }
+  // 添加新标签
+  try { await addGualiTag(detail.value.id, newId); if (!detail.value.tags.includes(name)) detail.value.tags.push(name) } catch { /* ok */ }
+}
+
 // 标签编辑
 const showTagEditor = ref(false)
 const tagTree = ref([])
@@ -99,6 +133,7 @@ function _findRootTag(nodes, node) {
 
 // 显示标签：有同组二级则隐藏一级
 function showTag(name) {
+  if (ZY_NAMES.includes(name)) return false
   const tree = store.tagTree.length ? store.tagTree : tagTree.value
   const tag = _findTagInTree(tree, name)
   if (!tag) return true
@@ -170,28 +205,49 @@ function yaoMark(y) {
 
 const isEditing = computed(() => editingShiyou.value || editingZhanduan.value)
 
+function enterEdit() {
+  editingShiyou.value = true; editShiyou.value = detail.value.zhanwen_shiyou
+  editingZhanduan.value = true; editZhanduan.value = detail.value.zhanduan
+  setTimeout(() => document.addEventListener('click', onClickOutside))
+}
+
+function exitEdit() {
+  document.removeEventListener('click', onClickOutside)
+  if (editingShiyou.value) saveAll()
+  else { editingShiyou.value = false; editingZhanduan.value = false }
+}
+
+function onClickOutside(e) {
+  // 点击编辑按钮、输入框、文本域之外 → 保存退出
+  const target = e.target
+  if (target.closest('.edit-input') || target.closest('.edit-textarea') || target.closest('.btn-edit')) return
+  exitEdit()
+}
+
 function toggleEdit() {
   if (isEditing.value) {
-    if (editingShiyou.value) saveShiyou()
-    if (editingZhanduan.value) saveZhanduan()
+    exitEdit()
   } else {
-    editingShiyou.value = true; editShiyou.value = detail.value.zhanwen_shiyou
-    editingZhanduan.value = true; editZhanduan.value = detail.value.zhanduan
+    enterEdit()
   }
 }
-function onDblClickShiyou() { if (!editingShiyou.value) { editingShiyou.value = true; editShiyou.value = detail.value.zhanwen_shiyou } }
-function onDblClickZhanduan() { if (!editingZhanduan.value) { editingZhanduan.value = true; editZhanduan.value = detail.value.zhanduan } }
 
-async function saveShiyou() {
+function onDblClickShiyou() { if (!editingShiyou.value) { editingShiyou.value = true; editShiyou.value = detail.value.zhanwen_shiyou; setTimeout(() => document.addEventListener('click', onClickOutside)) } }
+function onDblClickZhanduan() { if (!editingZhanduan.value) { editingZhanduan.value = true; editZhanduan.value = detail.value.zhanduan; setTimeout(() => document.addEventListener('click', onClickOutside)) } }
+
+async function saveAll() {
   if (saving.value) return; saving.value = true
-  try { await updateGuali(detail.value.id, { zhanwen_shiyou: editShiyou.value }); detail.value.zhanwen_shiyou = editShiyou.value; editingShiyou.value = false }
-  catch { error.value = '保存失败' }
-  finally { saving.value = false }
-}
-async function saveZhanduan() {
-  if (saving.value) return; saving.value = true
-  try { await updateGuali(detail.value.id, { zhanduan: editZhanduan.value }); detail.value.zhanduan = editZhanduan.value; editingZhanduan.value = false }
-  catch { error.value = '保存失败' }
+  const changes = {}
+  if (editingShiyou.value) changes.zhanwen_shiyou = editShiyou.value
+  if (editingZhanduan.value) changes.zhanduan = editZhanduan.value
+  try {
+    if (Object.keys(changes).length) {
+      await updateGuali(detail.value.id, changes)
+      if (changes.zhanwen_shiyou) detail.value.zhanwen_shiyou = changes.zhanwen_shiyou
+      if (changes.zhanduan) detail.value.zhanduan = changes.zhanduan
+    }
+    editingShiyou.value = false; editingZhanduan.value = false
+  } catch { error.value = '保存失败' }
   finally { saving.value = false }
 }
 async function onDelete() {
@@ -222,7 +278,7 @@ function fanYinText() {
       <div class="top-bar">
         <span class="top-shiyou" @dblclick="onDblClickShiyou">
           <template v-if="!editingShiyou">{{ detail.zhanwen_shiyou }}</template>
-          <input v-else v-model="editShiyou" @blur="saveShiyou" @keyup.enter="saveShiyou" autofocus class="edit-input" />
+          <input v-else v-model="editShiyou" @keyup.enter="exitEdit" autofocus class="edit-input" />
         </span>
         <div class="top-right">
           <span class="guali-id">#{{ detail.id }}</span>
@@ -232,7 +288,8 @@ function fanYinText() {
           </div>
           <button class="btn-jiegua" @click="$router.push(`/jiegua/bagong?guali_id=${detail.id}`)">八宫</button>
           <button class="btn-jiegua" @click="$router.push(`/jiegua/hugua?guali_id=${detail.id}`)">互卦</button>
-          <button @click="onDelete" class="btn-del">删除</button>
+          <button v-if="embedded" @dblclick="onDelete" class="btn-del-embedded" title="双击删除">删除</button>
+          <button v-else @click="onDelete" class="btn-del">删除</button>
         </div>
       </div>
 
@@ -285,6 +342,12 @@ function fanYinText() {
             <option value="all">全部</option>
             <option value="changed">仅变爻</option>
             <option value="hide">隐藏</option>
+          </select>
+        </label>
+        <label style="margin-left:8px">占验情况
+          <select :value="currentZhanYan" @change="onZhanYanChange($event.target.value)" class="zy-select"
+            :class="'zy-' + currentZhanYan">
+            <option v-for="n in ZY_NAMES" :key="n" :value="n">{{ n }}</option>
           </select>
         </label>
       </div>
@@ -365,7 +428,7 @@ function fanYinText() {
       <div class="info-section" @dblclick="onDblClickZhanduan">
         <div class="label">占断内容：</div>
         <p v-if="!editingZhanduan" class="zhanduan-text">{{ detail.zhanduan }}</p>
-        <textarea v-else v-model="editZhanduan" @blur="saveZhanduan" rows="6" autofocus class="edit-textarea" />
+        <textarea v-else v-model="editZhanduan" rows="6" autofocus class="edit-textarea" />
       </div>
 
       <!-- 标签编辑弹窗 -->
@@ -409,6 +472,8 @@ function fanYinText() {
 .guali-id { font-size: var(--font-size-base); color: var(--color-text-muted); font-weight: 500; }
 .btn-del { padding: 3px 12px; background: var(--color-danger); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-sm); transition: background var(--transition-fast); }
 .btn-del:hover { background: var(--color-danger-hover); }
+.btn-del-embedded { padding: 3px 12px; background: var(--color-bg-tertiary); color: var(--color-text-muted); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-sm); transition: all var(--transition-fast); }
+.btn-del-embedded:hover { border-color: var(--color-danger); color: var(--color-danger); }
 .btn-jiegua { padding: 3px 8px; background: var(--color-bg-tertiary); color: var(--color-text-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-xs); transition: all var(--transition-fast); }
 .btn-jiegua:hover { border-color: var(--color-accent); color: var(--color-accent-light); }
 .btn-edit-wrap { position: relative; display: inline-flex; }
@@ -426,6 +491,11 @@ function fanYinText() {
 .toggles { display: flex; gap: 14px; align-items: center; margin: var(--space-3) 0; padding: var(--space-2) var(--space-3); background: var(--color-bg-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); font-size: var(--font-size-sm); }
 .toggles label { display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--color-text-secondary); }
 .toggles select { padding: 2px 4px; background: var(--color-bg-tertiary); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); transition: border-color var(--transition-fast); }
+.zy-select { color: #fff !important; margin-left: 14px; border-width: 2px !important; }
+.zy-select.zy-应验 { border-color: #4DA87A; }
+.zy-select.zy-模糊 { border-color: #6366f1; }
+.zy-select.zy-不验 { border-color: #DE2A2A; }
+.zy-select option { color: var(--color-text-primary); background: var(--color-bg-input); }
 
 .gua-cards-row {
   display: flex; align-items: stretch;

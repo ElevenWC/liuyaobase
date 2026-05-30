@@ -101,8 +101,8 @@ const GUA_FIELDS = [
 const LIUQIN_VALS = ['妻财', '官鬼', '父母', '兄弟', '子孙']
 const SHIYING_VALS = ['世', '应']
 const YAOTYPE_VALS = ['阳', '阴']
-const OPERATORS = ['equals', 'not_equals', 'in', 'not_in', 'gt', 'lt', 'gte', 'lte', 'range']
-const OP_DISPLAY = { equals: '= (等于)', not_equals: '≠ (不等于)', in: '∈ (属于)', not_in: '∉ (不属于)', gt: '> (大于)', lt: '< (小于)', gte: '≥ (≥)', lte: '≤ (≤)', range: '↔ (范围)' }
+const OPERATORS = ['equals', 'not_equals']
+const OP_DISPLAY = { equals: '= (等于)', not_equals: '≠ (不等于)' }
 const GUA_PALACE_VALS = ['乾宫', '坤宫', '震宫', '巽宫', '坎宫', '离宫', '艮宫', '兑宫']
 const PALACE_TYPE_VALS = ['本宫卦', '一世卦', '二世卦', '三世卦', '四世卦', '五世卦', '游魂卦', '归魂卦']
 const SPECIAL_TYPE_VALS = ['六合', '六冲', '普通']
@@ -745,7 +745,7 @@ function remove(id) { store.removeCondition(id) }
 .cb-sel:focus { outline: none; border-color: var(--color-accent); }
 .cb-input { padding: 2px 6px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); font-size: var(--font-size-sm); width: 80px; }
 .cb-input:focus { outline: none; border-color: var(--color-accent); }
-.cb-op { width: 70px; }
+.cb-op { width: 100px; }
 .cb-yu { font-size: var(--font-size-sm); color: var(--color-text-secondary); flex-shrink: 0; }
 .cb-gap { width: 6px; flex-shrink: 0; }
 

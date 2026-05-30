@@ -1,9 +1,18 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useAppStore } from '../stores/index.js'
 import GualiList from './GualiList.vue'
 import GualiDetail from './GualiDetail.vue'
 
+const route = useRoute()
+const store = useAppStore()
 const leftPanelCollapsed = ref(false)
+
+onMounted(() => {
+  const id = Number(route.query.id)
+  if (id) store.selectGuali(id)
+})
 </script>
 
 <template>
