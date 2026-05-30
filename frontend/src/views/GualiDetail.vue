@@ -35,7 +35,6 @@ const showCalendar = ref(false)
 
 // 占验情况选择器
 const ZY_NAMES = ['应验', '模糊', '不验', '未验']
-const ZY_COLORS = { '应验': '#4DA87A', '模糊': '#5F8EC0', '不验': '#C46B6B', '未验': '' }
 const currentZhanYan = computed(() => {
   if (!detail.value?.tags) return '未验'
   const t = detail.value.tags.find(t => ZY_NAMES.includes(t))
@@ -344,9 +343,9 @@ function fanYinText() {
             <option value="hide">隐藏</option>
           </select>
         </label>
-        <label style="margin-left:16px">占验情况
+        <label style="margin-left:8px">占验情况
           <select :value="currentZhanYan" @change="onZhanYanChange($event.target.value)" class="zy-select"
-            :style="ZY_COLORS[currentZhanYan] ? { background: ZY_COLORS[currentZhanYan], color: '#fff', borderColor: ZY_COLORS[currentZhanYan] } : {}">
+            :class="'zy-' + currentZhanYan">
             <option v-for="n in ZY_NAMES" :key="n" :value="n">{{ n }}</option>
           </select>
         </label>
@@ -489,7 +488,11 @@ function fanYinText() {
 .toggles { display: flex; gap: 14px; align-items: center; margin: var(--space-3) 0; padding: var(--space-2) var(--space-3); background: var(--color-bg-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); font-size: var(--font-size-sm); }
 .toggles label { display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--color-text-secondary); }
 .toggles select { padding: 2px 4px; background: var(--color-bg-tertiary); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); transition: border-color var(--transition-fast); }
-.zy-select { color: var(--color-text-muted) !important; }
+.zy-select { color: #fff !important; margin-left: 14px; }
+.zy-select.zy-应验 { border-color: #4DA87A; }
+.zy-select.zy-模糊 { border-color: #5F8EC0; }
+.zy-select.zy-不验 { border-color: #C46B6B; }
+.zy-select option { color: var(--color-text-primary); background: var(--color-bg-input); }
 
 .gua-cards-row {
   display: flex; align-items: stretch;

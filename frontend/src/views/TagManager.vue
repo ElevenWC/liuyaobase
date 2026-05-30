@@ -47,7 +47,7 @@ const flatNodes = () => {
   function walk(nodes, depth) {
     for (const n of nodes) {
       result.push({ ...n, depth, hasChildren: !!(n.children && n.children.length) })
-      if (n.children && n.children.length && !collapsed.value[n.id]) {
+      if (n.children && n.children.length && collapsed.value[n.id]) {
         walk(n.children, depth + 1)
       }
     }
@@ -77,7 +77,7 @@ const flatNodes = () => {
           <input v-model="editName" @keyup.enter="saveEdit(n)" @blur="saveEdit(n)" autofocus />
         </template>
         <template v-else>
-          <span v-if="n.hasChildren" class="tag-arrow" @click="toggleCollapse(n)">{{ collapsed[n.id] ? '▸' : '▾' }}</span>
+          <span v-if="n.hasChildren" class="tag-arrow" @click="toggleCollapse(n)">{{ collapsed[n.id] ? '▾' : '▸' }}</span>
           <span v-else class="tag-arrow-spacer"></span>
           <span class="tag-name" :class="{ 'sys-tag': n.is_system }" @dblclick="!n.is_system && startEdit(n)">{{ n.name }}</span>
           <span class="tag-children-count" v-if="n.children?.length">({{ n.children.length }} 子标签)</span>
