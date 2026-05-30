@@ -490,7 +490,7 @@ function fanYinText() {
 .toggles select { padding: 2px 4px; background: var(--color-bg-tertiary); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); transition: border-color var(--transition-fast); }
 .zy-select { color: #fff !important; margin-left: 14px; border-width: 2px !important; }
 .zy-select.zy-应验 { border-color: #4DA87A; }
-.zy-select.zy-模糊 { border-color: #5F8EC0; }
+.zy-select.zy-模糊 { border-color: #6366f1; }
 .zy-select.zy-不验 { border-color: #DE2A2A; }
 .zy-select option { color: var(--color-text-primary); background: var(--color-bg-input); }
 
