@@ -491,7 +491,7 @@ function fanYinText() {
 .zy-select { color: #fff !important; margin-left: 14px; border-width: 2px !important; }
 .zy-select.zy-应验 { border-color: #4DA87A; }
 .zy-select.zy-模糊 { border-color: #5F8EC0; }
-.zy-select.zy-不验 { border-color: #C46B6B; }
+.zy-select.zy-不验 { border-color: #E06060; }
 .zy-select option { color: var(--color-text-primary); background: var(--color-bg-input); }
 
 .gua-cards-row {
