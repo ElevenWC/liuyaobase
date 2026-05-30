@@ -35,6 +35,7 @@ const showCalendar = ref(false)
 
 // 占验情况选择器
 const ZY_NAMES = ['应验', '模糊', '不验', '未验']
+const ZY_COLORS = { '应验': '#4DA87A', '模糊': '#5F8EC0', '不验': '#C46B6B', '未验': '' }
 const currentZhanYan = computed(() => {
   if (!detail.value?.tags) return '未验'
   const t = detail.value.tags.find(t => ZY_NAMES.includes(t))
@@ -343,8 +344,9 @@ function fanYinText() {
             <option value="hide">隐藏</option>
           </select>
         </label>
-        <label style="margin-left:8px">占验情况
-          <select :value="currentZhanYan" @change="onZhanYanChange($event.target.value)" class="zy-select">
+        <label style="margin-left:16px">占验情况
+          <select :value="currentZhanYan" @change="onZhanYanChange($event.target.value)" class="zy-select"
+            :style="ZY_COLORS[currentZhanYan] ? { background: ZY_COLORS[currentZhanYan], color: '#fff', borderColor: ZY_COLORS[currentZhanYan] } : {}">
             <option v-for="n in ZY_NAMES" :key="n" :value="n">{{ n }}</option>
           </select>
         </label>
