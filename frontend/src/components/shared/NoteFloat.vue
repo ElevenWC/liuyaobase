@@ -129,7 +129,7 @@ const editor = useEditor({
   },
   editorProps: {
     handleKeyDown: (view, event) => {
-      if (event.key === 'Tab') { event.preventDefault(); view.dispatch(view.state.tr.insertText('  ')); return true }
+      if (event.key === 'Tab') { event.preventDefault(); view.dispatch(view.state.tr.insertText('    ')); return true }
       return false
     },
   },
