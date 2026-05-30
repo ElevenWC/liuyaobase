@@ -105,14 +105,17 @@ const editor = useEditor({
   extensions: [StarterKit.configure({ bold: false }), GuaLinkExtension],
   content: '',
   editable: true,
-  onUpdate: () => {
-    const n = currentNote()
-    if (n) {
-      n.content = editor.value?.getHTML() || '<p></p>'
-      n.updatedAt = new Date().toISOString()
-      saveNotes(notes.value)
-    }
-  },
+})
+
+// watch 编辑器内容变化自动保存（替代 onUpdate，更可靠）
+watch(() => editor.value?.getHTML(), (html) => {
+  if (!html) return
+  const n = currentNote()
+  if (n) {
+    n.content = html
+    n.updatedAt = new Date().toISOString()
+    saveNotes(notes.value)
+  }
 })
 
 function loadEditorContent() {
@@ -165,7 +168,7 @@ function lastSaved() {
       <div class="nf-editor-wrap" @click="zIndex = nextZIndex()">
         <div v-if="currentId">
           <input :value="currentNote()?.title || ''" class="nf-title-input" placeholder="笔记标题..."
-            @input="(e) => { const n = currentNote(); if (n) { n.title = e.target.value; n.updatedAt = new Date().toISOString(); saveNotes(notes) } }" />
+            @input="(e) => { const n = currentNote(); if (n) { n.title = e.target.value; n.updatedAt = new Date().toISOString(); saveNotes(notes.value) } }" />
           <div class="nf-editor" @click="onEditorClick">
             <EditorContent :editor="editor" />
           </div>
