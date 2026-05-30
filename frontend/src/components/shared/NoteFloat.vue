@@ -127,6 +127,12 @@ const editor = useEditor({
     n.updatedAt = new Date().toISOString()
     saveNotes(notes.value)
   },
+  editorProps: {
+    handleKeyDown: (view, event) => {
+      if (event.key === 'Tab') { event.preventDefault(); view.dispatch(view.state.tr.insertText('  ')); return true }
+      return false
+    },
+  },
 })
 
 function loadEditorContent() {
