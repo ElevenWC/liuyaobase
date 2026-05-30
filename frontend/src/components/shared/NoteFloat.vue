@@ -101,21 +101,32 @@ function saveCurrentContent() {
 }
 
 // ── Tiptap 编辑器 ──
+let saveTimer = null
 const editor = useEditor({
   extensions: [StarterKit.configure({ bold: false }), GuaLinkExtension],
   content: '',
   editable: true,
-})
-
-// watch 编辑器内容变化自动保存（替代 onUpdate，更可靠）
-watch(() => editor.value?.getHTML(), (html) => {
-  if (!html) return
-  const n = currentNote()
-  if (n) {
-    n.content = html
+  onUpdate: ({ editor: ed }) => {
+    // ed 是回调参数中的 editor，确保拿到最新实例
+    const n = currentNote()
+    if (!n) return
+    clearTimeout(saveTimer)
+    saveTimer = setTimeout(() => {
+      const html = ed.getHTML()
+      if (!html || html === '<p></p>' && n.content && n.content !== '<p></p>') return
+      n.content = html
+      n.updatedAt = new Date().toISOString()
+      saveNotes(notes.value)
+    }, 300)
+  },
+  onBlur: ({ editor: ed }) => {
+    clearTimeout(saveTimer)
+    const n = currentNote()
+    if (!n) return
+    n.content = ed.getHTML()
     n.updatedAt = new Date().toISOString()
     saveNotes(notes.value)
-  }
+  },
 })
 
 function loadEditorContent() {
