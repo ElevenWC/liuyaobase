@@ -211,11 +211,14 @@ function lastSaved() {
 .nf-new:hover { border-color: var(--color-accent); color: var(--color-accent-light); }
 
 .nf-editor-wrap { flex: 1; display: flex; flex-direction: column; padding: 10px 14px; overflow-y: auto; min-width: 0; }
-.nf-title-input { width: 100%; padding: 4px 0; margin-bottom: 8px; border: none; border-bottom: 1px solid var(--color-border-subtle); background: none; color: var(--color-text-primary); font-size: var(--font-size-md); font-weight: bold; outline: none; }
-.nf-title-input:focus { border-bottom-color: var(--color-accent); }
+.nf-title-input { width: 100%; padding: 4px 0; margin-bottom: 10px; border: none; border-bottom: 1px solid var(--color-border-subtle); background: none; color: var(--color-text-primary); font-size: var(--font-size-lg); font-weight: bold; outline: none; }
+.nf-title-input:focus { outline: none; border-bottom-color: var(--color-border-subtle); }
 
 .nf-editor { flex: 1; min-height: 0; }
-.nf-editor :deep(.tiptap) { outline: none; min-height: 200px; font-size: var(--font-size-sm); color: var(--color-text-primary); line-height: 1.7; }
+.nf-editor :deep(.tiptap) { outline: none; min-height: 200px; font-size: var(--font-size-base); color: var(--color-text-primary); line-height: 1.7; }
+.nf-editor :deep(.tiptap:focus) { outline: none; }
+.nf-editor :deep(.ProseMirror:focus) { outline: none; }
+.nf-editor :deep(.ProseMirror-focused) { outline: none; }
 .nf-editor :deep(.tiptap p) { margin: 0 0 4px; }
 .nf-editor :deep(.gua-link) { color: #5F8EC0; cursor: pointer; text-decoration: none; }
 .nf-editor :deep(.gua-link:hover) { text-decoration: underline; }
