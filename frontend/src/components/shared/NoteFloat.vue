@@ -18,8 +18,8 @@ const posY = ref(Math.max(60, window.innerHeight / 2 - 400))
 const zIndex = ref(nextZIndex())
 const dragStart = ref({ x: 0, y: 0 })
 const dragging = ref(false)
-const elWidth = ref(600)
-const elHeight = ref(1000)
+const elWidth = ref(700)
+const elHeight = ref(800)
 
 function onMouseDown(e) {
   if (e.target.closest('.nf-resize')) return
@@ -102,7 +102,7 @@ function saveCurrentContent() {
 
 // ── Tiptap 编辑器 ──
 const editor = useEditor({
-  extensions: [StarterKit, GuaLinkExtension],
+  extensions: [StarterKit.configure({ bold: false }), GuaLinkExtension],
   content: '',
   editable: true,
   onUpdate: () => {
@@ -210,5 +210,6 @@ function lastSaved() {
 .nf-empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--color-text-muted); font-size: var(--font-size-sm); }
 .nf-footer { padding: 6px 0 0; font-size: var(--font-size-xs); color: var(--color-text-muted); border-top: 1px solid var(--color-border-subtle); margin-top: auto; }
 
-.nf-resize { position: absolute; bottom: 0; right: 0; width: 16px; height: 16px; cursor: nwse-resize; }
+.nf-resize { position: absolute; bottom: 0; right: 0; width: 20px; height: 20px; cursor: nwse-resize; z-index: 1; }
+.nf-resize::after { content: ''; position: absolute; bottom: 3px; right: 3px; width: 8px; height: 8px; border-right: 2px solid var(--color-text-muted); border-bottom: 2px solid var(--color-text-muted); }
 </style>

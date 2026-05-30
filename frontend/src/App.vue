@@ -30,12 +30,17 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 <style>
 .note-fab {
   position: fixed; bottom: 24px; right: 24px; z-index: 99;
-  width: 48px; height: 48px; border-radius: 50%;
-  background: var(--color-accent); color: #fff; font-size: 22px;
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--color-bg-glass); backdrop-filter: blur(6px);
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-muted); font-size: 18px;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; box-shadow: var(--shadow-lg);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  cursor: pointer; box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
   user-select: none;
 }
-.note-fab:hover { transform: scale(1.1); box-shadow: var(--shadow-glow); }
+.note-fab:hover {
+  color: var(--color-accent-light); border-color: var(--color-accent);
+  box-shadow: var(--shadow-md); transform: scale(1.05);
+}
 </style>
