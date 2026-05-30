@@ -288,7 +288,8 @@ function fanYinText() {
           </div>
           <button class="btn-jiegua" @click="$router.push(`/jiegua/bagong?guali_id=${detail.id}`)">八宫</button>
           <button class="btn-jiegua" @click="$router.push(`/jiegua/hugua?guali_id=${detail.id}`)">互卦</button>
-          <button @click="onDelete" class="btn-del">删除</button>
+          <button v-if="embedded" @dblclick="onDelete" class="btn-del-embedded" title="双击删除">删除</button>
+          <button v-else @click="onDelete" class="btn-del">删除</button>
         </div>
       </div>
 
@@ -471,6 +472,8 @@ function fanYinText() {
 .guali-id { font-size: var(--font-size-base); color: var(--color-text-muted); font-weight: 500; }
 .btn-del { padding: 3px 12px; background: var(--color-danger); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-sm); transition: background var(--transition-fast); }
 .btn-del:hover { background: var(--color-danger-hover); }
+.btn-del-embedded { padding: 3px 12px; background: var(--color-bg-tertiary); color: var(--color-text-muted); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-sm); transition: all var(--transition-fast); }
+.btn-del-embedded:hover { border-color: var(--color-danger); color: var(--color-danger); }
 .btn-jiegua { padding: 3px 8px; background: var(--color-bg-tertiary); color: var(--color-text-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-xs); transition: all var(--transition-fast); }
 .btn-jiegua:hover { border-color: var(--color-accent); color: var(--color-accent-light); }
 .btn-edit-wrap { position: relative; display: inline-flex; }
