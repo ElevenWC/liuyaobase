@@ -224,7 +224,7 @@ function lastSaved() {
 .nf-new { padding: 6px 8px; border: 1px dashed var(--color-border-primary); border-radius: var(--radius-sm); background: none; color: var(--color-text-muted); font-size: var(--font-size-sm); cursor: pointer; text-align: left; }
 .nf-new:hover { border-color: var(--color-accent); color: var(--color-accent-light); }
 
-.nf-editor-wrap { flex: 1; display: flex; flex-direction: column; padding: 10px 14px; overflow-y: auto; min-width: 0; }
+.nf-editor-wrap { flex: 1; display: flex; flex-direction: column; padding: 10px 14px 10px 24px; overflow-y: auto; min-width: 0; }
 .nf-title-input { width: 100%; padding: 4px 0 12px; margin-bottom: 10px; border: none; border-bottom: 1px solid var(--color-border-subtle); background: none; color: var(--color-text-primary); font-size: 1.4rem; font-weight: bold; outline: none !important; box-shadow: none !important; }
 .nf-title-input:focus, .nf-title-input:focus-visible { outline: none !important; box-shadow: none !important; border-bottom-color: var(--color-border-subtle); }
 
