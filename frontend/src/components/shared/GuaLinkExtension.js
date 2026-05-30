@@ -1,4 +1,4 @@
-import { Node } from '@tiptap/core'
+import { Node, nodeInputRule } from '@tiptap/core'
 
 /**
  * 自定义 inline atomic Node：**数字** → #数字 超链接
@@ -28,21 +28,18 @@ export default Node.create({
   renderHTML({ node }) {
     return [
       'span',
-      { class: 'gua-link', 'data-id': node.attrs.id, onclick: `window.open('/guali?id=${node.attrs.id}','_blank')` },
+      { class: 'gua-link', 'data-id': node.attrs.id },
       `#${node.attrs.id}`,
     ]
   },
 
   addInputRules() {
     return [
-      {
+      nodeInputRule({
         find: /(\*\*(\d+)\*\*)$/,
-        handler: ({ state, range, match }) => {
-          const { tr } = state
-          const start = range.from - match[0].length
-          tr.replaceWith(start, range.to, state.schema.nodes.guaLink.create({ id: match[2] }))
-        },
-      },
+        type: this.type,
+        getAttributes: match => ({ id: match[2] }),
+      }),
     ]
   },
 })

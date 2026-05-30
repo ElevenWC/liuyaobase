@@ -124,6 +124,15 @@ function loadEditorContent() {
   })
 }
 
+// guaLink 点击跳转（事件委托）
+function onEditorClick(e) {
+  const link = e.target.closest('.gua-link')
+  if (link) {
+    const id = link.dataset.id
+    if (id) window.open(`/guali?id=${id}`, '_blank')
+  }
+}
+
 watch(currentId, () => loadEditorContent())
 
 function lastSaved() {
@@ -137,7 +146,10 @@ function lastSaved() {
 <template>
   <div v-if="visible" class="nf-float" :style="{ left: posX + 'px', top: posY + 'px', zIndex, width: elWidth + 'px', height: elHeight + 'px' }">
     <div class="nf-header" @mousedown="onMouseDown" :class="{ dragging }">
-      <span class="nf-title">📝 笔记</span>
+      <span class="nf-title">
+        <svg class="nf-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        笔记
+      </span>
       <button class="nf-close" @click="saveCurrentContent(); emit('close')">&times;</button>
     </div>
 
@@ -154,7 +166,7 @@ function lastSaved() {
         <div v-if="currentId">
           <input :value="currentNote()?.title || ''" class="nf-title-input" placeholder="笔记标题..."
             @input="(e) => { const n = currentNote(); if (n) { n.title = e.target.value; n.updatedAt = new Date().toISOString(); saveNotes(notes) } }" />
-          <div class="nf-editor">
+          <div class="nf-editor" @click="onEditorClick">
             <EditorContent :editor="editor" />
           </div>
         </div>
@@ -181,13 +193,14 @@ function lastSaved() {
   flex-shrink: 0;
 }
 .nf-header.dragging { cursor: grabbing; }
-.nf-title { font-size: var(--font-size-sm); font-weight: 600; color: var(--color-text-primary); }
+.nf-title { font-size: var(--font-size-sm); font-weight: 600; color: var(--color-text-primary); display: flex; align-items: center; gap: 6px; }
+.nf-icon { flex-shrink: 0; color: var(--color-text-secondary); }
 .nf-close { width: 24px; height: 24px; border: none; background: none; color: var(--color-text-muted); font-size: 18px; cursor: pointer; border-radius: var(--radius-sm); }
 .nf-close:hover { background: var(--color-danger); color: #fff; }
 
 .nf-body { display: flex; flex: 1; min-height: 0; }
-.nf-list { width: 180px; flex-shrink: 0; border-right: 1px solid var(--color-border-primary); padding: 6px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; background: var(--color-bg-secondary); }
-.nf-item { display: flex; align-items: center; padding: 6px 8px; border-radius: var(--radius-sm); cursor: pointer; font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+.nf-list { width: 180px; flex-shrink: 0; border-right: 1px solid var(--color-border-primary); padding: 6px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; background: var(--color-bg-secondary); }
+.nf-item { display: flex; align-items: center; padding: 8px 8px; border-radius: var(--radius-sm); cursor: pointer; font-size: var(--font-size-sm); color: var(--color-text-secondary); }
 .nf-item:hover { background: var(--color-bg-tertiary); }
 .nf-item.active { background: var(--color-accent); color: #fff; }
 .nf-item-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -211,5 +224,4 @@ function lastSaved() {
 .nf-footer { padding: 6px 0 0; font-size: var(--font-size-xs); color: var(--color-text-muted); border-top: 1px solid var(--color-border-subtle); margin-top: auto; }
 
 .nf-resize { position: absolute; bottom: 0; right: 0; width: 20px; height: 20px; cursor: nwse-resize; z-index: 1; }
-.nf-resize::after { content: ''; position: absolute; bottom: 3px; right: 3px; width: 8px; height: 8px; border-right: 2px solid var(--color-text-muted); border-bottom: 2px solid var(--color-text-muted); }
 </style>
