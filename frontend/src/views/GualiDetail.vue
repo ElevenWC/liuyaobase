@@ -33,6 +33,40 @@ const saving = ref(false)
 const activeFloats = ref([])
 const showCalendar = ref(false)
 
+// 占验情况选择器
+const ZY_NAMES = ['应验', '模糊', '不验', '未验']
+const currentZhanYan = computed(() => {
+  if (!detail.value?.tags) return '未验'
+  const t = detail.value.tags.find(t => ZY_NAMES.includes(t))
+  return t || '未验'
+})
+
+function findZhanYanTagId(name) {
+  const tree = store.tagTree.length ? store.tagTree : tagTree.value
+  for (const l1 of tree) {
+    if (l1.children) {
+      const c = l1.children.find(c => c.name === name)
+      if (c) return c.id
+    }
+  }
+  return null
+}
+
+async function onZhanYanChange(name) {
+  const oldName = currentZhanYan.value
+  if (name === oldName) return
+  const newId = findZhanYanTagId(name)
+  if (!newId) return
+  // 先移除旧标签
+  const oldId = findZhanYanTagId(oldName)
+  if (oldId) {
+    try { await removeGualiTag(detail.value.id, oldId) } catch { /* ok */ }
+    detail.value.tags = detail.value.tags.filter(t => t !== oldName)
+  }
+  // 添加新标签
+  try { await addGualiTag(detail.value.id, newId); if (!detail.value.tags.includes(name)) detail.value.tags.push(name) } catch { /* ok */ }
+}
+
 // 标签编辑
 const showTagEditor = ref(false)
 const tagTree = ref([])
@@ -99,6 +133,7 @@ function _findRootTag(nodes, node) {
 
 // 显示标签：有同组二级则隐藏一级
 function showTag(name) {
+  if (ZY_NAMES.includes(name)) return false
   const tree = store.tagTree.length ? store.tagTree : tagTree.value
   const tag = _findTagInTree(tree, name)
   if (!tag) return true
@@ -308,6 +343,11 @@ function fanYinText() {
             <option value="hide">隐藏</option>
           </select>
         </label>
+        <label style="margin-left:8px">占验情况
+          <select :value="currentZhanYan" @change="onZhanYanChange($event.target.value)" class="zy-select">
+            <option v-for="n in ZY_NAMES" :key="n" :value="n">{{ n }}</option>
+          </select>
+        </label>
       </div>
 
       <div class="yao-card">
@@ -447,6 +487,7 @@ function fanYinText() {
 .toggles { display: flex; gap: 14px; align-items: center; margin: var(--space-3) 0; padding: var(--space-2) var(--space-3); background: var(--color-bg-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-md); font-size: var(--font-size-sm); }
 .toggles label { display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--color-text-secondary); }
 .toggles select { padding: 2px 4px; background: var(--color-bg-tertiary); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); transition: border-color var(--transition-fast); }
+.zy-select { color: var(--color-text-muted) !important; }
 
 .gua-cards-row {
   display: flex; align-items: stretch;

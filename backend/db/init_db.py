@@ -85,8 +85,19 @@ def seed_basic_data(session: Session):
     # system_config（1 条，初始值为空）
     session.add(SystemConfig(config_key="last_import_time", config_value=""))
 
+    # 系统标签——占验情况组（不可删除）
+    from backend.models.tag import Tag
+    sys_tags = {"占验情况": None, "应验": "占验情况", "模糊": "占验情况", "不验": "占验情况", "未验": "占验情况"}
+    tag_map: dict[str, Tag] = {}
+    for name, parent_name in sys_tags.items():
+        parent_id = tag_map[parent_name].id if parent_name else None
+        t = Tag(name=name, parent_id=parent_id, is_system=True)
+        session.add(t)
+        session.flush()
+        tag_map[name] = t
+
     session.commit()
-    print("基础数据填充完成（bagong_gua 64 + guaci 64 + system_config 1）")
+    print("基础数据填充完成（bagong_gua 64 + guaci 64 + system_config 1 + 系统标签 5）")
 
 
 def register_stored_functions(engine: Engine):

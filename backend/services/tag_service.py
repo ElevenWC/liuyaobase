@@ -30,7 +30,12 @@ def update_tag(session: Session, tag_id: int, name: str) -> Tag:
 
 
 def delete_tag(session: Session, tag_id: int):
-    """删除标签。一级标签有子标签时拒绝删除。"""
+    """删除标签。系统标签和有一级子标签时拒绝删除。"""
+    tag = session.get(Tag, tag_id)
+    if tag is None:
+        raise ValueError(f"标签不存在: {tag_id}")
+    if tag.is_system:
+        raise ValueError("系统标签不可删除")
     children = [t for t in get_all(session) if t.parent_id == tag_id]
     if children:
         names = ", ".join(c.name for c in children)
@@ -87,6 +92,7 @@ def _build_tree(tags: list[Tag], parent_id: int | None) -> list[dict]:
             "id": tag.id,
             "name": tag.name,
             "parent_id": tag.parent_id,
+            "is_system": tag.is_system,
             "children": children,
         })
     return result

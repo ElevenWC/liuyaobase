@@ -156,7 +156,16 @@ async function batchDelete() { if (!selectedIds.value.size) return; if (!confirm
 function totalPages() { return Math.ceil(total.value / pageSize) }
 function formatTime(t) { return t ? t.slice(0, 10) : '' }
 
-function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of nodes) { r.push({ ...n, depth: d }); if (n.children) w(n.children, d+1); } }; w(store.tagTree, 0); return r }
+const ZY_NAMES = ['应验', '模糊', '不验', '未验']
+
+const sidebarTags = computed(() => {
+  return (store.tagTree || []).map(n => ({
+    ...n,
+    children: (n.children || []).filter(c => !c.is_system),
+  })).filter(n => !n.is_system)
+})
+
+function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of nodes) { if (n.is_system) continue; r.push({ ...n, depth: d }); if (n.children) w(n.children.filter(c => !c.is_system), d+1); } }; w(store.tagTree, 0); return r }
 </script>
 
 <template>
@@ -170,7 +179,7 @@ function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of n
     <div class="tag-filters" v-if="store.tagTree.length">
       <select v-model="selectedLevel1" @change="onLevel1Change(selectedLevel1)" class="tag-select">
         <option :value="null">一级：全部</option>
-        <option v-for="t in store.tagTree" :key="t.id" :value="t.id">{{ t.name }}</option>
+        <option v-for="t in sidebarTags" :key="t.id" :value="t.id">{{ t.name }}</option>
       </select>
       <select v-if="selectedLevel1" v-model="selectedLevel2" @change="onLevel2Change(selectedLevel2)" class="tag-select">
         <option :value="null">二级：全部</option>
@@ -196,7 +205,7 @@ function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of n
           </div>
           <div class="card-shiyou">{{ item.zhanwen_shiyou }}</div>
           <div class="card-tags" v-if="item.tags?.length">
-            <span v-for="t in item.tags" :key="t" class="tag-badge" :style="{ background: cardTagColor(t) }">{{ rootTagName(t) }}</span>
+            <span v-for="t in item.tags.filter(t => !ZY_NAMES.includes(t))" :key="t" class="tag-badge" :style="{ background: cardTagColor(t) }">{{ rootTagName(t) }}</span>
           </div>
         </div>
         <p v-if="!items.length" class="empty">暂无卦例</p>
