@@ -56,6 +56,11 @@ function onToggleExclude(id) {
   excludedIds.value = s
 }
 
+const batchCount = computed(() => {
+  if (selectAllResults.value) return Math.max(0, store.pagination.total - excludedIds.value.size)
+  return selectedCount()
+})
+
 async function batchAddTag(tagId) {
   if (!tagId) return
 
@@ -208,10 +213,10 @@ function onPageChange(page) {
             <option v-for="t in batchLevel2Options" :key="t.id" :value="t.id">{{ t.name }}</option>
           </select>
           <button class="sp-batch-btn sp-batch-add" :disabled="!selectedTagId()" @click="batchAddTag(selectedTagId())">
-            {{ batchTagging ? '打标中...' : `加标签(${selectAllResults ? store.pagination.total : selectedCount()})` }}
+            {{ batchTagging ? '打标中...' : `加标签(${batchCount})` }}
           </button>
           <button class="sp-batch-btn sp-batch-del" :disabled="!selectedTagId()" @click="batchRemoveTag(selectedTagId())">
-            {{ batchTagging ? '删标中...' : `删标签(${selectAllResults ? store.pagination.total : selectedCount()})` }}
+            {{ batchTagging ? '删标中...' : `删标签(${batchCount})` }}
           </button>
         </div>
         <RecommendedSchemes />
