@@ -88,7 +88,7 @@ const flatNodes = () => {
 
     <div class="tag-list">
       <div v-for="n in flatNodes()" :key="n.id" class="tag-item" :style="{ paddingLeft: (n.depth * 20 + 8) + 'px' }"
-        :draggable="n.depth === 0 && !n.is_system"
+        :draggable="n.depth === 0"
         :class="{ 'drag-over': dragId && dragId !== n.id && n.depth === 0, 'drag-src': dragId === n.id }"
         @dragstart="onDragStart(n)"
         @dragover.prevent="n.depth === 0 && dragId !== n.id"
