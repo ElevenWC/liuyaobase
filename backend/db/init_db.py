@@ -96,8 +96,18 @@ def seed_basic_data(session: Session):
         session.flush()
         tag_map[name] = t
 
+    # 系统标签——时间周期组
+    cycle_tags = {"时间周期": None, "时级": "时间周期", "日级": "时间周期", "周级": "时间周期", "旬级": "时间周期", "月级": "时间周期", "年级": "时间周期"}
+    tag_map2: dict[str, Tag] = {}
+    for name, parent_name in cycle_tags.items():
+        parent_id = tag_map2[parent_name].id if parent_name else None
+        t = Tag(name=name, parent_id=parent_id, is_system=True)
+        session.add(t)
+        session.flush()
+        tag_map2[name] = t
+
     session.commit()
-    print("基础数据填充完成（bagong_gua 64 + guaci 64 + system_config 1 + 系统标签 5）")
+    print("基础数据填充完成（bagong_gua 64 + guaci 64 + system_config 1 + 系统标签 11）")
 
 
 def register_stored_functions(engine: Engine):
