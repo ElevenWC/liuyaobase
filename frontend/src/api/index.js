@@ -63,6 +63,10 @@ export function deleteTag(id) {
   return api.delete(`/tags/${id}`)
 }
 
+export function reorderTags(ids) {
+  return api.post('/tags/reorder', { ids })
+}
+
 export function fetchGualiByTag(tagId, params) {
   return api.get(`/tags/${tagId}/guali`, { params })
 }

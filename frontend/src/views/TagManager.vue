@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { fetchTagTree, createTag, updateTag, deleteTag } from '../api/index.js'
+import { fetchTagTree, createTag, updateTag, deleteTag, reorderTags } from '../api/index.js'
 
 const tree = ref([])
 const newName = ref('')
@@ -34,6 +34,21 @@ async function removeTag(tag) {
   if (!confirm('删除标签 "' + tag.name + '"？')) return
   try { await deleteTag(tag.id); await load() }
   catch (e) { error.value = e.response?.data?.message || '删除失败' }
+}
+
+// ── 拖拽排序 ──
+const dragId = ref(null)
+function onDragStart(tag) { if (tag.depth === 0) dragId.value = tag.id }
+async function onDrop(target) {
+  if (dragId.value == null || target.depth !== 0 || dragId.value === target.id) return
+  const ids = flatNodes().filter(n => n.depth === 0).map(n => n.id)
+  const from = ids.indexOf(dragId.value)
+  const to = ids.indexOf(target.id)
+  if (from < 0 || to < 0) return
+  ids.splice(from, 1)
+  ids.splice(to, 0, dragId.value)
+  try { await reorderTags(ids); await load() } catch { /* ok */ }
+  dragId.value = null
 }
 
 const collapsed = ref({})
@@ -72,7 +87,13 @@ const flatNodes = () => {
     </div>
 
     <div class="tag-list">
-      <div v-for="n in flatNodes()" :key="n.id" class="tag-item" :style="{ paddingLeft: (n.depth * 20 + 8) + 'px' }">
+      <div v-for="n in flatNodes()" :key="n.id" class="tag-item" :style="{ paddingLeft: (n.depth * 20 + 8) + 'px' }"
+        :draggable="n.depth === 0 && !n.is_system"
+        :class="{ 'drag-over': dragId && dragId !== n.id && n.depth === 0, 'drag-src': dragId === n.id }"
+        @dragstart="onDragStart(n)"
+        @dragover.prevent="n.depth === 0 && dragId !== n.id"
+        @drop.prevent="onDrop(n)"
+        @dragend="dragId = null">
         <template v-if="editId === n.id">
           <input v-model="editName" @keyup.enter="saveEdit(n)" @blur="saveEdit(n)" autofocus />
         </template>
@@ -111,4 +132,7 @@ h2 { margin-bottom: var(--space-4); }
 .hint { color: var(--color-text-muted); padding: var(--space-4); }
 .sys-tag { color: var(--color-text-muted); cursor: default; }
 .sys-badge { font-size: 10px; padding: 0 4px; background: var(--color-bg-tertiary); color: var(--color-text-muted); border-radius: var(--radius-sm); border: 1px solid var(--color-border-subtle); }
+.tag-item[draggable="true"] { cursor: grab; }
+.tag-item.drag-src { opacity: 0.4; }
+.tag-item.drag-over { border-top: 2px solid var(--color-accent); }
 </style>

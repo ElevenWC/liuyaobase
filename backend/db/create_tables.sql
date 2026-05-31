@@ -53,6 +53,7 @@ CREATE TABLE tag (
     parent_id INT NULL COMMENT '父标签ID',
     name VARCHAR(50) NOT NULL COMMENT '标签名称',
     is_system TINYINT(1) NOT NULL DEFAULT 0 COMMENT '系统标签(不可删除)',
+    sort_order INT NOT NULL DEFAULT 0 COMMENT '排序序号',
     FOREIGN KEY (parent_id) REFERENCES tag(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '标签表';
 

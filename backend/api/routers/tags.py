@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
 from backend.db.connection import get_session
 from backend.services.tag_service import (
-    get_tag_tree, create_tag, update_tag, delete_tag, get_guali_by_tag,
+    get_tag_tree, create_tag, update_tag, delete_tag, get_guali_by_tag, reorder_tags,
 )
 
 router = APIRouter(prefix="/tags", tags=["标签"])
@@ -56,6 +56,16 @@ async def remove_tag(tag_id: int, session: Session = Depends(get_session)):
         return _ok(None)
     except ValueError as e:
         return _err(str(e))
+
+
+@router.post("/reorder")
+async def reorder(data: dict, session: Session = Depends(get_session)):
+    """更新一级标签排序"""
+    ids = data.get("ids", [])
+    if not ids:
+        return _err("ids 不能为空")
+    reorder_tags(session, ids)
+    return _ok(None)
 
 
 @router.get("/{tag_id}/guali")

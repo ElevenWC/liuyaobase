@@ -17,6 +17,7 @@ class Tag(SQLModel, table=True):
     parent_id: Optional[int] = Field(default=None, foreign_key="tag.id")
     name: str = Field(max_length=50)
     is_system: bool = Field(default=False)
+    sort_order: int = Field(default=0)
 
     parent: Mapped[Optional["Tag"]] = Relationship(
         back_populates="children",
