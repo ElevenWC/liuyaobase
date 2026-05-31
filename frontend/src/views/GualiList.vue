@@ -158,14 +158,9 @@ function formatTime(t) { return t ? t.slice(0, 10) : '' }
 
 const ZY_NAMES = ['应验', '模糊', '不验', '未验']
 
-const sidebarTags = computed(() => {
-  return (store.tagTree || []).map(n => ({
-    ...n,
-    children: (n.children || []).filter(c => !c.is_system),
-  })).filter(n => !n.is_system)
-})
+const sidebarTags = computed(() => store.tagTree || [])
 
-function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of nodes) { if (n.is_system) continue; r.push({ ...n, depth: d }); if (n.children) w(n.children.filter(c => !c.is_system), d+1); } }; w(store.tagTree, 0); return r }
+function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of nodes) { r.push({ ...n, depth: d }); if (n.children) w(n.children, d+1); } }; w(store.tagTree, 0); return r }
 </script>
 
 <template>
