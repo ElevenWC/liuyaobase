@@ -81,18 +81,27 @@ def set_zhan_yan_tag(session: Session, guali_id: int, tag_id: int):
     add_guali_tag(session, guali_id, tag_id)
 
 
+def reorder_tags(session: Session, ids: list[int]):
+    """按传入 ID 顺序更新一级标签的 sort_order"""
+    for i, tag_id in enumerate(ids):
+        tag = get_by_id(session, tag_id)
+        if tag:
+            tag.sort_order = i
+    session.commit()
+
+
 def _build_tree(tags: list[Tag], parent_id: int | None) -> list[dict]:
-    """递归构建标签树"""
+    """递归构建标签树，按 sort_order 排序"""
     result: list[dict] = []
-    for tag in tags:
-        if tag.parent_id != parent_id:
-            continue
-        children = _build_tree(tags, tag.id)
+    children = [t for t in tags if t.parent_id == parent_id]
+    children.sort(key=lambda t: t.sort_order)
+    for tag in children:
+        sub = _build_tree(tags, tag.id)
         result.append({
             "id": tag.id,
             "name": tag.name,
             "parent_id": tag.parent_id,
             "is_system": tag.is_system,
-            "children": children,
+            "children": sub,
         })
     return result

@@ -9,9 +9,11 @@ const props = defineProps({
   pageSize: { type: Number, default: 50 },
   loading: { type: Boolean, default: false },
   selectedId: { type: Number, default: null },
+  selectAll: { type: Boolean, default: false },
+  excludedIds: { type: Set, default: () => new Set() },
 })
 
-const emit = defineEmits(['page-change', 'select-guali', 'export-data'])
+const emit = defineEmits(['page-change', 'select-guali', 'export-data', 'toggle-exclude'])
 
 const selected = ref([])
 const activeFloats = ref([])
@@ -64,7 +66,9 @@ defineExpose({ selected, clearSelection })
       <table class="rl-table">
         <thead>
           <tr>
-            <th class="col-cb"><input type="checkbox" @change="(e) => selected = e.target.checked ? results.map(r=>r.id) : []" /></th>
+            <th class="col-cb"><input type="checkbox"
+              :checked="props.selectAll || selected.length === results.length"
+              @change="(e) => { if (props.selectAll) { results.forEach(r => { if (!e.target.checked) emit('toggle-exclude', r.id) }) } else { selected = e.target.checked ? results.map(r=>r.id) : [] } }" /></th>
             <th class="col-num">#</th>
             <th class="col-time">占问时间</th>
             <th class="col-shiyou">占问事由</th>
@@ -74,7 +78,9 @@ defineExpose({ selected, clearSelection })
         </thead>
         <tbody>
           <tr v-for="(r, i) in results" :key="r.id" @click="onRowClick(r.id)" class="rl-row" :class="{ active: r.id === props.selectedId }">
-            <td class="col-cb" @click.stop><input type="checkbox" :checked="selected.includes(r.id)" @change="toggleSelect(r.id)" /></td>
+            <td class="col-cb" @click.stop><input type="checkbox"
+              :checked="props.selectAll ? !props.excludedIds.has(r.id) : selected.includes(r.id)"
+              @change="props.selectAll ? emit('toggle-exclude', r.id) : toggleSelect(r.id)" /></td>
             <td class="col-num">{{ r.id }}</td>
             <td class="col-time">{{ r.zhanwen_time?.slice(0, 10) }}</td>
             <td class="col-shiyou">{{ r.zhanwen_shiyou }}</td>

@@ -44,9 +44,22 @@ function selectedCount() {
 
 const selectedGualiId = ref(null)
 const selectAllResults = ref(false)
+const excludedIds = ref(new Set())
 
-// 清空或条件变化时重置全选
-watch(() => store.results.length, (n) => { if (!n) selectAllResults.value = false })
+// 清空或条件变化时重置全选和排除列表
+watch(() => store.results.length, (n) => { if (!n) { selectAllResults.value = false; excludedIds.value = new Set() } })
+watch(selectAllResults, (v) => { if (v) excludedIds.value = new Set() })
+
+function onToggleExclude(id) {
+  const s = new Set(excludedIds.value)
+  if (s.has(id)) s.delete(id); else s.add(id)
+  excludedIds.value = s
+}
+
+const batchCount = computed(() => {
+  if (selectAllResults.value) return Math.max(0, store.pagination.total - excludedIds.value.size)
+  return selectedCount()
+})
 
 async function batchAddTag(tagId) {
   if (!tagId) return
@@ -61,7 +74,7 @@ async function batchAddTag(tagId) {
         logic: store.logicChain,
         pagination: { page: 1, page_size: 99999 },
       })
-      ids = (allRes.data.data?.results || []).map(r => r.id)
+      ids = (allRes.data.data?.results || []).map(r => r.id).filter(id => !excludedIds.value.has(id))
     } catch { ids = []; alert('获取全部卦例失败') }
   }
 
@@ -90,7 +103,7 @@ async function batchRemoveTag(tagId) {
   if (selectAllResults.value && store.pagination.total > 0) {
     try {
       const allRes = await fetchSearchResults({ conditions: store.conditions, logic: store.logicChain, pagination: { page: 1, page_size: 99999 } })
-      ids = (allRes.data.data?.results || []).map(r => r.id)
+      ids = (allRes.data.data?.results || []).map(r => r.id).filter(id => !excludedIds.value.has(id))
     } catch { ids = [] }
   }
   if (!ids.length) return
@@ -200,10 +213,10 @@ function onPageChange(page) {
             <option v-for="t in batchLevel2Options" :key="t.id" :value="t.id">{{ t.name }}</option>
           </select>
           <button class="sp-batch-btn sp-batch-add" :disabled="!selectedTagId()" @click="batchAddTag(selectedTagId())">
-            {{ batchTagging ? '打标中...' : `加标签(${selectAllResults ? store.pagination.total : selectedCount()})` }}
+            {{ batchTagging ? '打标中...' : `加标签(${batchCount})` }}
           </button>
           <button class="sp-batch-btn sp-batch-del" :disabled="!selectedTagId()" @click="batchRemoveTag(selectedTagId())">
-            {{ batchTagging ? '删标中...' : `删标签(${selectAllResults ? store.pagination.total : selectedCount()})` }}
+            {{ batchTagging ? '删标中...' : `删标签(${batchCount})` }}
           </button>
         </div>
         <RecommendedSchemes />
@@ -216,8 +229,11 @@ function onPageChange(page) {
             :loading="store.loading"
             :selected-id="selectedGualiId"
             @page-change="onPageChange"
+            :select-all="selectAllResults"
+            :excluded-ids="excludedIds"
             @select-guali="onSelectGuali"
             @export-data="onExportData"
+            @toggle-exclude="onToggleExclude"
           />
         </div>
       </div>

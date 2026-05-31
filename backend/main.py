@@ -5,14 +5,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.config import SERVER_HOST, SERVER_PORT
 from backend.db.connection import engine, init_db
 from backend.api.main import router as api_router
+from backend.services.sync_watcher import start_watcher, stop_watcher
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # startup: 确保数据库表存在
+    # startup
     init_db()
+    start_watcher()
     yield
-    # shutdown: 关闭连接池
+    # shutdown
+    stop_watcher()
     engine.dispose()
 
 
