@@ -23,9 +23,9 @@ logs/
 *.db
 *.sqlite3
 
-# Uploads/Images (保留目录结构)
-images/*
-!images/.gitkeep
+# Syncthing 同步文件夹（含隐私数据，不跟踪）
+sync/**
+!.gitignore
 
 # OS
 .DS_Store
