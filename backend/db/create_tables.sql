@@ -219,6 +219,8 @@ CREATE TABLE guali_shensha (
     yi_ma VARCHAR(2) COMMENT '驿马地支',
     yang_ren VARCHAR(2) COMMENT '羊刃地支',
     tao_hua VARCHAR(2) COMMENT '桃花地支',
+    zai_sha VARCHAR(2) COMMENT '灾煞地支',
+    jie_sha VARCHAR(2) COMMENT '劫煞地支',
     yimao_is_ganlu VARCHAR(10) DEFAULT '' COMMENT '是干禄的爻位',
     yimao_dai_ganlu VARCHAR(10) DEFAULT '' COMMENT '带干禄的爻位',
     yimao_is_yima VARCHAR(10) DEFAULT '' COMMENT '是驿马的爻位',
@@ -227,6 +229,10 @@ CREATE TABLE guali_shensha (
     yimao_dai_yangren VARCHAR(10) DEFAULT '' COMMENT '带羊刃的爻位',
     yimao_is_taohua VARCHAR(10) DEFAULT '' COMMENT '是桃花的爻位',
     yimao_dai_taohua VARCHAR(10) DEFAULT '' COMMENT '带桃花的爻位',
+    yimao_is_zaisha VARCHAR(10) DEFAULT '' COMMENT '是灾煞的爻位',
+    yimao_dai_zaisha VARCHAR(10) DEFAULT '' COMMENT '带灾煞的爻位',
+    yimao_is_jiesha VARCHAR(10) DEFAULT '' COMMENT '是劫煞的爻位',
+    yimao_dai_jiesha VARCHAR(10) DEFAULT '' COMMENT '带劫煞的爻位',
     zengshan_is_ganlu VARCHAR(10) DEFAULT '' COMMENT '是干禄的爻位',
     zengshan_dai_ganlu VARCHAR(10) DEFAULT '' COMMENT '带干禄的爻位',
     zengshan_is_yima VARCHAR(10) DEFAULT '' COMMENT '是驿马的爻位',
@@ -261,6 +267,8 @@ CREATE INDEX idx_gan_lu ON guali_shensha(gan_lu);
 CREATE INDEX idx_yi_ma ON guali_shensha(yi_ma);
 CREATE INDEX idx_yang_ren ON guali_shensha(yang_ren);
 CREATE INDEX idx_tao_hua ON guali_shensha(tao_hua);
+CREATE INDEX idx_zai_sha ON guali_shensha(zai_sha);
+CREATE INDEX idx_jie_sha ON guali_shensha(jie_sha);
 
 -- 15. 卦类扩展表
 CREATE TABLE guali_gua (

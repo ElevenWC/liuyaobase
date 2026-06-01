@@ -13,6 +13,8 @@ class GualiShensha(SQLModel, table=True):
     yi_ma: Optional[str] = Field(default=None, max_length=2)
     yang_ren: Optional[str] = Field(default=None, max_length=2)
     tao_hua: Optional[str] = Field(default=None, max_length=2)
+    zai_sha: Optional[str] = Field(default=None, max_length=2)
+    jie_sha: Optional[str] = Field(default=None, max_length=2)
 
     # 易冒伏神-神煞状态（8个）
     yimao_is_ganlu: str = Field(default="", max_length=10)
@@ -23,6 +25,10 @@ class GualiShensha(SQLModel, table=True):
     yimao_dai_yangren: str = Field(default="", max_length=10)
     yimao_is_taohua: str = Field(default="", max_length=10)
     yimao_dai_taohua: str = Field(default="", max_length=10)
+    yimao_is_zaisha: str = Field(default="", max_length=10)
+    yimao_dai_zaisha: str = Field(default="", max_length=10)
+    yimao_is_jiesha: str = Field(default="", max_length=10)
+    yimao_dai_jiesha: str = Field(default="", max_length=10)
 
     # 增删伏神-神煞状态（8个）
     zengshan_is_ganlu: str = Field(default="", max_length=10)
@@ -33,6 +39,10 @@ class GualiShensha(SQLModel, table=True):
     zengshan_dai_yangren: str = Field(default="", max_length=10)
     zengshan_is_taohua: str = Field(default="", max_length=10)
     zengshan_dai_taohua: str = Field(default="", max_length=10)
+    zengshan_is_zaisha: str = Field(default="", max_length=10)
+    zengshan_dai_zaisha: str = Field(default="", max_length=10)
+    zengshan_is_jiesha: str = Field(default="", max_length=10)
+    zengshan_dai_jiesha: str = Field(default="", max_length=10)
 
     # 本卦-神煞状态（8个）
     ben_is_ganlu: str = Field(default="", max_length=10)
@@ -43,6 +53,10 @@ class GualiShensha(SQLModel, table=True):
     ben_dai_yangren: str = Field(default="", max_length=10)
     ben_is_taohua: str = Field(default="", max_length=10)
     ben_dai_taohua: str = Field(default="", max_length=10)
+    ben_is_zaisha: str = Field(default="", max_length=10)
+    ben_dai_zaisha: str = Field(default="", max_length=10)
+    ben_is_jiesha: str = Field(default="", max_length=10)
+    ben_dai_jiesha: str = Field(default="", max_length=10)
 
     # 之卦-神煞状态（8个）
     zhi_is_ganlu: str = Field(default="", max_length=10)
@@ -53,3 +67,7 @@ class GualiShensha(SQLModel, table=True):
     zhi_dai_yangren: str = Field(default="", max_length=10)
     zhi_is_taohua: str = Field(default="", max_length=10)
     zhi_dai_taohua: str = Field(default="", max_length=10)
+    zhi_is_zaisha: str = Field(default="", max_length=10)
+    zhi_dai_zaisha: str = Field(default="", max_length=10)
+    zhi_is_jiesha: str = Field(default="", max_length=10)
+    zhi_dai_jiesha: str = Field(default="", max_length=10)

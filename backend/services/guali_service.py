@@ -95,6 +95,7 @@ def get_guali_detail(session: Session, guali_id: int) -> dict | None:
         detail.update({
             "gan_lu": _str(shensha.gan_lu), "yi_ma": _str(shensha.yi_ma),
             "yang_ren": _str(shensha.yang_ren), "tao_hua": _str(shensha.tao_hua),
+            "zai_sha": _str(shensha.zai_sha), "jie_sha": _str(shensha.jie_sha),
         })
 
     # 卦类

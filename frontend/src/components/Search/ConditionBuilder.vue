@@ -111,7 +111,7 @@ const DIZHI_VALS = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申
 const TIAN_GAN_VALS = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
 const LIUSHEN_VALS = ['青龙', '朱雀', '勾陈', '螣蛇', '白虎', '玄武']
 
-const SHENSHA_FIELDS = ['is_ganlu', 'dai_ganlu', 'is_yima', 'dai_yima', 'is_yangren', 'dai_yangren', 'is_taohua', 'dai_taohua', 'ganlu', 'yima', 'yangren', 'taohua']
+const SHENSHA_FIELDS = ['is_ganlu', 'dai_ganlu', 'is_yima', 'dai_yima', 'is_yangren', 'dai_yangren', 'is_taohua', 'dai_taohua', 'is_zaisha', 'dai_zaisha', 'is_jiesha', 'dai_jiesha', 'ganlu', 'yima', 'yangren', 'taohua', 'zaisha', 'jiesha']
 const SHENSHA_TYPES = [
   { v: 'is_ganlu', label: '是干禄', mode: '是', shensha: '干禄' },
   { v: 'dai_ganlu', label: '带干禄', mode: '带', shensha: '干禄' },
@@ -125,6 +125,12 @@ const SHENSHA_TYPES = [
   { v: 'yima', label: '是或带驿马', mode: '是或带', shensha: '驿马' },
   { v: 'yangren', label: '是或带羊刃', mode: '是或带', shensha: '羊刃' },
   { v: 'taohua', label: '是或带桃花', mode: '是或带', shensha: '桃花' },
+  { v: 'is_zaisha', label: '是灾煞', mode: '是', shensha: '灾煞' },
+  { v: 'dai_zaisha', label: '带灾煞', mode: '带', shensha: '灾煞' },
+  { v: 'zaisha', label: '是或带灾煞', mode: '是或带', shensha: '灾煞' },
+  { v: 'is_jiesha', label: '是劫煞', mode: '是', shensha: '劫煞' },
+  { v: 'dai_jiesha', label: '带劫煞', mode: '带', shensha: '劫煞' },
+  { v: 'jiesha', label: '是或带劫煞', mode: '是或带', shensha: '劫煞' },
 ]
 
 function isShensha(field) { return SHENSHA_FIELDS.includes(field) }

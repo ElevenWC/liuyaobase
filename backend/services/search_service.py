@@ -60,6 +60,10 @@ SHENSHA_MAP = {
     "yima":      ("is_yima",   "dai_yima"),
     "yangren":   ("is_yangren","dai_yangren"),
     "taohua":    ("is_taohua", "dai_taohua"),
+    "is_zaisha": ("is_zaisha", "dai_zaisha"),
+    "zaisha":    ("is_zaisha", "dai_zaisha"),
+    "is_jiesha": ("is_jiesha", "dai_jiesha"),
+    "jiesha":    ("is_jiesha", "dai_jiesha"),
 }
 
 # yao_object 六爻对象 → 查找方式

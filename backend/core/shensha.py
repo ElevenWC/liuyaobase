@@ -28,6 +28,8 @@ _SANHE_JU = {
 }
 _YI_MA: dict[str, str] = {"申子辰": "寅", "亥卯未": "巳", "寅午戌": "申", "巳酉丑": "亥"}
 _TAO_HUA: dict[str, str] = {"申子辰": "酉", "亥卯未": "子", "寅午戌": "卯", "巳酉丑": "午"}
+_ZAI_SHA: dict[str, str] = {"申子辰": "午", "亥卯未": "酉", "寅午戌": "子", "巳酉丑": "卯"}
+_JIE_SHA: dict[str, str] = {"申子辰": "巳", "巳酉丑": "寅", "寅午戌": "亥", "亥卯未": "申"}
 
 
 def get_shensha_dizhi(day_gan: str, day_zhi: str) -> dict:
@@ -38,6 +40,8 @@ def get_shensha_dizhi(day_gan: str, day_zhi: str) -> dict:
         "yi_ma": _YI_MA.get(ju, ""),
         "yang_ren": _YANG_REN.get(day_gan, ""),
         "tao_hua": _TAO_HUA.get(ju, ""),
+        "zai_sha": _ZAI_SHA.get(ju, ""),
+        "jie_sha": _JIE_SHA.get(ju, ""),
     }
 
 

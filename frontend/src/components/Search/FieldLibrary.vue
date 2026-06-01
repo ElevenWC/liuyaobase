@@ -79,6 +79,10 @@ const categories = [
       { key: 'dai_yangren', label: '带羊刃', type: 'shensha' },
       { key: 'is_taohua', label: '是桃花', type: 'shensha' },
       { key: 'dai_taohua', label: '带桃花', type: 'shensha' },
+      { key: 'is_zaisha', label: '是灾煞', type: 'shensha' },
+      { key: 'dai_zaisha', label: '带灾煞', type: 'shensha' },
+      { key: 'is_jiesha', label: '是劫煞', type: 'shensha' },
+      { key: 'dai_jiesha', label: '带劫煞', type: 'shensha' },
     ],
   },
   {
