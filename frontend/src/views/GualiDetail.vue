@@ -336,6 +336,8 @@ function fanYinText() {
           <span style="margin-left:16px"><span class="label">驿马：</span>{{ detail.yi_ma }}</span>
           <span style="margin-left:16px"><span class="label">羊刃：</span>{{ detail.yang_ren }}</span>
           <span style="margin-left:16px"><span class="label">桃花：</span>{{ detail.tao_hua }}</span>
+          <span style="margin-left:16px"><span class="label">灾煞：</span>{{ detail.zai_sha }}</span>
+          <span style="margin-left:16px"><span class="label">劫煞：</span>{{ detail.jie_sha }}</span>
         </div>
       </div>
 

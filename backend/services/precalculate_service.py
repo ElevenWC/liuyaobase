@@ -175,6 +175,7 @@ def precalculate(session: Session, guali_id: int):
     _SS_KEY_MAP = {
         "gan_lu": "ganlu", "yi_ma": "yima",
         "yang_ren": "yangren", "tao_hua": "taohua",
+        "zai_sha": "zaisha", "jie_sha": "jiesha",
     }
     for old, new in list(_SS_KEY_MAP.items()):
         for prefix in ("ben_is_", "ben_dai_", "zhi_is_", "zhi_dai_",
