@@ -4,6 +4,7 @@ import { useAppStore } from '../stores/index.js'
 import { fetchGualiDetail, updateGuali, deleteGuali, fetchTagTree, addGualiTag, removeGualiTag } from '../api/index.js'
 import GuaCiFloat from '../components/shared/GuaCiFloat.vue'
 import CalendarFloat from '../components/shared/CalendarFloat.vue'
+import ZhanduanFloat from '../components/shared/ZhanduanFloat.vue'
 
 const store = useAppStore()
 
@@ -32,6 +33,17 @@ const saving = ref(false)
 
 const activeFloats = ref([])
 const showCalendar = ref(false)
+const showZhanduan = ref(false)
+
+async function onZhanduanSave(content) {
+  if (saving.value) return; saving.value = true
+  try { await updateGuali(detail.value.id, { zhanduan: content }); detail.value.zhanduan = content }
+  catch { error.value = '保存失败' }
+  finally { saving.value = false }
+}
+
+// 切卦例时自动关闭占断浮窗
+watch(effectiveId, () => { showZhanduan.value = false })
 
 // 占验情况选择器
 const ZY_NAMES = ['应验', '模糊', '不验', '未验']
@@ -426,7 +438,9 @@ function fanYinText() {
       </div>
 
       <div class="info-section" @dblclick="onDblClickZhanduan">
-        <div class="label">占断内容：</div>
+        <div class="label">占断内容
+          <span class="zd-float-btn" @click.stop="showZhanduan = true" title="浮窗编辑占断">+</span>
+        </div>
         <p v-if="!editingZhanduan" class="zhanduan-text">{{ detail.zhanduan }}</p>
         <textarea v-else v-model="editZhanduan" rows="6" autofocus class="edit-textarea" />
       </div>
@@ -455,6 +469,7 @@ function fanYinText() {
 
       <GuaCiFloat v-for="f in activeFloats" :key="f.id" :gua-code="f.guaCode" :gua-name="f.guaName" :visible="true" @close="closeFloat(f.id)" />
       <CalendarFloat v-if="showCalendar && detail.zhanwen_time" :zhanwen-time="detail.zhanwen_time" :visible="showCalendar" @close="showCalendar = false" />
+      <ZhanduanFloat v-if="showZhanduan" :guali-id="detail.id" :content="detail.zhanduan || ''" :visible="showZhanduan" @close="showZhanduan = false" @save="onZhanduanSave" />
     </template>
   </div>
   <div v-else class="no-selection">点击左侧卦例查看详情</div>
@@ -575,6 +590,8 @@ function fanYinText() {
 .edit-input, .edit-textarea { background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-accent); border-radius: var(--radius-md); padding: var(--space-1) var(--space-2); width: 100%; font-family: var(--font-family); }
 .edit-textarea { padding: var(--space-2); min-height: 120px; }
 
+.zd-float-btn { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: 1px dashed var(--color-border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-text-muted); font-size: 14px; margin-left: 6px; transition: border-color var(--transition-fast); vertical-align: middle; }
+.zd-float-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
 .tag-add-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: 1px dashed var(--color-border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-text-muted); font-size: 14px; margin-left: 4px; transition: border-color var(--transition-fast); }
 .tag-add-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
 .tag-add-btn:hover .btn-edit-tip { display: block; }
