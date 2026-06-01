@@ -23,15 +23,19 @@ FAILED_DIR = SYNC_DIR / "failed"
 
 class LyFileHandler(FileSystemEventHandler):
     def on_created(self, event):
-        if event.is_directory:
+        self._handle(event.src_path)
+
+    def on_moved(self, event):
+        self._handle(event.dest_path)
+
+    def _handle(self, src):
+        if Path(src).is_dir():
             return
-        path = Path(event.src_path)
+        path = Path(src)
         if not path.suffix == ".ly":
             return
-        # 排除临时文件
         if path.name.endswith(".tmp") or ".sync" in path.name:
             return
-
         self._process(path)
 
     def _process(self, path: Path):
