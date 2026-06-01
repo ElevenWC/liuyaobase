@@ -584,7 +584,7 @@ function fanYinText() {
 }
 .yao-line .gap { width: 0; }
 
-.zhanduan-text { white-space: pre-wrap; line-height: var(--line-height); }
+.zhanduan-text { white-space: pre-wrap; line-height: var(--line-height); font-size: 0.95rem; color: var(--color-text-primary); }
 .tag-badge { padding: 1px 8px; color: #fff; border-radius: var(--radius-sm); font-size: var(--font-size-xs); margin-right: var(--space-1); }
 
 .edit-input, .edit-textarea { background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-accent); border-radius: var(--radius-md); padding: var(--space-1) var(--space-2); width: 100%; font-family: var(--font-family); }
