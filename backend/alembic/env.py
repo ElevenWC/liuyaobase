@@ -11,8 +11,7 @@ from sqlmodel import SQLModel
 
 from backend.config import DATABASE_URL
 
-# 等 Issue #6（models/）完成后，取消下面注释以启用 autogenerate 检测
-# from backend.models import *  # noqa: F403
+from backend.models import *  # noqa: F403
 
 config = context.config
 
