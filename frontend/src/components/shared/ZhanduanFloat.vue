@@ -37,13 +37,15 @@ function onMouseDown(e) {
 
 function onResizeDown(e) {
   e.stopPropagation(); e.preventDefault()
-  const startX = e.clientX; const startY = e.clientY
+  const start = { x: e.clientX, y: e.clientY }
   const onMove = (ev) => {
-    elWidth.value = Math.max(300, elWidth.value + ev.clientX - startX - startX + e.clientX)
+    elWidth.value = Math.max(300, elWidth.value + ev.clientX - start.x)
+    elHeight.value = Math.max(200, elHeight.value + ev.clientY - start.y)
+    start.x = ev.clientX; start.y = ev.clientY
   }
-  // Simplified resize — just horizontal for now
+  const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp) }
   document.addEventListener('mousemove', onMove)
-  document.addEventListener('mouseup', () => { document.removeEventListener('mousemove', onMove) }, { once: true })
+  document.addEventListener('mouseup', onUp)
 }
 
 function doClose() {
@@ -83,7 +85,7 @@ function doClose() {
 .zf-textarea {
   flex: 1; padding: 12px 14px; border: none; outline: none; resize: none;
   background: transparent; color: var(--color-text-primary);
-  font-size: var(--font-size-sm); font-family: var(--font-family);
+  font-size: 0.95rem; font-family: var(--font-family);
   line-height: 1.7; min-height: 0;
 }
 .zf-textarea::placeholder { color: var(--color-text-muted); }
