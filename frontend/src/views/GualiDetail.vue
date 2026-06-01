@@ -438,7 +438,7 @@ function fanYinText() {
       </div>
 
       <div class="info-section" @dblclick="onDblClickZhanduan">
-        <div class="label">占断内容
+        <div class="label" style="font-weight:bold;color:var(--color-text-primary)">占断内容
           <span class="zd-float-btn" @click.stop="showZhanduan = true" title="浮窗编辑占断">+</span>
         </div>
         <p v-if="!editingZhanduan" class="zhanduan-text">{{ detail.zhanduan }}</p>

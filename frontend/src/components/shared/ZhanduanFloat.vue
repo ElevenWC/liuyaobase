@@ -79,7 +79,7 @@ function doClose() {
   flex-shrink: 0;
 }
 .zf-header.dragging { cursor: grabbing; }
-.zf-title { font-size: var(--font-size-sm); font-weight: 600; color: var(--color-text-primary); }
+.zf-title { font-size: var(--font-size-lg); font-weight: bold; color: var(--color-text-primary); }
 .zf-close { width: 24px; height: 24px; border: none; background: none; color: var(--color-text-muted); font-size: 18px; cursor: pointer; border-radius: var(--radius-sm); }
 .zf-close:hover { background: var(--color-danger); color: #fff; }
 .zf-textarea {
