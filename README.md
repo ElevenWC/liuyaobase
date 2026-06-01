@@ -4,14 +4,14 @@
 
 ## 快速开始
 
-双击 `run.bat` 一键启动后端和前端。浏览器会自动打开 `http://localhost:5173/guali`。
+双击 `run.bat` 一键启动后端和前端。浏览器会自动打开 `http://localhost:5174/guali`。
 
 ```bash
 # 或者分别启动：
 # 后端 (默认 localhost:8001)
 venv\Scripts\python -m uvicorn backend.main:app --host 127.0.0.1 --port 8001
 
-# 前端 (默认 localhost:5173)
+# 前端 (默认 localhost:5174)
 cd frontend && npm run dev
 ```
 
