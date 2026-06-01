@@ -72,6 +72,8 @@ class GualiDetailResponse(BaseModel):
     yi_ma: Optional[str] = None
     yang_ren: Optional[str] = None
     tao_hua: Optional[str] = None
+    zai_sha: Optional[str] = None
+    jie_sha: Optional[str] = None
     # guali_gua
     ben_palace: Optional[str] = None
     ben_palace_type: Optional[str] = None
