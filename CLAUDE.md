@@ -57,6 +57,9 @@ AI 跑规划文档 §6 的测试命令 → 全部通过
       ▼
 AI commit + push（不创建 PR）
       │
+      ├── 涉及数据库改表？
+      │   └── 先跑 alembic revision --autogenerate + alembic upgrade head
+      │       （见 memory/alembic_workflow.md）
       ▼
 用户跑 §6 的用户测试命令
       │
