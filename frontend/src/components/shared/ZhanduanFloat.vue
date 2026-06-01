@@ -71,7 +71,7 @@ function doClose() {
   background: var(--color-bg-overlay); backdrop-filter: blur(10px);
   border: 1px solid var(--color-border-primary); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg); user-select: none;
-  display: flex; flex-direction: column;
+  display: flex; flex-direction: column; overflow: hidden;
 }
 .zf-header {
   display: flex; align-items: center; justify-content: space-between;
