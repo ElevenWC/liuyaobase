@@ -85,6 +85,20 @@ function deleteNote(id) {
   }
 }
 
+// ── 拖拽排序 ──
+const dragNoteId = ref(null)
+function onNoteDragStart(id) { dragNoteId.value = id }
+function onNoteDrop(targetId) {
+  if (dragNoteId.value == null || dragNoteId.value === targetId) return
+  const from = notes.value.findIndex(n => n.id === dragNoteId.value)
+  const to = notes.value.findIndex(n => n.id === targetId)
+  if (from < 0 || to < 0) return
+  const item = notes.value.splice(from, 1)[0]
+  notes.value.splice(to, 0, item)
+  saveNotes(notes.value)
+  dragNoteId.value = null
+}
+
 function selectNote(id) {
   saveCurrentContent()
   currentId.value = id
@@ -175,7 +189,13 @@ function lastSaved() {
 
     <div class="nf-body">
       <div class="nf-list">
-        <div v-for="n in notes" :key="n.id" class="nf-item" :class="{ active: n.id === currentId }" @click="selectNote(n.id)">
+        <div v-for="n in notes" :key="n.id" class="nf-item" :class="{ active: n.id === currentId, 'drag-over': dragNoteId && dragNoteId !== n.id, 'drag-src': dragNoteId === n.id }"
+          draggable="true"
+          @click="selectNote(n.id)"
+          @dragstart="onNoteDragStart(n.id)"
+          @dragover.prevent
+          @drop.prevent="onNoteDrop(n.id)"
+          @dragend="dragNoteId = null">
           <span class="nf-item-title">{{ n.title || '无标题' }}</span>
           <button class="nf-del" @click.stop="deleteNote(n.id)">×</button>
         </div>
@@ -223,7 +243,10 @@ function lastSaved() {
 .nf-item { display: flex; align-items: center; padding: 8px 8px; border-radius: var(--radius-sm); cursor: pointer; font-size: var(--font-size-sm); color: var(--color-text-secondary); }
 .nf-item:hover { background: var(--color-bg-tertiary); }
 .nf-item.active { background: var(--color-accent); color: #fff; }
+.nf-item { cursor: pointer; }
 .nf-item-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nf-item.drag-src { opacity: 0.4; }
+.nf-item.drag-over { border-top: 2px solid var(--color-accent); }
 .nf-del { width: 16px; height: 16px; border: none; background: none; color: inherit; font-size: 12px; cursor: pointer; border-radius: 50%; opacity: 0; flex-shrink: 0; }
 .nf-item:hover .nf-del { opacity: 0.6; }
 .nf-item:hover .nf-del:hover { opacity: 1; background: rgba(255,255,255,0.2); }
