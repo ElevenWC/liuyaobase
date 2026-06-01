@@ -16,7 +16,7 @@ from sqlmodel import Session
 
 logger = logging.getLogger(__name__)
 
-SYNC_DIR = Path(__file__).resolve().parent.parent.parent.parent / "sync"
+SYNC_DIR = Path(__file__).resolve().parent.parent.parent / "sync"
 IMPORTED_DIR = SYNC_DIR / "imported"
 FAILED_DIR = SYNC_DIR / "failed"
 
