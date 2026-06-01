@@ -14,7 +14,3 @@ echo Frontend starting on http://localhost:5174
 rem Open browser
 timeout /t 3 /nobreak >nul
 start http://localhost:5174/guali
-
-echo.
-echo Both services started. Close this window or press Ctrl+C to exit.
-pause
