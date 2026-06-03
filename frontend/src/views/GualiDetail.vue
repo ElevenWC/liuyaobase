@@ -441,7 +441,10 @@ function fanYinText() {
 
       <div class="info-section" @dblclick="onDblClickZhanduan">
         <div class="label" style="font-weight:bold;color:var(--color-text-primary)">占断内容
-          <span class="zd-float-btn" @click.stop="showZhanduan = true" title="浮窗编辑占断">+</span>
+          <span class="zd-float-btn-wrap">
+            <span class="zd-float-btn" @click.stop="showZhanduan = true">+</span>
+            <span class="btn-edit-tip">浮窗编辑占断</span>
+          </span>
         </div>
         <p v-if="!editingZhanduan" class="zhanduan-text">{{ detail.zhanduan }}</p>
         <textarea v-else v-model="editZhanduan" rows="6" autofocus class="edit-textarea" />
@@ -592,11 +595,14 @@ function fanYinText() {
 .edit-input, .edit-textarea { background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-accent); border-radius: var(--radius-md); padding: var(--space-1) var(--space-2); width: 100%; font-family: var(--font-family); }
 .edit-textarea { padding: var(--space-2); min-height: 120px; }
 
+.zd-float-btn-wrap { position: relative; display: inline-flex; }
+.zd-float-btn-wrap:hover .btn-edit-tip { display: block; }
 .zd-float-btn { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: 1px dashed var(--color-border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-text-muted); font-size: 14px; margin-left: 6px; transition: border-color var(--transition-fast); vertical-align: middle; }
 .zd-float-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
 .tag-add-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: 1px dashed var(--color-border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-text-muted); font-size: 14px; margin-left: 4px; transition: border-color var(--transition-fast); }
 .tag-add-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
 .tag-add-btn:hover .btn-edit-tip { display: block; }
+.tag-add-btn .btn-edit-tip { right: auto; left: 0; }
 
 .tag-editor-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 5000; display: flex; align-items: center; justify-content: center; }
 .tag-editor { background: var(--color-bg-secondary); border-radius: var(--radius-xl); width: 360px; max-height: 480px; overflow: hidden; box-shadow: var(--shadow-lg); }
