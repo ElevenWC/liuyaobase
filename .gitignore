@@ -52,5 +52,8 @@ build/
 # Sensitive config (not tracked)
 backend/config.py
 
+# C3 export temp files
+backend/exports/
+
 # User documents (not tracked)
 .user/

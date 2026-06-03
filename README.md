@@ -4,10 +4,12 @@
 
 ## 快速开始
 
-双击 `run.bat` 一键启动后端和前端。浏览器会自动打开 `http://localhost:5174/guali`。
+双击 `run.bat` 一键启动后端和前端，服务在后台静默运行，浏览器自动打开 `http://localhost:5174/guali`。
+
+双击 `stop.bat` 停止所有服务。
 
 ```bash
-# 或者分别启动：
+# 调试模式（带控制台输出，适合排查问题）：
 # 后端 (默认 localhost:8001)
 venv\Scripts\python -m uvicorn backend.main:app --host 127.0.0.1 --port 8001
 
