@@ -499,7 +499,7 @@ function fanYinText() {
 .btn-edit-wrap { position: relative; display: inline-flex; }
 .btn-edit { padding: 3px 12px; background: var(--color-accent); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-sm); transition: background var(--transition-fast); }
 .btn-edit:hover { background: var(--color-accent-dark); }
-.btn-edit-tip { display: none; position: absolute; top: 110%; right: 0; width: 220px; padding: 6px 10px; background: var(--color-bg-tertiary); color: var(--color-text-secondary); font-size: var(--font-size-xs); border-radius: var(--radius-sm); border: 1px solid var(--color-border-primary); white-space: normal; z-index: 100; }
+.btn-edit-tip { display: none; position: absolute; top: 110%; right: 0; width: 220px; padding: 6px 10px; background: var(--color-bg-tertiary); color: var(--color-text-secondary); font-size: var(--font-size-xs); font-weight: normal; border-radius: var(--radius-sm); border: 1px solid var(--color-border-primary); white-space: normal; z-index: 100; }
 .btn-edit-wrap:hover .btn-edit-tip { display: block; }
 
 .time-bold { font-weight: bold; }
@@ -602,8 +602,8 @@ function fanYinText() {
 .tag-add-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: 1px dashed var(--color-border-subtle); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-text-muted); font-size: 14px; margin-left: 4px; transition: border-color var(--transition-fast); }
 .tag-add-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
 .tag-add-btn:hover .btn-edit-tip { display: block; }
-.tag-add-btn .btn-edit-tip { right: auto; left: 0; }
-.zd-float-btn-wrap .btn-edit-tip { right: auto; left: 0; }
+.tag-add-btn .btn-edit-tip { right: auto; left: 0; width: auto; white-space: nowrap; }
+.zd-float-btn-wrap .btn-edit-tip { right: auto; left: 0; width: auto; white-space: nowrap; }
 
 .tag-editor-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 5000; display: flex; align-items: center; justify-content: center; }
 .tag-editor { background: var(--color-bg-secondary); border-radius: var(--radius-xl); width: 360px; max-height: 480px; overflow: hidden; box-shadow: var(--shadow-lg); }
