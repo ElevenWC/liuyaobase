@@ -1,7 +1,7 @@
 @echo off
 echo Stopping liuyaobase...
 
-rem 按端口精确杀进程，不误杀其他 node/python 进程
+rem Kill processes by port to avoid affecting other services
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8001.*LISTENING"') do (
     echo Killing process on port 8001 (PID: %%a)
     taskkill /f /pid %%a 2>nul
