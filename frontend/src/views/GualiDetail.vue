@@ -603,6 +603,7 @@ function fanYinText() {
 .tag-add-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
 .tag-add-btn:hover .btn-edit-tip { display: block; }
 .tag-add-btn .btn-edit-tip { right: auto; left: 0; }
+.zd-float-btn-wrap .btn-edit-tip { right: auto; left: 0; }
 
 .tag-editor-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 5000; display: flex; align-items: center; justify-content: center; }
 .tag-editor { background: var(--color-bg-secondary); border-radius: var(--radius-xl); width: 360px; max-height: 480px; overflow: hidden; box-shadow: var(--shadow-lg); }
