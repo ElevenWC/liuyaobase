@@ -363,7 +363,7 @@ def _build_condition_clause(cond: Condition, params: dict, idx: int, cond_clause
             code = NAME_TO_CODE.get(cond.value if isinstance(cond.value, str) else '')
             if code:
                 params[f"kw{idx}"] = code
-                return f"guali.yao_bian_code = :kw{idx}"
+                return f"guali.zhi_code = :kw{idx}"
             else:
                 return "1=0"
         else:

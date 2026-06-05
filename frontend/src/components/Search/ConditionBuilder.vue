@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useSearchStore } from '../../stores/useSearchStore.js'
 import { useAppStore } from '../../stores/index.js'
-import { GUA_NAMES, GUA_NAME_SET } from '../../constants/guaNames.js'
+import { GUA_NAME_SET } from '../../constants/guaNames.js'
 import SameYaoGroup from './SameYaoGroup.vue'
 import SamePositionGroup from './SamePositionGroup.vue'
 import FeishenGroup from './FeishenGroup.vue'
@@ -444,12 +444,8 @@ function remove(id) { store.removeCondition(id) }
         <span class="cb-yu">包含</span>
         <input v-model="cond.value" class="cb-input" :class="{ 'cb-input-err': isGuaNameInvalid(cond) }"
           :placeholder="keywordPlaceholder(cond.scope)"
-          :list="(cond.scope === 'ben_name' || cond.scope === 'zhi_name') ? 'gua-names-list' : undefined"
           style="width:150px" @keyup.enter="onKeywordEnter(cond)" />
-        <datalist id="gua-names-list">
-          <option v-for="name in GUA_NAMES" :key="name" :value="name" />
-        </datalist>
-        <span v-if="isGuaNameInvalid(cond)" class="cb-err-msg">无效卦名，请从下拉提示中选择</span>
+        <span v-if="isGuaNameInvalid(cond)" class="cb-err-msg">无效卦名</span>
       </template>
 
       <!-- 标签筛选 -->
