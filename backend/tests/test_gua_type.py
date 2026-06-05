@@ -12,7 +12,7 @@ def test_liu_chong():
 
 def test_liu_he():
     assert check_liu_he("000111")
-    assert check_liu_he("011110")
+    assert check_liu_he("010110")
     assert not check_liu_he("111111")
 
 
