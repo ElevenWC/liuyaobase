@@ -1,7 +1,7 @@
 """C3 复杂检索核心——动态 SQL 生成 + 执行"""
 from sqlmodel import Session, text
 from backend.schemas.search import SearchRequest, Condition, RelationCondition, LogicItem, SearchResponse, SameYaoGroup, SamePositionGroup, FeishenGroup, SubCondition
-from backend.core.enums import CODE_TO_NAME
+from backend.core.enums import CODE_TO_NAME, NAME_TO_CODE
 
 # ── 字段映射白名单 ──
 # field_name → (table_alias, column_expression, needs_yao_join, needs_shensha_join, needs_gua_join, needs_time_join)
@@ -351,9 +351,26 @@ def _build_condition_clause(cond: Condition, params: dict, idx: int, cond_clause
 
     # 文本搜索
     if cond.field == '_keyword':
-        kw = cond.value if isinstance(cond.value, str) else ''
-        params[f"kw{idx}"] = f"%{kw}%"
-        return f"guali.zhanwen_shiyou LIKE :kw{idx}"
+        scope = (cond.scope or 'shiyou')
+        if scope == 'ben_name':
+            code = NAME_TO_CODE.get(cond.value if isinstance(cond.value, str) else '')
+            if code:
+                params[f"kw{idx}"] = code
+                return f"guali.ben_code = :kw{idx}"
+            else:
+                return "1=0"  # 无效卦名
+        elif scope == 'zhi_name':
+            code = NAME_TO_CODE.get(cond.value if isinstance(cond.value, str) else '')
+            if code:
+                params[f"kw{idx}"] = code
+                return f"guali.yao_bian_code = :kw{idx}"
+            else:
+                return "1=0"
+        else:
+            # 占问事由（默认）
+            kw = cond.value if isinstance(cond.value, str) else ''
+            params[f"kw{idx}"] = f"%{kw}%"
+            return f"guali.zhanwen_shiyou LIKE :kw{idx}"
 
     # 标签筛选
     if cond.field == '_tag':

@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useSearchStore } from '../../stores/useSearchStore.js'
 import { useAppStore } from '../../stores/index.js'
+import { GUA_NAMES, GUA_NAME_SET } from '../../constants/guaNames.js'
 import SameYaoGroup from './SameYaoGroup.vue'
 import SamePositionGroup from './SamePositionGroup.vue'
 import FeishenGroup from './FeishenGroup.vue'
@@ -272,12 +273,29 @@ function addTimeCondition() {
 function addKeywordCondition() {
   store.addCondition('normal')
   const c = store.conditions[store.conditions.length - 1]
-  if (c) store.updateCondition(c.id, { field: '_keyword', operator: 'equals', value: '', scope: null })
+  if (c) store.updateCondition(c.id, { field: '_keyword', operator: 'equals', value: '', scope: 'shiyou' })
 }
 function addTagCondition() {
   store.addCondition('normal')
   const c = store.conditions[store.conditions.length - 1]
   if (c) store.updateCondition(c.id, { field: '_tag', tagId: null, tagId2: null, operator: 'equals', value: '', scope: null })
+}
+
+function keywordPlaceholder(scope) {
+  if (scope === 'ben_name' || scope === 'zhi_name') return '输入标准卦名...'
+  return '输入关键词...'
+}
+
+function isGuaNameInvalid(cond) {
+  const scope = cond.scope || 'shiyou'
+  if (scope !== 'ben_name' && scope !== 'zhi_name') return false
+  const v = (cond.value || '').trim()
+  return v && !GUA_NAME_SET.has(v)
+}
+
+function onKeywordEnter(cond) {
+  if (isGuaNameInvalid(cond)) return
+  store.executeSearch()
 }
 
 function remove(id) { store.removeCondition(id) }
@@ -418,8 +436,20 @@ function remove(id) { store.removeCondition(id) }
 
       <!-- 文本搜索 -->
       <template v-else-if="isKeyword(cond.field)">
-        <span class="cb-yu">占问事由 包含</span>
-        <input v-model="cond.value" class="cb-input" placeholder="输入关键词..." style="width:180px" />
+        <select v-model="cond.scope" class="cb-sel" style="width:90px">
+          <option value="shiyou">占问事由</option>
+          <option value="ben_name">本卦卦名</option>
+          <option value="zhi_name">之卦卦名</option>
+        </select>
+        <span class="cb-yu">包含</span>
+        <input v-model="cond.value" class="cb-input" :class="{ 'cb-input-err': isGuaNameInvalid(cond) }"
+          :placeholder="keywordPlaceholder(cond.scope)"
+          :list="(cond.scope === 'ben_name' || cond.scope === 'zhi_name') ? 'gua-names-list' : undefined"
+          style="width:150px" @keyup.enter="onKeywordEnter(cond)" />
+        <datalist id="gua-names-list">
+          <option v-for="name in GUA_NAMES" :key="name" :value="name" />
+        </datalist>
+        <span v-if="isGuaNameInvalid(cond)" class="cb-err-msg">无效卦名，请从下拉提示中选择</span>
       </template>
 
       <!-- 标签筛选 -->
@@ -751,6 +781,8 @@ function remove(id) { store.removeCondition(id) }
 .cb-sel:focus { outline: none; border-color: var(--color-accent); }
 .cb-input { padding: 2px 6px; background: var(--color-bg-input); color: var(--color-text-primary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-sm); font-size: var(--font-size-sm); width: 80px; }
 .cb-input:focus { outline: none; border-color: var(--color-accent); }
+.cb-input-err { border-color: var(--color-danger) !important; }
+.cb-err-msg { color: var(--color-danger); font-size: var(--font-size-xs); margin-left: 4px; }
 .cb-op { width: 100px; }
 .cb-yu { font-size: var(--font-size-sm); color: var(--color-text-secondary); flex-shrink: 0; }
 .cb-gap { width: 6px; flex-shrink: 0; }

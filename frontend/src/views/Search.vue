@@ -131,7 +131,7 @@ function onFieldSelect({ cat, field, type, label }) {
   if (field === '_keyword') {
     store.addCondition('normal')
     const c = store.conditions[store.conditions.length - 1]
-    if (c) store.updateCondition(c.id, { field: '_keyword', operator: 'equals', value: '', scope: null })
+    if (c) store.updateCondition(c.id, { field: '_keyword', operator: 'equals', value: '', scope: 'shiyou' })
     return
   }
   if (field === '_tag') {

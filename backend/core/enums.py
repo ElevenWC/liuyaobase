@@ -187,6 +187,9 @@ CODE_TO_NAME = {
     "111111": "乾为天",
 }
 
+# 卦名 → 64卦代码（反向映射，用于卦名搜索）
+NAME_TO_CODE = {v: k for k, v in CODE_TO_NAME.items()}
+
 # 64卦代码 → 卦宫
 CODE_TO_PALACE = {
     "000000": "坤宫",
