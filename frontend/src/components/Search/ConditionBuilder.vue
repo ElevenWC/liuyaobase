@@ -219,7 +219,7 @@ const COUNT_ATTRS = [
   { v: 'is_an_dong', label: '暗动', vals: [{v:'true',l:'是'},{v:'false',l:'否'}] },
   { v: 'zengshan_exists', label: '有伏神', vals: [{v:'true',l:'有'},{v:'false',l:'无'}] },
 ]
-const COUNT_OPS = ['equals', 'not_equals', 'gt', 'lt', 'gte', 'lte']
+const COUNT_OPS = ['equals', 'not_equals']
 
 function currentCountAttr(cond) {
   return COUNT_ATTRS.find(a => a.v === cond.countAttr)
