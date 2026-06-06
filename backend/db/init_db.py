@@ -106,8 +106,12 @@ def seed_basic_data(session: Session):
         session.flush()
         tag_map2[name] = t
 
+    # 系统标签——标记（独立一级标签）
+    t = Tag(name="标记", parent_id=None, is_system=True)
+    session.add(t)
+
     session.commit()
-    print("基础数据填充完成（bagong_gua 64 + guaci 64 + system_config 1 + 系统标签 11）")
+    print("基础数据填充完成（bagong_gua 64 + guaci 64 + system_config 1 + 系统标签 12）")
 
 
 def register_stored_functions(engine: Engine):

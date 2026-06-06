@@ -79,6 +79,24 @@ async function onZhanYanChange(name) {
   try { await addGualiTag(detail.value.id, newId); detail.value.tags.push({ id: newId, name }) } catch { /* ok */ }
 }
 
+// 标记勾选框
+const isMarked = computed(() =>
+  detail.value?.tags?.some(t => t.name === '标记')
+)
+
+async function toggleMark() {
+  const tree = store.tagTree.length ? store.tagTree : tagTree.value
+  const markTag = tree.find(t => t.name === '标记')
+  if (!markTag) return
+  if (isMarked.value) {
+    await removeGualiTag(detail.value.id, markTag.id)
+    detail.value.tags = detail.value.tags.filter(t => t.id !== markTag.id)
+  } else {
+    await addGualiTag(detail.value.id, markTag.id)
+    detail.value.tags.push({ id: markTag.id, name: '标记' })
+  }
+}
+
 // 标签编辑
 const showTagEditor = ref(false)
 const tagTree = ref([])
@@ -352,6 +370,7 @@ function fanYinText() {
             <option v-for="n in ZY_NAMES" :key="n" :value="n">{{ n }}</option>
           </select>
         </label>
+        <label><input type="checkbox" :checked="isMarked" @change="toggleMark" /> 标记</label>
       </div>
 
       <div class="yao-card">

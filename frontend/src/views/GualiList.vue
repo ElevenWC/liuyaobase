@@ -148,6 +148,7 @@ function rootTagName(tag) {
 const TAG_COLORS = ['#6E78C6','#9B7ED4','#CF7A97','#C49B4A','#4DA87A','#5F8EC0','#C46B6B','#4D9F99']
 
 function cardTagColor(tag) {
+  if (tag.name === '标记') return '#D4A017'
   const tree = store.tagTree
   const node = _findNodeById(tree, tag.id)
   if (!node) return TAG_COLORS[0]
