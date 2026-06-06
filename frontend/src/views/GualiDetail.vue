@@ -353,24 +353,24 @@ function fanYinText() {
       </div>
 
       <div class="toggles">
-        <label><input type="checkbox" v-model="showLiuShen" /> 六神</label>
-        <label><input type="checkbox" v-model="showTianGan" /> 天干</label>
-        <label><input type="checkbox" v-model="showYiMao" /> 易冒</label>
+        <label>六神 <input type="checkbox" v-model="showLiuShen" /></label>
+        <label>天干 <input type="checkbox" v-model="showTianGan" /></label>
+        <label>易冒 <input type="checkbox" v-model="showYiMao" /></label>
         <label v-if="!isJingGua">
-          之卦：
+          之卦
           <select v-model="zhiMode">
             <option value="all">全部</option>
             <option value="changed">仅变爻</option>
             <option value="hide">隐藏</option>
           </select>
         </label>
-        <label style="margin-left:8px">占验情况
+        <label>占验情况
           <select :value="currentZhanYan" @change="onZhanYanChange($event.target.value)" class="zy-select"
             :class="'zy-' + currentZhanYan">
             <option v-for="n in ZY_NAMES" :key="n" :value="n">{{ n }}</option>
           </select>
         </label>
-        <label><input type="checkbox" :checked="isMarked" @change="toggleMark" /> 标记</label>
+        <label>标记 <input type="checkbox" :checked="isMarked" @change="toggleMark" /></label>
       </div>
 
       <div class="yao-card">
