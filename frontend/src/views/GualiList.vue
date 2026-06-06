@@ -126,24 +126,33 @@ function onLevel2Change(tagId) {
 }
 
 // 获取标签对应的一级标签名（用于卡片显示）
-function rootTagName(tagName) {
-  const found = store.tagTree.find(t => t.name === tagName)
-  if (found) return found.name
-  for (const l1 of store.tagTree) {
-    if (l1.children?.some(c => c.name === tagName)) return l1.name
+function _findNodeById(nodes, id) {
+  for (const n of nodes) {
+    if (n.id === id) return n
+    if (n.children?.length) { const r = _findNodeById(n.children, id); if (r) return r }
   }
-  return tagName
+  return null
+}
+
+function rootTagName(tag) {
+  const tree = store.tagTree
+  const node = _findNodeById(tree, tag.id)
+  if (!node) return tag.name
+  if (node.parent_id) {
+    const parent = tree.find(n => n.id === node.parent_id)
+    return parent ? parent.name : tag.name
+  }
+  return node.name
 }
 
 const TAG_COLORS = ['#6E78C6','#9B7ED4','#CF7A97','#C49B4A','#4DA87A','#5F8EC0','#C46B6B','#4D9F99']
 
-function cardTagColor(tagName) {
-  const found = store.tagTree.find(t => t.name === tagName)
-  if (found) return TAG_COLORS[(found.id) % TAG_COLORS.length]
-  for (const l1 of store.tagTree) {
-    if (l1.children?.some(c => c.name === tagName)) return TAG_COLORS[(l1.id) % TAG_COLORS.length]
-  }
-  return TAG_COLORS[0]
+function cardTagColor(tag) {
+  const tree = store.tagTree
+  const node = _findNodeById(tree, tag.id)
+  if (!node) return TAG_COLORS[0]
+  const parent = node.parent_id ? tree.find(n => n.id === node.parent_id) : node
+  return TAG_COLORS[(parent?.id || 0) % TAG_COLORS.length]
 }
 
 function onPageChange(p) { page.value = p; loadData() }
@@ -200,7 +209,7 @@ function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of n
           </div>
           <div class="card-shiyou">{{ item.zhanwen_shiyou }}</div>
           <div class="card-tags" v-if="item.tags?.length">
-            <span v-for="t in item.tags.filter(t => !ZY_NAMES.includes(t))" :key="t" class="tag-badge" :style="{ background: cardTagColor(t) }">{{ rootTagName(t) }}</span>
+            <span v-for="t in item.tags.filter(t => !ZY_NAMES.includes(t.name))" :key="t.id" class="tag-badge" :style="{ background: cardTagColor(t) }">{{ rootTagName(t) }}</span>
           </div>
         </div>
         <p v-if="!items.length" class="empty">暂无卦例</p>

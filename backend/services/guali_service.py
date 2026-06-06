@@ -34,11 +34,11 @@ def get_guali_list(
     links = session.query(GualiTag).where(
         GualiTag.guali_id.in_(guali_ids)  # type: ignore[attr-defined]
     ).all()
-    tag_by_guali: dict[int, list[str]] = {}
+    tag_by_guali: dict[int, list[dict]] = {}
     for link in links:
         tag = next((t for t in all_tags if t.id == link.tag_id), None)
         if tag:
-            tag_by_guali.setdefault(link.guali_id, []).append(tag.name)
+            tag_by_guali.setdefault(link.guali_id, []).append({"id": tag.id, "name": tag.name})
 
     items = []
     for g in results:
@@ -131,6 +131,6 @@ def get_guali_detail(session: Session, guali_id: int) -> dict | None:
         })
 
     # 标签
-    detail["tags"] = [t.name for t in tags]
+    detail["tags"] = [{"id": t.id, "name": t.name} for t in tags]
 
     return detail

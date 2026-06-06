@@ -4,6 +4,12 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+class TagRef(BaseModel):
+    """标签引用（id + name，前端通过 ID 精确定位标签）"""
+    id: int
+    name: str
+
+
 class ManualImportSchema(BaseModel):
     """手动导入单个卦例"""
     zhanwen_time: datetime
@@ -44,7 +50,7 @@ class GualiListResponse(BaseModel):
     zhanwen_time: datetime
     zhanwen_shiyou: Optional[str] = None
     ben_code: str
-    tags: list[str] = []
+    tags: list[TagRef] = []
 
 
 class GualiDetailResponse(BaseModel):
@@ -87,7 +93,7 @@ class GualiDetailResponse(BaseModel):
     # guali_yao
     yaos: list[YaoItemSchema] = []
     # 标签
-    tags: list[str] = []
+    tags: list[TagRef] = []
 
 
 class GualiUpdateRequest(BaseModel):

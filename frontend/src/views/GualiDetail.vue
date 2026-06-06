@@ -49,11 +49,11 @@ watch(effectiveId, () => { showZhanduan.value = false })
 const ZY_NAMES = ['应验', '模糊', '不验', '未验']
 const currentZhanYan = computed(() => {
   if (!detail.value?.tags) return '未验'
-  const t = detail.value.tags.find(t => ZY_NAMES.includes(t))
-  return t || '未验'
+  const t = detail.value.tags.find(t => ZY_NAMES.includes(t.name))
+  return t?.name || '未验'
 })
 
-function findZhanYanTagId(name) {
+function _findZyTagId(name) {
   const tree = store.tagTree.length ? store.tagTree : tagTree.value
   for (const l1 of tree) {
     if (l1.children) {
@@ -67,22 +67,22 @@ function findZhanYanTagId(name) {
 async function onZhanYanChange(name) {
   const oldName = currentZhanYan.value
   if (name === oldName) return
-  const newId = findZhanYanTagId(name)
+  const newId = _findZyTagId(name)
   if (!newId) return
   // 先移除旧标签
-  const oldId = findZhanYanTagId(oldName)
+  const oldId = _findZyTagId(oldName)
   if (oldId) {
     try { await removeGualiTag(detail.value.id, oldId) } catch { /* ok */ }
-    detail.value.tags = detail.value.tags.filter(t => t !== oldName)
+    detail.value.tags = detail.value.tags.filter(t => t.id !== oldId)
   }
   // 添加新标签
-  try { await addGualiTag(detail.value.id, newId); if (!detail.value.tags.includes(name)) detail.value.tags.push(name) } catch { /* ok */ }
+  try { await addGualiTag(detail.value.id, newId); detail.value.tags.push({ id: newId, name }) } catch { /* ok */ }
 }
 
 // 标签编辑
 const showTagEditor = ref(false)
 const tagTree = ref([])
-const editingTags = ref([])
+const editingTagIds = ref(new Set())
 
 async function loadTagTree() {
   try { const r = await fetchTagTree(); tagTree.value = r.data.data || [] }
@@ -91,49 +91,43 @@ async function loadTagTree() {
 
 function openTagEditor() {
   loadTagTree()
-  editingTags.value = detail.value?.tags ? [...detail.value.tags] : []
+  editingTagIds.value = new Set((detail.value?.tags || []).map(t => t.id))
   showTagEditor.value = true
 }
 
-function isTagSelected(name) { return editingTags.value.includes(name) }
+async function toggleTag(tag) {
+  const tree = store.tagTree.length ? store.tagTree : tagTree.value
 
-async function toggleTag(name) {
-  const tag = findTagByName(name)
-  if (!tag) return
-
-  if (isTagSelected(name)) {
+  if (editingTagIds.value.has(tag.id)) {
     // 移除
     await removeGualiTag(detail.value.id, tag.id)
-    detail.value.tags = detail.value.tags.filter(t => t !== name)
-    editingTags.value = editingTags.value.filter(t => t !== name)
+    detail.value.tags = detail.value.tags.filter(t => t.id !== tag.id)
+    editingTagIds.value.delete(tag.id)
   } else {
     // 添加二级标签时，去掉同组一级标签
     if (tag.parent_id) {
-      const tree = store.tagTree.length ? store.tagTree : tagTree.value
       const l1 = tree.find(n => n.id === tag.parent_id)
-      if (l1 && detail.value.tags.includes(l1.name)) {
+      if (l1) {
         await removeGualiTag(detail.value.id, l1.id)
-        detail.value.tags = detail.value.tags.filter(t => t !== l1.name)
-        editingTags.value = editingTags.value.filter(t => t !== l1.name)
+        detail.value.tags = detail.value.tags.filter(t => t.id !== l1.id)
+        editingTagIds.value.delete(l1.id)
       }
     }
     await addGualiTag(detail.value.id, tag.id)
-    if (!detail.value.tags.includes(name)) detail.value.tags.push(name)
-    editingTags.value.push(name)
+    detail.value.tags.push({ id: tag.id, name: tag.name })
+    editingTagIds.value.add(tag.id)
   }
 }
 
 const TAG_COLORS = ['#6E78C6','#9B7ED4','#CF7A97','#C49B4A','#4DA87A','#5F8EC0','#C46B6B','#4D9F99']
 
 function tagColor(node) {
-  // 用一级标签 ID 取模，颜色稳定不随顺序变化
   const tree = store.tagTree.length ? store.tagTree : tagTree.value
   const root = _findRootTag(tree, node)
   return TAG_COLORS[(root?.id || 0) % TAG_COLORS.length]
 }
 
 function _findRootTag(nodes, node) {
-  // node 本身可能就是一/二级标签节点；返回它所属的一级标签
   for (const n of nodes) {
     if (n.id === node.id) return n
     if (n.children?.some(c => c.id === node.id)) return n
@@ -144,36 +138,30 @@ function _findRootTag(nodes, node) {
 }
 
 // 显示标签：有同组二级则隐藏一级
-function showTag(name) {
-  if (ZY_NAMES.includes(name)) return false
+function showTag(tag) {
+  if (ZY_NAMES.includes(tag.name)) return false
   const tree = store.tagTree.length ? store.tagTree : tagTree.value
-  const tag = _findTagInTree(tree, name)
-  if (!tag) return true
-  if (tag.parent_id) return true
-  const l1 = tree.find(n => n.id === tag.id)
-  const children = l1?.children || []
-  return !children.some(c => detail.value?.tags?.includes(c.name))
+  const node = _findTagById(tree, tag.id)
+  if (!node) return true
+  if (node.parent_id) return true
+  const children = node.children || []
+  return !children.some(c => detail.value?.tags?.some(t => t.id === c.id))
 }
 
-function tagBadgeColor(name) {
+function tagBadgeColor(tag) {
   const tree = store.tagTree.length ? store.tagTree : tagTree.value
-  const tag = _findTagInTree(tree, name)
-  if (!tag) return TAG_COLORS[0]
-  const parent = tag.parent_id ? tree.find(n => n.id === tag.parent_id) : tag
+  const node = _findTagById(tree, tag.id)
+  if (!node) return TAG_COLORS[0]
+  const parent = node.parent_id ? tree.find(n => n.id === node.parent_id) : node
   return parent ? tagColor(parent) : TAG_COLORS[0]
 }
 
-function _findTagInTree(nodes, name) {
+function _findTagById(nodes, id) {
   for (const n of nodes) {
-    if (n.name === name) return n
-    if (n.children?.length) { const r = _findTagInTree(n.children, name); if (r) return r }
+    if (n.id === id) return n
+    if (n.children?.length) { const r = _findTagById(n.children, id); if (r) return r }
   }
   return null
-}
-
-function findTagByName(name) {
-  const tree = store.tagTree.length ? store.tagTree : tagTree.value
-  return _findTagInTree(tree, name)
 }
 
 const WUXING = {
@@ -311,8 +299,8 @@ function fanYinText() {
         </div>
         <div class="info-row">
           <span class="label">标签：</span>
-          <template v-for="t in detail.tags" :key="t">
-            <span v-if="showTag(t)" class="tag-badge" :style="{ background: tagBadgeColor(t) }">{{ t }}</span>
+          <template v-for="t in detail.tags" :key="t.id">
+            <span v-if="showTag(t)" class="tag-badge" :style="{ background: tagBadgeColor(t) }">{{ t.name }}</span>
           </template>
           <span class="tag-add-btn" @click="openTagEditor">
             +
@@ -458,11 +446,11 @@ function fanYinText() {
           </div>
           <div class="tag-editor-body">
             <div v-for="node in tagTree" :key="node.id" class="tag-tree-item" :style="{ paddingLeft: '0' }">
-              <div class="tag-row" :class="{ selected: isTagSelected(node.name) }" @click="toggleTag(node.name)">
+              <div class="tag-row" :class="{ selected: editingTagIds.has(node.id) }" @click="toggleTag(node)">
                 <span class="tag-badge-dot" :style="{ background: tagColor(node) }"></span>
                 {{ node.name }}
               </div>
-              <div v-for="c in node.children" :key="c.id" class="tag-row child" :style="{ paddingLeft: '16px' }" :class="{ selected: isTagSelected(c.name) }" @click="toggleTag(c.name)">
+              <div v-for="c in node.children" :key="c.id" class="tag-row child" :style="{ paddingLeft: '16px' }" :class="{ selected: editingTagIds.has(c.id) }" @click="toggleTag(c)">
                 <span class="tag-badge-dot" :style="{ background: tagColor(node) }"></span>
                 {{ c.name }}
               </div>
