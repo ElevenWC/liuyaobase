@@ -100,7 +100,7 @@ const flatNodes = () => {
         <template v-else>
           <span class="tag-name" :class="{ 'sys-tag': n.is_system, 'has-kids': n.hasChildren }"
             @click="n.hasChildren && toggleCollapse(n)"
-            @dblclick="!n.is_system && !n.hasChildren && startEdit(n)">{{ n.hasChildren ? (collapsed[n.id] ? '▸' : '▾') + ' ' : '' }}{{ n.name }}</span>
+            @dblclick="!n.is_system && !n.hasChildren && startEdit(n)">{{ n.name }}</span>
           <span class="tag-children-count" v-if="n.children?.length">({{ n.children.length }} 子标签)</span>
           <span v-if="n.is_system" class="sys-badge">系统</span>
           <template v-if="!n.is_system">
