@@ -55,5 +55,8 @@ backend/config.py
 # C3 export temp files
 backend/exports/
 
+# Notes export files
+backend/notes_export/
+
 # User documents (not tracked)
 .user/

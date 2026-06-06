@@ -61,6 +61,45 @@ function saveNotes(n) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(n))
 }
 
+// ── 导出/导入 ──
+const importFile = ref(null)
+const exportMsg = ref('')
+
+async function doExport() {
+  exportMsg.value = ''
+  try {
+    const res = await fetch('/api/notes/export', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notes: notes.value })
+    })
+    const d = await res.json()
+    if (d.code === 200) exportMsg.value = `已导出: ${d.data.filename}`
+    else exportMsg.value = '导出失败'
+  } catch { exportMsg.value = '导出失败' }
+  setTimeout(() => { exportMsg.value = '' }, 3000)
+}
+
+function doImport() {
+  exportMsg.value = ''
+  if (!importFile.value?.files?.length) return
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result)
+      if (!Array.isArray(data)) throw new Error('格式错误')
+      notes.value = data
+      saveNotes(data)
+      currentId.value = data.length ? data[0].id : null
+      loadEditorContent()
+      exportMsg.value = `已导入 ${data.length} 篇笔记`
+    } catch { exportMsg.value = '导入失败: JSON格式不正确' }
+    setTimeout(() => { exportMsg.value = '' }, 3000)
+  }
+  reader.readAsText(importFile.value.files[0])
+  importFile.value.value = ''
+}
+
 const notes = ref(loadNotes())
 const currentId = ref(notes.value[0]?.id || null)
 
@@ -200,6 +239,12 @@ function lastSaved() {
           <button class="nf-del" @click.stop="deleteNote(n.id)">×</button>
         </div>
         <button class="nf-new" @click="newNote">＋ 新建笔记</button>
+        <div class="nf-io-row">
+          <button class="nf-new nf-io-btn" @click="doExport">导出</button>
+          <button class="nf-new nf-io-btn" @click="importFile?.click()">导入</button>
+          <input ref="importFile" type="file" accept=".json" style="display:none" @change="doImport" />
+        </div>
+        <div v-if="exportMsg" class="nf-io-msg">{{ exportMsg }}</div>
       </div>
 
       <div class="nf-editor-wrap" @click="zIndex = nextZIndex()">
@@ -252,6 +297,9 @@ function lastSaved() {
 .nf-item:hover .nf-del:hover { opacity: 1; background: rgba(255,255,255,0.2); }
 .nf-new { padding: 6px 8px; border: 1px dashed var(--color-border-primary); border-radius: var(--radius-sm); background: none; color: var(--color-text-muted); font-size: var(--font-size-sm); cursor: pointer; text-align: left; }
 .nf-new:hover { border-color: var(--color-accent); color: var(--color-accent-light); }
+.nf-io-row { display: flex; gap: 6px; margin-top: 4px; }
+.nf-io-btn { flex: 1; text-align: center !important; }
+.nf-io-msg { margin-top: 4px; font-size: var(--font-size-xs); color: var(--color-accent-light); }
 
 .nf-editor-wrap { flex: 1; display: flex; flex-direction: column; padding: 10px 14px 10px 24px; overflow-y: auto; min-width: 0; }
 .nf-title-input { width: 100%; padding: 4px 0 12px; margin-bottom: 10px; border: none; border-bottom: 1px solid var(--color-border-subtle); background: none; color: var(--color-text-primary); font-size: 1.4rem; font-weight: bold; outline: none !important; box-shadow: none !important; }
