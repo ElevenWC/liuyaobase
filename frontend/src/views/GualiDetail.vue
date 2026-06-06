@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onBeforeUnmount } from 'vue'
 import { useAppStore } from '../stores/index.js'
 import { fetchGualiDetail, updateGuali, deleteGuali, fetchTagTree, addGualiTag, removeGualiTag } from '../api/index.js'
 import GuaCiFloat from '../components/shared/GuaCiFloat.vue'
@@ -272,6 +272,9 @@ async function saveAll() {
   } catch { error.value = '保存失败' }
   finally { saving.value = false }
 }
+// 离开页面时自动保存未提交的编辑
+onBeforeUnmount(() => { if (isEditing.value) saveAll() })
+
 async function onDelete() {
   if (!confirm('确定删除此卦例？')) return
   try { await deleteGuali(detail.value.id); detail.value = null; store.currentGualiId = null; emit('deleted') }
