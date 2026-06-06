@@ -101,6 +101,9 @@ async function toggleMark() {
 const showTagEditor = ref(false)
 const tagTree = ref([])
 const editingTagIds = ref(new Set())
+const tagCollapsed = ref({})  // 默认全部折叠
+
+function toggleCollapse(id) { tagCollapsed.value[id] = !tagCollapsed.value[id] }
 
 async function loadTagTree() {
   try { const r = await fetchTagTree(); tagTree.value = r.data.data || [] }
@@ -167,6 +170,7 @@ function showTag(tag) {
 }
 
 function tagBadgeColor(tag) {
+  if (tag.name === '标记') return '#D4A017'
   const tree = store.tagTree.length ? store.tagTree : tagTree.value
   const node = _findTagById(tree, tag.id)
   if (!node) return TAG_COLORS[0]
@@ -465,14 +469,16 @@ function fanYinText() {
           </div>
           <div class="tag-editor-body">
             <div v-for="node in tagTree" :key="node.id" class="tag-tree-item" :style="{ paddingLeft: '0' }">
-              <div class="tag-row" :class="{ selected: editingTagIds.has(node.id) }" @click="toggleTag(node)">
+              <div class="tag-row" :class="{ selected: editingTagIds.has(node.id) }" @click="node.children?.length ? toggleCollapse(node.id) : toggleTag(node)">
                 <span class="tag-badge-dot" :style="{ background: tagColor(node) }"></span>
                 {{ node.name }}
               </div>
-              <div v-for="c in node.children" :key="c.id" class="tag-row child" :style="{ paddingLeft: '16px' }" :class="{ selected: editingTagIds.has(c.id) }" @click="toggleTag(c)">
-                <span class="tag-badge-dot" :style="{ background: tagColor(node) }"></span>
-                {{ c.name }}
-              </div>
+              <template v-if="tagCollapsed[node.id] && node.children?.length">
+                <div v-for="c in node.children" :key="c.id" class="tag-row child" :style="{ paddingLeft: '16px' }" :class="{ selected: editingTagIds.has(c.id) }" @click="toggleTag(c)">
+                  <span class="tag-badge-dot" :style="{ background: tagColor(node) }"></span>
+                  {{ c.name }}
+                </div>
+              </template>
             </div>
             <p v-if="!tagTree.length" class="hint">暂无标签，请先在标签管理页创建</p>
           </div>
