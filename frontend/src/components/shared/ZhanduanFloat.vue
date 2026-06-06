@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onBeforeUnmount } from 'vue'
 import { nextZIndex } from '../../shared/zCounter.js'
 
 const props = defineProps({
@@ -52,6 +52,11 @@ function doClose() {
   if (text.value !== props.content) emit('save', text.value)
   emit('close')
 }
+
+// 离开页面时自动保存
+onBeforeUnmount(() => {
+  if (text.value !== props.content) emit('save', text.value)
+})
 </script>
 
 <template>
