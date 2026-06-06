@@ -14,8 +14,8 @@ const GEN_FIELD_OPTIONS = [
   { v: 'liushen', label: '六神' }, { v: 'zengshan_exists', label: '有伏神' },
 ]
 
-const OPERATORS = ['equals', 'not_equals', 'in', 'not_in', 'gt', 'lt', 'gte', 'lte', 'range']
-const OP_DISPLAY = { equals: '=', not_equals: '≠', in: '∈', not_in: '∉', gt: '>', lt: '<', gte: '≥', lte: '≤', range: '↔' }
+const OPERATORS = ['equals', 'not_equals']
+const OP_DISPLAY = { equals: '=', not_equals: '≠' }
 const LIUQIN_VALS = ['妻财', '官鬼', '父母', '兄弟', '子孙']
 const SHIYING_VALS = ['世', '应']
 const YAOTYPE_VALS = ['阳', '阴']
