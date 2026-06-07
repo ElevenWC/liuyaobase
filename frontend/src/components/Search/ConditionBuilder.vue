@@ -140,12 +140,11 @@ function isKeyword(field) { return field === '_keyword' }
 function isTag(field) { return field === '_tag' }
 function isFushenFeishen(v) { return ['易冒伏神','增删伏神','易冒飞神','增删飞神'].includes(v) }
 
-const level2Options = computed(() => {
-  const g = store.conditions.find(c => c.field === '_tag')
-  if (!g?.tagId) return []
-  const parent = appStore.tagTree.find(t => t.id === g.tagId)
+function level2Options(tagId) {
+  if (!tagId) return []
+  const parent = appStore.tagTree.find(t => t.id === tagId)
   return parent?.children || []
-})
+}
 
 function getLogicOp(condIndex) {
   // 找到第 condIndex 个 condition 之前的 and/or 操作符
@@ -457,7 +456,7 @@ function remove(id) { store.removeCondition(id) }
         </select>
         <select v-if="cond.tagId" v-model="cond.tagId2" class="cb-sel">
           <option :value="null">二级：全部</option>
-          <option v-for="t in level2Options" :key="t.id" :value="t.id">{{ t.name }}</option>
+          <option v-for="t in level2Options(cond.tagId)" :key="t.id" :value="t.id">{{ t.name }}</option>
         </select>
       </template>
 
