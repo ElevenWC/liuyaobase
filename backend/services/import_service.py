@@ -12,10 +12,18 @@ from sqlmodel import Session, select
 from backend.crud.guali import create as create_guali
 from backend.crud.system_config import get_config, set_config
 from backend.crud.bagong_gua import get_by_code as get_gua_by_code
+from backend.crud.tag import add_guali_tag, get_all as get_all_tags
 from backend.services.precalculate_service import precalculate
 from backend.models.guali import Guali
 
 _CONFIG_KEY = "last_import_time"
+
+def _set_default_wei_yan(session: Session, guali_id: int):
+    """给新卦例默认打上"未验"标签（如果标签存在）"""
+    tags = get_all_tags(session)
+    weiyan = next((t for t in tags if t.name == '未验'), None)
+    if weiyan:
+        add_guali_tag(session, guali_id, weiyan.id)
 _CONFIG_FILES_KEY = "imported_files"
 
 # dyaolist 符号 → (本卦位, 爻变位)
@@ -196,6 +204,7 @@ def import_single(data: dict, session: Session) -> Guali:
 
     guali = create_guali(session, guali_data)
     precalculate(session, guali.id)
+    _set_default_wei_yan(session, guali.id)
     return guali
 
 
@@ -223,6 +232,7 @@ def _import_one(item: dict, dinitime: datetime, session: Session):
     }
     guali = create_guali(session, guali_data)
     precalculate(session, guali.id)
+    _set_default_wei_yan(session, guali.id)
 
 
 def _extract_zhanwen_time(item: dict, dinitime: datetime) -> datetime:
