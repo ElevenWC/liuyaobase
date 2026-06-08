@@ -9,6 +9,8 @@ const items = ref([])
 const total = ref(0)
 const page = ref(1)
 const pageSize = 20
+
+function seqNo(index) { return total.value - (page.value - 1) * pageSize - index }
 const keyword = ref('')
 const selectedLevel1 = ref(null)
 const selectedLevel2 = ref(null)
@@ -200,12 +202,12 @@ function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of n
 
     <div class="scroll-area">
       <div class="cards" v-if="!loading">
-        <div v-for="item in items" :key="item.id"
+        <div v-for="(item, index) in items" :key="item.id"
           class="card" :class="{ selected: store.currentGualiId === item.id }"
           @click="selectGuali(item)">
           <div class="card-top">
             <input type="checkbox" :checked="selectedIds.has(item.id)" @click="toggleSelect(item.id, $event)" class="card-check" />
-            <span class="card-id">ID: {{ item.id }}</span>
+            <span class="card-id">No. {{ seqNo(index) }}</span>
             <span class="card-time">{{ formatTime(item.zhanwen_time) }}</span>
           </div>
           <div class="card-shiyou">{{ item.zhanwen_shiyou }}</div>
