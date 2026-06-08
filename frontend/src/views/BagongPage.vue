@@ -194,7 +194,7 @@ function yaoType(code, pos) { return code[5 - pos] === '1' ? '阳' : '阴' }
     <!-- 顶部输入栏 -->
     <div class="top-input-bar">
       <div class="input-group">
-        <label>卦例编号</label>
+        <label>卦例ID</label>
         <input v-model="gualiIdInput" type="number" placeholder="输入卦例 ID" @keyup.enter="onGualiLoad" />
         <button @click="onGualiLoad">加载</button>
       </div>

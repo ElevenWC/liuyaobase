@@ -178,7 +178,7 @@ function flatTagNodes() { const r = []; function w(nodes, d) { for (const n of n
 <template>
   <div class="guali-list">
     <div class="list-toolbar">
-      <input v-model="keyword" class="search-input" placeholder="搜索编号/日期/占问事由..." @input="onSearch" />
+      <input v-model="keyword" class="search-input" placeholder="搜索ID/日期/占问事由..." @input="onSearch" />
       <input ref="fileInput" type="file" accept=".csv,.json" @change="onFileLoad" hidden />
       <button @click="fileInput.click()" class="batch-lookup-btn" :disabled="loading">批量查找</button>
     </div>

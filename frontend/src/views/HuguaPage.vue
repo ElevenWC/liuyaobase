@@ -112,7 +112,7 @@ watch(() => route.query.guali_id, (val) => {
     <!-- 顶部输入栏 -->
     <div class="top-input-bar">
       <div class="input-group">
-        <label>卦例编号</label>
+        <label>卦例ID</label>
         <input v-model="gualiIdInput" type="number" placeholder="输入卦例 ID" @keyup.enter="onLoad" />
         <button @click="onLoad">加载</button>
       </div>
