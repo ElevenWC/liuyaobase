@@ -374,11 +374,17 @@ def _build_condition_clause(cond: Condition, params: dict, idx: int, cond_clause
 
     # 标签筛选
     if cond.field == '_tag':
-        tag_id = getattr(cond, 'tagId2', None) or getattr(cond, 'tagId', None)
-        if not tag_id:
-            return "FALSE"
-        params[f"tg{idx}"] = int(tag_id)
-        return f"guali.id IN (SELECT gt.guali_id FROM guali_tag gt WHERE gt.tag_id = :tg{idx})"
+        tag_id2 = getattr(cond, 'tagId2', None)
+        if tag_id2:
+            # 精确匹配二级标签
+            params[f"tg{idx}"] = int(tag_id2)
+            return f"guali.id IN (SELECT gt.guali_id FROM guali_tag gt WHERE gt.tag_id = :tg{idx})"
+        tag_id = getattr(cond, 'tagId', None)
+        if tag_id:
+            # 一级标签：包含自身及所有二级子标签
+            params[f"tg{idx}"] = int(tag_id)
+            return f"guali.id IN (SELECT gt.guali_id FROM guali_tag gt WHERE gt.tag_id = :tg{idx} OR gt.tag_id IN (SELECT id FROM tag WHERE parent_id = :tg{idx}))"
+        return "FALSE"
 
     # 神煞字段：委托给 _build_shensha_clause
     shensha_key = cond.field.replace("is_", "").replace("dai_", "")
