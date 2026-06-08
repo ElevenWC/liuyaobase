@@ -453,8 +453,9 @@ function remove(id) { store.removeCondition(id) }
         <select v-model="cond.tagId" class="cb-sel" @change="cond.tagId2=null">
           <option :value="null">一级：全部</option>
           <option v-for="t in appStore.tagTree" :key="t.id" :value="t.id">{{ t.name }}</option>
+          <option :value="-1">非系统标签</option>
         </select>
-        <select v-if="cond.tagId" v-model="cond.tagId2" class="cb-sel">
+        <select v-if="cond.tagId && cond.tagId !== -1" v-model="cond.tagId2" class="cb-sel">
           <option :value="null">二级：全部</option>
           <option v-for="t in level2Options(cond.tagId)" :key="t.id" :value="t.id">{{ t.name }}</option>
         </select>

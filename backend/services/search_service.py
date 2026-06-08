@@ -380,6 +380,9 @@ def _build_condition_clause(cond: Condition, params: dict, idx: int, cond_clause
             params[f"tg{idx}"] = int(tag_id2)
             return f"guali.id IN (SELECT gt.guali_id FROM guali_tag gt WHERE gt.tag_id = :tg{idx})"
         tag_id = getattr(cond, 'tagId', None)
+        if tag_id == -1:
+            # 非系统标签：所有打上了非系统标签的卦例
+            return "guali.id IN (SELECT gt.guali_id FROM guali_tag gt JOIN tag t ON gt.tag_id = t.id WHERE t.is_system = FALSE)"
         if tag_id:
             # 一级标签：包含自身及所有二级子标签
             params[f"tg{idx}"] = int(tag_id)
