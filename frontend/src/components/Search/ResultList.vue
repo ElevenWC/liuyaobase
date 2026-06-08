@@ -41,9 +41,17 @@ function toggleSelect(id) {
   else selected.value.push(id)
 }
 
+const timeSort = ref(null)  // null=默认(倒序), 'asc'=正序
+const sortedResults = computed(() => {
+  if (timeSort.value !== 'asc') return props.results
+  return [...props.results].sort((a, b) => (a.zhanwen_time || '').localeCompare(b.zhanwen_time || ''))
+})
+
+function toggleTimeSort() { timeSort.value = timeSort.value === 'asc' ? null : 'asc' }
+
 const totalPages = computed(() => Math.ceil(props.total / props.pageSize) || 1)
 
-watch(() => props.results, (v) => { if (!v?.length) selected.value = [] })
+watch(() => props.results, (v) => { if (!v?.length) { selected.value = []; timeSort.value = null } })
 
 function clearSelection() { selected.value = [] }
 defineExpose({ selected, clearSelection })
@@ -70,14 +78,14 @@ defineExpose({ selected, clearSelection })
               :checked="props.selectAll || selected.length === results.length"
               @change="(e) => { if (props.selectAll) { results.forEach(r => { if (!e.target.checked) emit('toggle-exclude', r.id) }) } else { selected = e.target.checked ? results.map(r=>r.id) : [] } }" /></th>
             <th class="col-num">#</th>
-            <th class="col-time">占问时间</th>
+            <th class="col-time sortable" @click="toggleTimeSort">占问时间{{ timeSort === 'asc' ? ' ▲' : '' }}</th>
             <th class="col-shiyou">占问事由</th>
             <th class="col-ben">本卦</th>
             <th class="col-zhi">之卦</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(r, i) in results" :key="r.id" @click="onRowClick(r.id)" class="rl-row" :class="{ active: r.id === props.selectedId }">
+          <tr v-for="(r, i) in sortedResults" :key="r.id" @click="onRowClick(r.id)" class="rl-row" :class="{ active: r.id === props.selectedId }">
             <td class="col-cb" @click.stop><input type="checkbox"
               :checked="props.selectAll ? !props.excludedIds.has(r.id) : selected.includes(r.id)"
               @change="props.selectAll ? emit('toggle-exclude', r.id) : toggleSelect(r.id)" /></td>
@@ -128,6 +136,8 @@ defineExpose({ selected, clearSelection })
 .col-cb { width: 28px; }
 .col-num { width: 32px; }
 .col-time { width: 90px; white-space: nowrap; }
+.sortable { cursor: pointer; user-select: none; }
+.sortable:hover { color: var(--color-accent); }
 .col-ben, .col-zhi { width: 80px; }
 .rl-gua-link { color: var(--color-accent-light); cursor: pointer; }
 .rl-gua-link:hover { text-decoration: underline; }
