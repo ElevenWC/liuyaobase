@@ -152,6 +152,7 @@ class SearchRequest(BaseModel):
     conditions: list[Union[SameYaoGroup, SamePositionGroup, FeishenGroup, Condition, RelationCondition]] = []
     logic: list[LogicItem] = []
     pagination: Pagination = Pagination()
+    sort_order: str = "desc"  # "desc" 或 "asc"
 
 
 class SearchResponse(BaseModel):

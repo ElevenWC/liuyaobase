@@ -11,9 +11,10 @@ const props = defineProps({
   selectedId: { type: Number, default: null },
   selectAll: { type: Boolean, default: false },
   excludedIds: { type: Set, default: () => new Set() },
+  sortOrder: { type: String, default: 'desc' },
 })
 
-const emit = defineEmits(['page-change', 'select-guali', 'export-data', 'toggle-exclude'])
+const emit = defineEmits(['page-change', 'select-guali', 'export-data', 'toggle-exclude', 'sort-change'])
 
 const selected = ref([])
 const activeFloats = ref([])
@@ -41,17 +42,11 @@ function toggleSelect(id) {
   else selected.value.push(id)
 }
 
-const timeSort = ref(null)  // null=默认(倒序), 'asc'=正序
-const sortedResults = computed(() => {
-  if (timeSort.value !== 'asc') return props.results
-  return [...props.results].sort((a, b) => (a.zhanwen_time || '').localeCompare(b.zhanwen_time || ''))
-})
-
-function toggleTimeSort() { timeSort.value = timeSort.value === 'asc' ? null : 'asc' }
+function toggleTimeSort() { emit('sort-change', props.sortOrder === 'asc' ? 'desc' : 'asc') }
 
 const totalPages = computed(() => Math.ceil(props.total / props.pageSize) || 1)
 
-watch(() => props.results, (v) => { if (!v?.length) { selected.value = []; timeSort.value = null } })
+watch(() => props.results, (v) => { if (!v?.length) selected.value = [] })
 
 function clearSelection() { selected.value = [] }
 defineExpose({ selected, clearSelection })
@@ -78,14 +73,14 @@ defineExpose({ selected, clearSelection })
               :checked="props.selectAll || selected.length === results.length"
               @change="(e) => { if (props.selectAll) { results.forEach(r => { if (!e.target.checked) emit('toggle-exclude', r.id) }) } else { selected = e.target.checked ? results.map(r=>r.id) : [] } }" /></th>
             <th class="col-num">#</th>
-            <th class="col-time sortable" @click="toggleTimeSort">占问时间{{ timeSort === 'asc' ? ' ▲' : '' }}</th>
+            <th class="col-time sortable" @click="toggleTimeSort">占问时间{{ sortOrder === 'asc' ? ' ▲' : '' }}</th>
             <th class="col-shiyou">占问事由</th>
             <th class="col-ben">本卦</th>
             <th class="col-zhi">之卦</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(r, i) in sortedResults" :key="r.id" @click="onRowClick(r.id)" class="rl-row" :class="{ active: r.id === props.selectedId }">
+          <tr v-for="(r, i) in results" :key="r.id" @click="onRowClick(r.id)" class="rl-row" :class="{ active: r.id === props.selectedId }">
             <td class="col-cb" @click.stop><input type="checkbox"
               :checked="props.selectAll ? !props.excludedIds.has(r.id) : selected.includes(r.id)"
               @change="props.selectAll ? emit('toggle-exclude', r.id) : toggleSelect(r.id)" /></td>

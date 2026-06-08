@@ -185,6 +185,10 @@ async function onExportData({ format, filename }) {
 function onPageChange(page) {
   store.setPage(page)
 }
+function onSortChange(order) {
+  store.sortOrder = order
+  store.setPage(1)
+}
 </script>
 
 <template>
@@ -228,12 +232,14 @@ function onPageChange(page) {
             :page-size="store.pagination.pageSize"
             :loading="store.loading"
             :selected-id="selectedGualiId"
+            :sort-order="store.sortOrder"
             @page-change="onPageChange"
             :select-all="selectAllResults"
             :excluded-ids="excludedIds"
             @select-guali="onSelectGuali"
             @export-data="onExportData"
             @toggle-exclude="onToggleExclude"
+            @sort-change="onSortChange"
           />
         </div>
       </div>

@@ -9,6 +9,7 @@ export const useSearchStore = defineStore('search', () => {
   const logicChain = ref([])
   const results = ref([])
   const pagination = ref({ page: 1, pageSize: 50, total: 0 })
+  const sortOrder = ref('desc')
   const loading = ref(false)
 
   // 字段名 → 中文标签
@@ -274,6 +275,7 @@ export const useSearchStore = defineStore('search', () => {
         conditions: conditions.value,
         logic: logicChain.value,
         pagination: { page: pagination.value.page, page_size: pagination.value.pageSize },
+        sort_order: sortOrder.value,
       }
       const res = await fetchSearchResults(body)
       if (res.data.code === 200 && res.data.data) {
@@ -320,7 +322,7 @@ export const useSearchStore = defineStore('search', () => {
     addConditionGroup, removeConditionGroup, updateConditionGroup,
     addSubCondition, removeSubCondition, updateSubCondition,
     setLogic, rebuildLogicChain, toggleLogicOp, toggleNot, hasNot, addOpenBracket, addCloseBracket, checkBracketBalance,
-    executeSearch, setPage,
+    sortOrder, executeSearch, setPage,
     loadSchemes, saveScheme, applyScheme, deleteScheme,
   }
 })

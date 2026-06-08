@@ -720,7 +720,8 @@ def execute_search(session: Session, request: SearchRequest) -> SearchResponse:
 
     page = pagination.page
     page_size = pagination.page_size
-    query_sql = f"SELECT DISTINCT guali.* {base_sql} ORDER BY guali.zhanwen_time DESC LIMIT :_limit OFFSET :_offset"
+    sort_dir = "ASC" if request.sort_order == "asc" else "DESC"
+    query_sql = f"SELECT DISTINCT guali.* {base_sql} ORDER BY guali.zhanwen_time {sort_dir} LIMIT :_limit OFFSET :_offset"
     params["_limit"] = page_size
     params["_offset"] = (page - 1) * page_size
 
