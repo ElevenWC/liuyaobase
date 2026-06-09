@@ -535,7 +535,7 @@ def _build_sanhe_exists(rel, params: dict, idx: int,
                         all_conditions: list, cond_clauses: dict) -> str:
     """三合检索——EXISTS + JOIN，支持任意两个爻与时间对象的两两组合"""
     bureau = getattr(rel, 'bureau', None)
-    bureau_check = f"= '{bureau}'" if bureau else "!= '无'"
+    bureau_check = f"= '{bureau}'" if bureau else "!= ''"
 
     objects = [
         (rel.left_type, rel.left_value, getattr(rel, 'left_scope', None) or 'ben_gua'),
@@ -684,7 +684,7 @@ def _build_sanhe_fallback(rel, params: dict, idx: int,
     dz2 = resolve_dz(rel.right_type, rel.right_value, f"fr{idx}", getattr(rel, 'right_scope', None) or 'ben_gua')
     if bureau:
         return f"check_sanhe({dz1}, {dz_mid}, {dz2}) = '{bureau}'"
-    return f"check_sanhe({dz1}, {dz_mid}, {dz2}) != '无'"
+    return f"check_sanhe({dz1}, {dz_mid}, {dz2}) != ''"
 
 
 def _build_relation_clause(rel: RelationCondition, params: dict, idx: int,
