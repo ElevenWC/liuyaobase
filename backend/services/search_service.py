@@ -716,6 +716,19 @@ def execute_search(session: Session, request: SearchRequest) -> SearchResponse:
         if isinstance(cond, RelationCondition):
             cond_clauses[cond.id] = _build_relation_clause(cond, params, i, conditions, cond_clauses)
 
+    # 第三遍：为条件组替换独立 yao 表别名（解决多组同爻位/同一爻 AND 串联时 y 行冲突）
+    group_aliases = set()
+    for i, cond in enumerate(conditions):
+        if isinstance(cond, (SameYaoGroup, SamePositionGroup, FeishenGroup)) and i > 0:
+            alias = f"y{i}"
+            group_aliases.add(alias)
+            if cond.id in cond_clauses:
+                cond_clauses[cond.id] = cond_clauses[cond.id].replace("y.", f"{alias}.")
+
+    # 为条件组添加独立的 yao 表 JOIN
+    for alias in sorted(group_aliases):
+        join_sql += f"\nLEFT JOIN guali_yao {alias} ON {alias}.guali_id = guali.id"
+
     # 解析逻辑链
     where_sql = _assemble_logic(logic, cond_clauses) if logic else " AND ".join(cond_clauses.values())
 
