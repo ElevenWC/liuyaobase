@@ -247,7 +247,11 @@ function fieldValueOptions(field) {
   return []
 }
 
-function addYaoCondition() { store.addCondition('normal') }
+function addYaoCondition() {
+  store.addCondition('normal')
+  const c = store.conditions[store.conditions.length - 1]
+  if (c) store.updateCondition(c.id, { field: 'ben_liuqin', operator: 'equals', value: '', scope: 'ben_gua' })
+}
 function addRelationCondition() { store.addCondition('relation') }
 function addShenshaCondition() {
   store.addCondition('normal')
