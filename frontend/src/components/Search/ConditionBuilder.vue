@@ -9,6 +9,7 @@ import FeishenGroup from './FeishenGroup.vue'
 
 const store = useSearchStore()
 const appStore = useAppStore()
+const condCollapsed = ref(false)
 function isGroup(c) { return !!c.groupType }
 
 // 括号组范围：从 logicChain 中提取 [start, end] 条件索引
@@ -313,11 +314,13 @@ function remove(id) { store.removeCondition(id) }
         <button class="cb-btn cb-btn-search" :disabled="store.loading" @click="store.executeSearch()">
           {{ store.loading ? '检索中...' : '搜索' }}
         </button>
+        <button class="cb-btn" @click="condCollapsed = !condCollapsed">{{ condCollapsed ? '展开' : '折叠' }}</button>
         <button class="cb-btn cb-btn-clear" @click="store.conditions = []; store.logicChain = []; store.results = []">清空</button>
       </div>
     </div>
 
-    <div v-if="!store.conditions.length" class="cb-empty">点击下方按钮或左侧字段库添加条件</div>
+    <div v-show="!condCollapsed">
+      <div v-if="!store.conditions.length" class="cb-empty">点击下方按钮或左侧字段库添加条件</div>
 
     <template v-for="(cond, ci) in store.conditions" :key="cond.id">
       <!-- 逻辑连接器（非第一个条件时显示） -->
@@ -737,6 +740,7 @@ function remove(id) { store.removeCondition(id) }
       <button @click="store.addConditionGroup('same_yao')" class="cb-btn cg-btn">+ 同一爻</button>
       <button @click="store.addConditionGroup('same_position')" class="cb-btn cg-btn">+ 同爻位</button>
       <button @click="store.addConditionGroup('feishen')" class="cb-btn cg-btn">+ 飞神</button>
+    </div>
     </div>
   </div>
 </template>
