@@ -759,13 +759,14 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int,
         params[suffix] = obj_value
         return f":{suffix}"
 
-    dz1 = resolve_dz(rel.left_type, rel.left_value, f"l{idx}", getattr(rel, 'left_scope', None) or 'ben_gua')
-    dz2 = resolve_dz(rel.right_type, rel.right_value, f"r{idx}", getattr(rel, 'right_scope', None) or 'ben_gua')
-
     if relation == "三合":
         # 三合改用 EXISTS + JOIN 模式，支持任意两个爻+时间对象两两组合
         return _build_sanhe_exists(rel, params, idx, all_conditions, cond_clauses)
-    elif relation in ("生", "克"):
+
+    dz1 = resolve_dz(rel.left_type, rel.left_value, f"l{idx}", getattr(rel, 'left_scope', None) or 'ben_gua')
+    dz2 = resolve_dz(rel.right_type, rel.right_value, f"r{idx}", getattr(rel, 'right_scope', None) or 'ben_gua')
+
+    if relation in ("生", "克"):
         func = "check_sheng" if relation == "生" else "check_ke"
         return f"{func}({dz1}, {dz2}) = TRUE"
     elif relation == "合":
