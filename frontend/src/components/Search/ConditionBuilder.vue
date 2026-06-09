@@ -643,7 +643,7 @@ function remove(id) { store.removeCondition(id) }
           </select>
           <span class="cb-gap"></span>
           <select v-model="cond.bureau" class="cb-sel">
-            <option value="">--局--</option>
+            <option value="">任意</option>
             <option value="水">水局</option>
             <option value="木">木局</option>
             <option value="火">火局</option>

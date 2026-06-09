@@ -531,6 +531,162 @@ def _build_shensha_clause(field: str, mode: str, scope: str, obj_value: str, par
     return f"({sub})"
 
 
+def _build_sanhe_exists(rel, params: dict, idx: int,
+                        all_conditions: list, cond_clauses: dict) -> str:
+    """三合检索——EXISTS + JOIN，支持任意两个爻与时间对象的两两组合"""
+    bureau = getattr(rel, 'bureau', None)
+    bureau_check = f"= '{bureau}'" if bureau else "!= '无'"
+
+    objects = [
+        (rel.left_type, rel.left_value, getattr(rel, 'left_scope', None) or 'ben_gua'),
+        (getattr(rel, 'middle_type', None), getattr(rel, 'middle_value', None),
+         getattr(rel, 'middle_scope', None) or 'ben_gua'),
+        (rel.right_type, rel.right_value, getattr(rel, 'right_scope', None) or 'ben_gua'),
+    ]
+
+    yao_configs = []  # (alias, column, value, scope) for each yao object
+    dz_exprs = []     # dz column references for check_sanhe()
+    needs_time = False
+
+    for slot_i, (obj_type, obj_value, obj_scope) in enumerate(objects):
+        if obj_type == "time_object":
+            needs_time = True
+            tm_map = {"年支": "t.year_zhi", "月支": "t.month_zhi", "日支": "t.day_zhi"}
+            dz_exprs.append(tm_map.get(obj_value or "", "NULL"))
+        elif obj_type == "yao_object":
+            alias = f"ys{idx}_{slot_i}"
+            col, val, dz_col = _parse_yao_object(obj_value or "")
+            _PFX = {'ben_gua': 'ben', 'zhi_gua': 'zhi', 'bian_yao': 'zhi',
+                     'yimao': 'yimao', 'zengshan': 'zengshan'}
+            pfx = _PFX.get(obj_scope, 'ben')
+
+            def _scoped(col_name, pfx):
+                for old in ['ben_', 'zhi_', 'yimao_', 'zengshan_']:
+                    if col_name.startswith(old):
+                        return col_name.replace(old, pfx + '_', 1)
+                return f"{pfx}_{col_name}" if '_' not in col_name else col_name
+
+            yao_configs.append((alias, col, val, dz_col, obj_scope, pfx, _scoped(col, pfx), _scoped(dz_col, pfx)))
+            dz_exprs.append(f"{alias}.{_scoped(dz_col, pfx)}")
+        else:
+            # condition_group_ref or unknown → fallback to scalar subquery
+            # We need resolve_dz from the caller, so just return a placeholder
+            return _build_sanhe_fallback(rel, params, idx, all_conditions, cond_clauses)
+
+    # Build JOINs for each yao object
+    yao_aliases = [c[0] for c in yao_configs]
+    yao_filters = {}  # alias → filter SQL (without guali_id condition)
+    for alias, col, val, dz_col, obj_scope, pfx, col_scoped, dz_scoped in yao_configs:
+        filters = []
+        if val:
+            key = f"s{idx}_{alias}"
+            params[key] = val
+            filters.append(f"{alias}.{col_scoped} = :{key}")
+        # Scope filter
+        scope = SOURCE_TO_SCOPE.get(obj_scope, "")
+        scope_clause = _scope_filter(scope, {})
+        if scope_clause:
+            filters.append(scope_clause.replace("y.", f"{alias}."))
+        yao_filters[alias] = " AND ".join(filters) if filters else "TRUE"
+
+    # Ensure different yao rows
+    position_conds = []
+    for i in range(len(yao_aliases)):
+        for j in range(i + 1, len(yao_aliases)):
+            position_conds.append(f"{yao_aliases[i]}.yao_position != {yao_aliases[j]}.yao_position")
+    pos_cond = " AND ".join(position_conds) if position_conds else "TRUE"
+
+    dz_str = ", ".join(dz_exprs)
+
+    if needs_time:
+        join_lines = []
+        for alias in yao_aliases:
+            join_lines.append(
+                f"  JOIN guali_yao {alias} ON {alias}.guali_id = t.guali_id AND {yao_filters[alias]}")
+        join_sql = "\n".join(join_lines)
+        return (
+            f"EXISTS (SELECT 1 FROM guali_time t\n"
+            f"{join_sql}\n"
+            f"WHERE t.guali_id = guali.id AND {pos_cond}\n"
+            f"AND check_sanhe({dz_str}) {bureau_check})"
+        )
+    else:
+        # 全是爻对象：第一个用 FROM + filter，后续用 JOIN
+        from_alias = yao_aliases[0]
+        extra_joins = ""
+        for alias in yao_aliases[1:]:
+            extra_joins += f"\n  JOIN guali_yao {alias} ON {alias}.guali_id = guali.id AND {yao_filters[alias]}"
+        return (
+            f"EXISTS (SELECT 1 FROM guali_yao {from_alias}\n"
+            f"{extra_joins}\n"
+            f"WHERE {from_alias}.guali_id = guali.id"
+            f" AND {yao_filters[from_alias]}"
+            f" AND {pos_cond}\n"
+            f"AND check_sanhe({dz_str}) {bureau_check})"
+        )
+
+
+def _build_sanhe_fallback(rel, params: dict, idx: int,
+                          all_conditions: list, cond_clauses: dict) -> str:
+    """三合检索的降级方案——使用标量子查询（适用于 condition_group_ref）"""
+    bureau = getattr(rel, 'bureau', None)
+    cg_counter = [0]
+
+    def resolve_dz(obj_type, obj_value, suffix, scope='ben_gua'):
+        _PFX = {'ben_gua': 'ben', 'zhi_gua': 'zhi', 'bian_yao': 'zhi',
+                 'yimao': 'yimao', 'zengshan': 'zengshan'}
+        pfx = _PFX.get(scope, 'ben')
+        if obj_type == "yao_object":
+            col, val, dz_col = _parse_yao_object(obj_value)
+            if val == "":
+                return f"y.{dz_col}"
+            def _scoped(col_name, pfx):
+                for old in ['ben_', 'zhi_', 'yimao_', 'zengshan_']:
+                    if col_name.startswith(old):
+                        return col_name.replace(old, pfx + '_', 1)
+                return f"{pfx}_{col_name}" if '_' not in col_name else col_name
+            dz = _scoped(dz_col, pfx)
+            col_scoped = _scoped(col, pfx)
+            params[suffix] = val
+            extra = ''
+            if scope == 'bian_yao': extra = ' AND y_inner.is_dong = TRUE'
+            elif scope == 'zhi_gua': extra = ' AND y_inner.is_dong = FALSE'
+            elif scope == 'zengshan': extra = ' AND y_inner.zengshan_exists = TRUE'
+            return f"(SELECT y_inner.{dz} FROM guali_yao y_inner WHERE y_inner.guali_id = guali.id AND y_inner.{col_scoped} = :{suffix}{extra} LIMIT 1)"
+        elif obj_type == "time_object":
+            tm_map = {"年支": "t.year_zhi", "月支": "t.month_zhi", "日支": "t.day_zhi"}
+            return tm_map.get(obj_value, "NULL")
+        elif obj_type == "condition_group_ref":
+            ref_cond = None
+            for c in all_conditions:
+                if c.id == obj_value:
+                    ref_cond = c
+                    break
+            if ref_cond is None:
+                return "NULL"
+            alias = f"ycg{cg_counter[0]}"
+            cg_counter[0] += 1
+            ref_clause = cond_clauses.get(obj_value, "")
+            ref_sql = ref_clause.replace("y.", f"{alias}.")
+            extra_join = ""
+            if "s." in ref_sql:
+                extra_join = f" LEFT JOIN guali_shensha s ON s.guali_id = {alias}.guali_id"
+            return (
+                f"(SELECT {alias}.ben_dizhi FROM guali_yao {alias}{extra_join}"
+                f" WHERE {alias}.guali_id = guali.id AND ({ref_sql}) LIMIT 1)"
+            )
+        params[suffix] = obj_value
+        return f":{suffix}"
+
+    dz1 = resolve_dz(rel.left_type, rel.left_value, f"fl{idx}", getattr(rel, 'left_scope', None) or 'ben_gua')
+    dz_mid = resolve_dz(rel.middle_type, rel.middle_value, f"fm{idx}",
+                         getattr(rel, 'middle_scope', None) or 'ben_gua')
+    dz2 = resolve_dz(rel.right_type, rel.right_value, f"fr{idx}", getattr(rel, 'right_scope', None) or 'ben_gua')
+    if bureau:
+        return f"check_sanhe({dz1}, {dz_mid}, {dz2}) = '{bureau}'"
+    return f"check_sanhe({dz1}, {dz_mid}, {dz2}) != '无'"
+
+
 def _build_relation_clause(rel: RelationCondition, params: dict, idx: int,
                            all_conditions: list = (), cond_clauses: dict = {}) -> str:
     """关系条件 → MySQL 存储函数调用"""
@@ -607,11 +763,8 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int,
     dz2 = resolve_dz(rel.right_type, rel.right_value, f"r{idx}", getattr(rel, 'right_scope', None) or 'ben_gua')
 
     if relation == "三合":
-        # 三合需要 3 个地支对象
-        dz_mid = resolve_dz(rel.middle_type, rel.middle_value, f"m{idx}", getattr(rel, 'middle_scope', None) or 'ben_gua')
-        if bureau:
-            return f"check_sanhe({dz1}, {dz_mid}, {dz2}) = '{bureau}'"
-        return f"check_sanhe({dz1}, {dz_mid}, {dz2}) != '无'"
+        # 三合改用 EXISTS + JOIN 模式，支持任意两个爻+时间对象两两组合
+        return _build_sanhe_exists(rel, params, idx, all_conditions, cond_clauses)
     elif relation in ("生", "克"):
         func = "check_sheng" if relation == "生" else "check_ke"
         return f"{func}({dz1}, {dz2}) = TRUE"
