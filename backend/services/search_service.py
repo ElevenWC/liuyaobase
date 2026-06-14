@@ -531,6 +531,92 @@ def _build_shensha_clause(field: str, mode: str, scope: str, obj_value: str, par
     return f"({sub})"
 
 
+def _build_cg_relation_exists(rel, params: dict, idx: int,
+                               all_conditions: list, cond_clauses: dict) -> str:
+    """2-way 关系涉及 condition_group_ref → EXISTS + JOIN，遍历所有爻组合"""
+    relation = rel.relation
+    objects = [
+        (rel.left_type, rel.left_value, getattr(rel, 'left_scope', None) or 'ben_gua'),
+        (rel.right_type, rel.right_value, getattr(rel, 'right_scope', None) or 'ben_gua'),
+    ]
+    join_lines = []
+    dz_exprs = []
+    yao_filters = {}  # alias → filter SQL (without guali_id condition)
+
+    for i, (obj_type, obj_value, obj_scope) in enumerate(objects):
+        alias = f"yr{idx}_{i}"
+        if obj_type == "time_object":
+            tm_map = {"年支": "t.year_zhi", "月支": "t.month_zhi", "日支": "t.day_zhi"}
+            dz_exprs.append(tm_map.get(obj_value or "", "NULL"))
+        elif obj_type == "condition_group_ref":
+            ref_clause = cond_clauses.get(obj_value, "")
+            if not ref_clause:
+                return "FALSE"
+            ref_sql = ref_clause.replace("y.", f"{alias}.")
+            yao_filters[alias] = f"({ref_sql})"
+            dz_exprs.append(f"{alias}.ben_dizhi")
+        elif obj_type == "yao_object":
+            col, val, dz_col = _parse_yao_object(obj_value or "")
+            _PFX = {'ben_gua': 'ben', 'zhi_gua': 'zhi', 'bian_yao': 'zhi',
+                     'yimao': 'yimao', 'zengshan': 'zengshan'}
+            pfx = _PFX.get(obj_scope, 'ben')
+            def _scoped(col_name, pfx):
+                for old in ['ben_', 'zhi_', 'yimao_', 'zengshan_']:
+                    if col_name.startswith(old):
+                        return col_name.replace(old, pfx + '_', 1)
+                return f"{pfx}_{col_name}" if '_' not in col_name else col_name
+            filters = []
+            if val:
+                key = f"yr{idx}_{i}"
+                params[key] = val
+                filters.append(f"{alias}.{_scoped(col, pfx)} = :{key}")
+            scope = SOURCE_TO_SCOPE.get(obj_scope, "")
+            scope_clause = _scope_filter(scope, {})
+            if scope_clause:
+                filters.append(scope_clause.replace("y.", f"{alias}."))
+            yao_filters[alias] = " AND ".join(filters) if filters else "TRUE"
+            dz_exprs.append(f"{alias}.{_scoped(dz_col, pfx)}")
+        else:
+            return "FALSE"
+
+    join_lines = []
+    for i, alias in enumerate(yao_filters.keys()):
+        if i == 0:
+            continue  # First alias is FROM, filter goes in WHERE
+        join_lines.append(
+            f"  JOIN guali_yao {alias} ON {alias}.guali_id = yr{idx}_0.guali_id AND {yao_filters[alias]}")
+
+    # Ensure different yao rows
+    pos_cond = f"yr{idx}_0.yao_position != yr{idx}_1.yao_position"
+
+    dz_str = ", ".join(dz_exprs)
+    if relation in ("生", "克"):
+        func = "check_sheng" if relation == "生" else "check_ke"
+        check = f"{func}({dz_str}) = TRUE"
+    elif relation == "合":
+        check = f"check_he({dz_str}) = TRUE"
+    elif relation == "冲":
+        check = f"check_chong({dz_str}) = TRUE"
+    elif relation == "半合":
+        check = f"check_banhe({dz_str}) = TRUE"
+    elif relation == "=":
+        check = f"{dz_str} = {dz_str}" if len(dz_exprs) > 1 else f"{dz_exprs[0]} = {dz_exprs[0]}"
+    elif relation in ("长生", "帝旺", "墓", "绝"):
+        check = f"check_shengwang({dz_str}, '{relation}') = TRUE"
+    else:
+        return "FALSE"
+
+    join_sql = "\n".join(join_lines) if join_lines else ""
+    first_alias = f"yr{idx}_0"
+    first_filter = yao_filters.get(first_alias, "TRUE")
+    return (
+        f"EXISTS (SELECT 1 FROM guali_yao {first_alias}\n"
+        f"{join_sql}\n"
+        f"WHERE {first_alias}.guali_id = guali.id AND {first_filter} AND {pos_cond}\n"
+        f"AND {check})"
+    )
+
+
 def _build_sanhe_exists(rel, params: dict, idx: int,
                         all_conditions: list, cond_clauses: dict) -> str:
     """三合检索——EXISTS + JOIN，支持任意两个爻与时间对象的两两组合"""
@@ -762,6 +848,9 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int,
     if relation == "三合":
         # 三合改用 EXISTS + JOIN 模式，支持任意两个爻+时间对象两两组合
         return _build_sanhe_exists(rel, params, idx, all_conditions, cond_clauses)
+
+    if rel.left_type == "condition_group_ref" or rel.right_type == "condition_group_ref":
+        return _build_cg_relation_exists(rel, params, idx, all_conditions, cond_clauses)
 
     dz1 = resolve_dz(rel.left_type, rel.left_value, f"l{idx}", getattr(rel, 'left_scope', None) or 'ben_gua')
     dz2 = resolve_dz(rel.right_type, rel.right_value, f"r{idx}", getattr(rel, 'right_scope', None) or 'ben_gua')
