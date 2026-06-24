@@ -143,8 +143,8 @@ function onFieldSelect({ cat, field, type, label }) {
   if (type === 'relation') {
     store.addCondition('relation')
     const c = store.conditions[store.conditions.length - 1]
-    const relMap = { shengke: '生', he_chong: '合', banhe: '半合', sanhe: '三合', xiangdeng: '=', shengwang: '长生' }
-    if (c && relMap[field]) store.updateCondition(c.id, { relation: relMap[field], middle_type: field === 'sanhe' ? 'yao_object' : null })
+    const relMap = { shengke: '生', he_chong: '合', banhe: '半合', sanhe: '三合', xiangdeng: '=', shengwang: '长生', xunkong: '旬空' }
+    if (c && relMap[field]) store.updateCondition(c.id, { relation: relMap[field], middle_type: field === 'sanhe' ? 'yao_object' : null, right_value: field === 'xunkong' ? '任意' : '' })
   } else {
     const id = store.addCondition('normal')
     if (cat === 'time' || cat === 'gua') {

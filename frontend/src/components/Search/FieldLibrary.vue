@@ -65,6 +65,7 @@ const categories = [
       { key: 'xiangdeng', label: '相等', type: 'relation' },
       { key: 'banhe', label: '半合', type: 'relation' },
       { key: 'sanhe', label: '三合', type: 'relation' },
+      { key: 'xunkong', label: '旬空', type: 'relation' },
       { key: 'shengwang', label: '生旺墓绝', type: 'relation' },
     ],
   },
