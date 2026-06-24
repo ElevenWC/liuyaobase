@@ -5,7 +5,7 @@ from typing import Union, Optional, Literal
 
 # ── 运算符白名单 ──
 VALID_OPERATORS = {"equals", "not_equals", "in", "not_in", "gt", "lt", "gte", "lte", "range"}
-VALID_RELATIONS = {"生", "克", "合", "冲", "半合", "三合", "=", "长生", "帝旺", "墓", "绝"}
+VALID_RELATIONS = {"生", "克", "合", "冲", "半合", "三合", "=", "长生", "帝旺", "墓", "绝", "旬空"}
 VALID_OBJECT_TYPES = {"yao_object", "time_object", "condition_group_ref"}
 VALID_LOGIC_TYPES = {"condition", "condition_group", "and", "or", "not", "(", ")"}
 VALID_SOURCES = {"本卦", "变爻", "之卦(静爻)", "易冒伏神", "增删伏神"}

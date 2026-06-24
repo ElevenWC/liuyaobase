@@ -531,6 +531,67 @@ def _build_shensha_clause(field: str, mode: str, scope: str, obj_value: str, par
     return f"({sub})"
 
 
+def _build_xunkong_exists(rel, params: dict, idx: int,
+                          all_conditions: list, cond_clauses: dict) -> str:
+    """旬空检索——EXISTS + JOIN，遍历所有匹配的爻"""
+    target = getattr(rel, 'right_value', None) or "任意"
+    left_type = rel.left_type
+    left_value = rel.left_value
+    left_scope = getattr(rel, 'left_scope', None) or 'ben_gua'
+
+    if left_type == "time_object":
+        tm_map = {"年支": "t.year_zhi", "月支": "t.month_zhi", "日支": "t.day_zhi"}
+        dz_col = tm_map.get(left_value or "", "NULL")
+        if target == "任意":
+            return f"EXISTS (SELECT 1 FROM guali_time t WHERE t.guali_id = guali.id AND INSTR(t.xun_kong, {dz_col}) > 0)"
+        else:
+            return f"(EXISTS (SELECT 1 FROM guali_time t WHERE t.guali_id = guali.id AND INSTR(t.xun_kong, '{target}') > 0) AND {dz_col} = '{target}')"
+
+    # yao_object or condition_group_ref → EXISTS + JOIN
+    alias = f"yx{idx}"
+    if left_type == "condition_group_ref":
+        ref_clause = cond_clauses.get(left_value, "")
+        if not ref_clause:
+            return "FALSE"
+        filter_sql = ref_clause.replace("y.", f"{alias}.")
+        dz_col_scoped = "ben_dizhi"  # 条件组的地支列固定为 ben_dizhi
+    else:
+        col, val, dz_col = _parse_yao_object(left_value or "")
+        _PFX = {'ben_gua': 'ben', 'zhi_gua': 'zhi', 'bian_yao': 'zhi',
+                 'yimao': 'yimao', 'zengshan': 'zengshan'}
+        pfx = _PFX.get(left_scope, 'ben')
+        def _scoped(col_name, pfx):
+            for old in ['ben_', 'zhi_', 'yimao_', 'zengshan_']:
+                if col_name.startswith(old):
+                    return col_name.replace(old, pfx + '_', 1)
+            return f"{pfx}_{col_name}" if '_' not in col_name else col_name
+        dz_col_scoped = _scoped(dz_col, pfx)
+
+        filters = []
+        if val:
+            key = f"xk{idx}"
+            params[key] = val
+            filters.append(f"{alias}.{_scoped(col, pfx)} = :{key}")
+        scope = SOURCE_TO_SCOPE.get(left_scope, "")
+        scope_clause = _scope_filter(scope, {})
+        if scope_clause:
+            filters.append(scope_clause.replace("y.", f"{alias}."))
+        filter_sql = " AND ".join(filters) if filters else "TRUE"
+
+    if target == "任意":
+        return (
+            f"EXISTS (SELECT 1 FROM guali_time t\n"
+            f"  JOIN guali_yao {alias} ON {alias}.guali_id = t.guali_id AND {filter_sql}\n"
+            f"WHERE t.guali_id = guali.id AND INSTR(t.xun_kong, {alias}.{dz_col_scoped}) > 0)"
+        )
+    else:
+        return (
+            f"EXISTS (SELECT 1 FROM guali_time t\n"
+            f"  JOIN guali_yao {alias} ON {alias}.guali_id = t.guali_id AND {filter_sql} AND {alias}.{dz_col_scoped} = '{target}'\n"
+            f"WHERE t.guali_id = guali.id AND INSTR(t.xun_kong, '{target}') > 0)"
+        )
+
+
 def _build_cg_relation_exists(rel, params: dict, idx: int,
                                all_conditions: list, cond_clauses: dict) -> str:
     """2-way 关系涉及 condition_group_ref → EXISTS + JOIN，遍历所有爻组合"""
@@ -848,6 +909,9 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int,
     if relation == "三合":
         # 三合改用 EXISTS + JOIN 模式，支持任意两个爻+时间对象两两组合
         return _build_sanhe_exists(rel, params, idx, all_conditions, cond_clauses)
+
+    if relation == "旬空":
+        return _build_xunkong_exists(rel, params, idx, all_conditions, cond_clauses)
 
     if rel.left_type == "condition_group_ref" or rel.right_type == "condition_group_ref":
         return _build_cg_relation_exists(rel, params, idx, all_conditions, cond_clauses)

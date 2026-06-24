@@ -204,6 +204,7 @@ function toggleLogicAt(condIndex) {
   }
 }
 const SHENGWANG_RELATIONS = ['长生', '帝旺', '墓', '绝']
+const DIZHI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
 
 const COUNT_SCOPES = [
   { v: 'ben_gua', label: '本卦' },
@@ -634,6 +635,9 @@ function remove(id) { store.removeCondition(id) }
             <optgroup label="三合">
               <option value="三合">三合</option>
             </optgroup>
+            <optgroup label="旬空">
+              <option value="旬空">旬空</option>
+            </optgroup>
             <optgroup label="生旺墓绝">
               <option value="长生">长生</option>
               <option value="帝旺">帝旺</option>
@@ -665,6 +669,9 @@ function remove(id) { store.removeCondition(id) }
             <optgroup label="三合">
               <option value="三合">三合</option>
             </optgroup>
+            <optgroup label="旬空">
+              <option value="旬空">旬空</option>
+            </optgroup>
             <optgroup label="生旺墓绝">
               <option value="长生">长生</option>
               <option value="帝旺">帝旺</option>
@@ -672,7 +679,15 @@ function remove(id) { store.removeCondition(id) }
               <option value="绝">绝</option>
             </optgroup>
           </select>
-          <span v-if="SHENGWANG_RELATIONS.includes(cond.relation)" class="cb-yu">于</span>
+          <template v-if="cond.relation === '旬空'">
+            <span class="cb-yu">于</span>
+            <select v-model="cond.right_value" class="cb-sel">
+              <option value="任意">任意</option>
+              <option v-for="d in DIZHI" :key="d" :value="d">{{ d }}</option>
+            </select>
+          </template>
+          <template v-else>
+            <span v-if="SHENGWANG_RELATIONS.includes(cond.relation)" class="cb-yu">于</span>
           <select v-model="cond.right_type" class="cb-sel">
             <option value="yao_object">爻对象</option>
             <option value="time_object">时间对象</option>
@@ -721,6 +736,7 @@ function remove(id) { store.removeCondition(id) }
             <option value="">--条件ID--</option>
             <option v-for="c in store.conditions.filter(x=>x.id!==cond.id&&x.groupType)" :key="c.id" :value="c.id">{{ groupSummary(c) }}</option>
           </select>
+          </template>
         </template>
       </template>
     </div>
