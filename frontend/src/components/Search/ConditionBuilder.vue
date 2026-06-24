@@ -316,7 +316,7 @@ function remove(id) { store.removeCondition(id) }
           {{ store.loading ? '检索中...' : '搜索' }}
         </button>
         <button class="cb-btn" @click="condCollapsed = !condCollapsed">{{ condCollapsed ? '展开' : '折叠' }}</button>
-        <button class="cb-btn cb-btn-clear" @click="store.conditions = []; store.logicChain = []; store.results = []">清空</button>
+        <button class="cb-btn cb-btn-clear" @click="store.conditions = []; store.logicChain = []; store.results = []; store.pagination.page = 1">清空</button>
       </div>
     </div>
 
