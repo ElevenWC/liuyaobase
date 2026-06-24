@@ -592,20 +592,19 @@ def _build_xunkong_exists(rel, params: dict, idx: int,
         )
 
 
-def _build_cg_relation_exists(rel, params: dict, idx: int,
-                               all_conditions: list, cond_clauses: dict) -> str:
-    """2-way 关系涉及 condition_group_ref → EXISTS + JOIN，遍历所有爻组合"""
+def _build_yao_relation_exists(rel, params: dict, idx: int,
+                                all_conditions: list, cond_clauses: dict) -> str:
+    """2-way 关系——EXISTS + JOIN 遍历所有爻组合（替代 LIMIT 1 标量子查询）"""
     relation = rel.relation
     objects = [
         (rel.left_type, rel.left_value, getattr(rel, 'left_scope', None) or 'ben_gua'),
         (rel.right_type, rel.right_value, getattr(rel, 'right_scope', None) or 'ben_gua'),
     ]
-    join_lines = []
+    yao_filters = {}
     dz_exprs = []
-    yao_filters = {}  # alias → filter SQL (without guali_id condition)
 
     for i, (obj_type, obj_value, obj_scope) in enumerate(objects):
-        alias = f"yr{idx}_{i}"
+        alias = f"y2r{idx}_{i}"
         if obj_type == "time_object":
             tm_map = {"年支": "t.year_zhi", "月支": "t.month_zhi", "日支": "t.day_zhi"}
             dz_exprs.append(tm_map.get(obj_value or "", "NULL"))
@@ -613,8 +612,7 @@ def _build_cg_relation_exists(rel, params: dict, idx: int,
             ref_clause = cond_clauses.get(obj_value, "")
             if not ref_clause:
                 return "FALSE"
-            ref_sql = ref_clause.replace("y.", f"{alias}.")
-            yao_filters[alias] = f"({ref_sql})"
+            yao_filters[alias] = ref_clause.replace("y.", f"{alias}.")
             dz_exprs.append(f"{alias}.ben_dizhi")
         elif obj_type == "yao_object":
             col, val, dz_col = _parse_yao_object(obj_value or "")
@@ -628,7 +626,7 @@ def _build_cg_relation_exists(rel, params: dict, idx: int,
                 return f"{pfx}_{col_name}" if '_' not in col_name else col_name
             filters = []
             if val:
-                key = f"yr{idx}_{i}"
+                key = f"y2r{idx}_{i}"
                 params[key] = val
                 filters.append(f"{alias}.{_scoped(col, pfx)} = :{key}")
             scope = SOURCE_TO_SCOPE.get(obj_scope, "")
@@ -640,17 +638,35 @@ def _build_cg_relation_exists(rel, params: dict, idx: int,
         else:
             return "FALSE"
 
+    aliases = list(yao_filters.keys())
+    if len(aliases) == 0:
+        # Both are time objects → use simple check
+        dz_str = ", ".join(dz_exprs)
+        if relation in ("生", "克"):
+            func = "check_sheng" if relation == "生" else "check_ke"
+            return f"EXISTS (SELECT 1 FROM guali_time t WHERE t.guali_id = guali.id AND {func}({dz_str}) = TRUE)"
+        elif relation == "合":
+            return f"EXISTS (SELECT 1 FROM guali_time t WHERE t.guali_id = guali.id AND check_he({dz_str}) = TRUE)"
+        elif relation == "冲":
+            return f"EXISTS (SELECT 1 FROM guali_time t WHERE t.guali_id = guali.id AND check_chong({dz_str}) = TRUE)"
+        elif relation == "半合":
+            return f"EXISTS (SELECT 1 FROM guali_time t WHERE t.guali_id = guali.id AND check_banhe({dz_str}) = TRUE)"
+        elif relation == "=":
+            return f"EXISTS (SELECT 1 FROM guali_time t WHERE t.guali_id = guali.id AND {dz_exprs[0]} = {dz_exprs[1]})"
+        elif relation in ("长生", "帝旺", "墓", "绝"):
+            return f"EXISTS (SELECT 1 FROM guali_time t WHERE t.guali_id = guali.id AND check_shengwang({dz_str}, '{relation}') = TRUE)"
+        return "FALSE"
+
+    first_alias = aliases[0]
     join_lines = []
-    for i, alias in enumerate(yao_filters.keys()):
-        if i == 0:
-            continue  # First alias is FROM, filter goes in WHERE
+    for alias in aliases[1:]:
         join_lines.append(
-            f"  JOIN guali_yao {alias} ON {alias}.guali_id = yr{idx}_0.guali_id AND {yao_filters[alias]}")
+            f"  JOIN guali_yao {alias} ON {alias}.guali_id = {first_alias}.guali_id AND {yao_filters[alias]}")
 
-    # Ensure different yao rows
-    pos_cond = f"yr{idx}_0.yao_position != yr{idx}_1.yao_position"
-
+    join_sql = "\n".join(join_lines)
     dz_str = ", ".join(dz_exprs)
+    pos_cond = f"{aliases[0]}.yao_position != {aliases[1]}.yao_position" if len(aliases) >= 2 else "TRUE"
+
     if relation in ("生", "克"):
         func = "check_sheng" if relation == "生" else "check_ke"
         check = f"{func}({dz_str}) = TRUE"
@@ -661,19 +677,16 @@ def _build_cg_relation_exists(rel, params: dict, idx: int,
     elif relation == "半合":
         check = f"check_banhe({dz_str}) = TRUE"
     elif relation == "=":
-        check = f"{dz_str} = {dz_str}" if len(dz_exprs) > 1 else f"{dz_exprs[0]} = {dz_exprs[0]}"
+        check = f"{dz_exprs[0]} = {dz_exprs[1]}"
     elif relation in ("长生", "帝旺", "墓", "绝"):
         check = f"check_shengwang({dz_str}, '{relation}') = TRUE"
     else:
         return "FALSE"
 
-    join_sql = "\n".join(join_lines) if join_lines else ""
-    first_alias = f"yr{idx}_0"
-    first_filter = yao_filters.get(first_alias, "TRUE")
     return (
         f"EXISTS (SELECT 1 FROM guali_yao {first_alias}\n"
         f"{join_sql}\n"
-        f"WHERE {first_alias}.guali_id = guali.id AND {first_filter} AND {pos_cond}\n"
+        f"WHERE {first_alias}.guali_id = guali.id AND {yao_filters[first_alias]} AND {pos_cond}\n"
         f"AND {check})"
     )
 
@@ -840,72 +853,6 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int,
     relation = rel.relation
     bureau = rel.bureau
 
-    # 条件组引用的子表别名计数器
-    cg_counter = [0]
-
-    # 获取地支值：yao_object → 子查询查爻表，time_object → 时间表字段
-    def resolve_dz(obj_type, obj_value, suffix, scope='ben_gua'):
-        # scope → 列前缀映射
-        _PFX = {'ben_gua': 'ben', 'zhi_gua': 'zhi', 'bian_yao': 'zhi', 'yimao': 'yimao', 'zengshan': 'zengshan'}
-        pfx = _PFX.get(scope, 'ben')
-        if obj_type == "yao_object":
-            col, val, dz_col = _parse_yao_object(obj_value)
-            # 伏神/飞神直接返回列名（列名自带来源前缀，不参与scope映射）
-            if val == "":
-                return f"y.{dz_col}"
-            # 根据 scope 调整列前缀
-            def _scoped(col_name, pfx):
-                for old in ['ben_', 'zhi_', 'yimao_', 'zengshan_']:
-                    if col_name.startswith(old):
-                        return col_name.replace(old, pfx + '_', 1)
-                return f"{pfx}_{col_name}" if '_' not in col_name else col_name
-
-            dz = _scoped(dz_col, pfx)
-            # 构建子查询
-            col_scoped = _scoped(col, pfx)
-            params[suffix] = val
-            # 额外 scope 过滤
-            extra = ''
-            if scope == 'bian_yao': extra = ' AND y_inner.is_dong = TRUE'
-            elif scope == 'zhi_gua': extra = ' AND y_inner.is_dong = FALSE'
-            elif scope == 'zengshan': extra = ' AND y_inner.zengshan_exists = TRUE'
-            return f"(SELECT y_inner.{dz} FROM guali_yao y_inner WHERE y_inner.guali_id = guali.id AND y_inner.{col_scoped} = :{suffix}{extra} LIMIT 1)"
-        elif obj_type == "time_object":
-            tm_map = {"年支": "t.year_zhi", "月支": "t.month_zhi", "日支": "t.day_zhi"}
-            dz_col = tm_map.get(obj_value)
-            if dz_col:
-                return dz_col
-            params[suffix] = obj_value
-            return f":{suffix}"
-        elif obj_type == "condition_group_ref":
-            # 找到被引用的条件，以独立表别名重建其 SQL 子句
-            ref_cond = None
-            for c in all_conditions:
-                if c.id == obj_value:
-                    ref_cond = c
-                    break
-            if ref_cond is None:
-                raise ValueError(f"条件组引用目标不存在: {obj_value}")
-
-            alias = f"ycg{cg_counter[0]}"
-            cg_counter[0] += 1
-
-            # 为被引用条件生成带新表别名的 SQL（替换 y. 为 alias.）
-            ref_clause = cond_clauses.get(obj_value, "")
-            ref_sql = ref_clause.replace("y.", f"{alias}.")
-
-            # 如果被引用条件含神煞字段(s.)，子查询需 JOIN guali_shensha
-            extra_join = ""
-            if "s." in ref_sql:
-                extra_join = f" LEFT JOIN guali_shensha s ON s.guali_id = {alias}.guali_id"
-
-            return (
-                f"(SELECT {alias}.ben_dizhi FROM guali_yao {alias}{extra_join}"
-                f" WHERE {alias}.guali_id = guali.id AND ({ref_sql}) LIMIT 1)"
-            )
-        params[suffix] = obj_value
-        return f":{suffix}"
-
     if relation == "三合":
         # 三合改用 EXISTS + JOIN 模式，支持任意两个爻+时间对象两两组合
         return _build_sanhe_exists(rel, params, idx, all_conditions, cond_clauses)
@@ -913,27 +860,7 @@ def _build_relation_clause(rel: RelationCondition, params: dict, idx: int,
     if relation == "旬空":
         return _build_xunkong_exists(rel, params, idx, all_conditions, cond_clauses)
 
-    if rel.left_type == "condition_group_ref" or rel.right_type == "condition_group_ref":
-        return _build_cg_relation_exists(rel, params, idx, all_conditions, cond_clauses)
-
-    dz1 = resolve_dz(rel.left_type, rel.left_value, f"l{idx}", getattr(rel, 'left_scope', None) or 'ben_gua')
-    dz2 = resolve_dz(rel.right_type, rel.right_value, f"r{idx}", getattr(rel, 'right_scope', None) or 'ben_gua')
-
-    if relation in ("生", "克"):
-        func = "check_sheng" if relation == "生" else "check_ke"
-        return f"{func}({dz1}, {dz2}) = TRUE"
-    elif relation == "合":
-        return f"check_he({dz1}, {dz2}) = TRUE"
-    elif relation == "冲":
-        return f"check_chong({dz1}, {dz2}) = TRUE"
-    elif relation == "半合":
-        return f"check_banhe({dz1}, {dz2}) = TRUE"
-    elif relation == "=":
-        return f"{dz1} = {dz2}"
-    elif relation in ("长生", "帝旺", "墓", "绝"):
-        return f"check_shengwang({dz1}, {dz2}, '{relation}') = TRUE"
-
-    return "FALSE"
+    return _build_yao_relation_exists(rel, params, idx, all_conditions, cond_clauses)
 
 
 def _collect_joins(conditions: list) -> set[str]:
